@@ -1,0 +1,98 @@
+/* Base styles */
+* {
+   margin: 0;
+   padding: 0;
+   box-sizing: border-box;
+}
+body {
+ font-family: Arial, Helvetica, sans-serif;
+ background: linear-gradient(135deg, #222 60%, #444 100%);
+ color: #f5f5f5;
+ line-height: 1.6;
+ text-align: center;
+}
+/* Header and footer styles */
+header {
+  background: #222;
+  color: #fff;
+  padding: 1rem 0;
+  text-align: center;
+}
+footer {
+  background: #222;
+  color: #fff;
+  text-align: center;
+  padding: 1rem 0;
+  margin-top: 2rem;
+  font-weight: bold;
+}
+/* Navigation styles */
+nav ul {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+  transition: color 0.2s;
+  font-size: 2.0rem;
+}
+nav a:hover {
+  color: #ffd700;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*home.html*/
+.movie-list {
+  list-styles: none;
+  padding: 0;
+  margin: 0;
+}
+.movie-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(34, 34, 34, 0.85);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+.movie-title-domestic {
+  display: flex;
+  align-items: center;
+  flex: 2;
+  gap: 2rem;
+}
+.movie-info-col {
+  text-align: left;
+  flex: 1;
+}
+/* Box Office Info */
+.box-office--info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 180px;
+}
+
