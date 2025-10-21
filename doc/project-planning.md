@@ -72,7 +72,7 @@ To create a **centralized movie hub for 2025** that merges release information, 
 ## Mural Project Resources
 All project planning materials, including the **User Story Map**, **Wireframes**, **User Flow Diagram**, and **SWOT Analysis**, are available in the Mural board linked below:
 
-👉 [View All Project Resources on Mural](https://app.mural.co/t/mycapstone1793/m/mycapstone1793/1759447593955/f8f12cb23f84c834f0389b641a1150faf6075db9)
+👉 [View All Project Resources on Mural]https://app.mural.co/t/mycapstone1793/m/mycapstone1793/1759447593955/f8f12cb23f84c834f0389b641a1150faf6075db9?sender=u315d2b17214858b1bf858824
 ---
 
 ## Research the Following
