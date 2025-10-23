@@ -25,15 +25,14 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
         <li><a href="about.html">About</a></li>
     </ul>
 </nav>
-</header>
-<main>
-    <h2>Upcoming Movie Releases</h2>
-    <div id="upcoming-movies"></div>
-    <!-- Upcoming movies will be dynamically inserted here -->
-</main>
-
-<footer>
-    <p>&copy; 2025 Movies. All rights reserved by James Nguyen.</p>
-</footer>
+<section id="movie-search">
+  <h2>Find a Flick</h2>
+  <form id="searchForm">
+    <label for="movieTitle">Movie Title:</label>
+    <input type="text" id="movieTitle" name="movieTitle" placeholder="enter a movie name..." required>
+    <button type="submit">Search</button>
+  </form>
+</section>
 </body>
 </html>
+7

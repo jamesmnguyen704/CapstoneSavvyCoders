@@ -4,37 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cinemetrics</title>
-<link rel="stylesheet" href="styles.css">
-<script src="script.js" defer></script>
-</head>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans&display=swap" rel="stylesheet">
+<link
+rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+/>
 <body>
-  <header>
-    <h1>Cinemetrics</h1>" <!-- Potential name-->
-    <h3>2025 Movie Hub</h3>
-    <nav>
-      <ul>
+<header>
+<nav class="navbar">
+    <div class="logo">
+      <a href="home.html">Cinemetrics</a>
+    </div>
+    <i class="fa-solid fa-bars" id="menu-icon"></i>
+    <ul class="nav-links" id="nav-links">
         <li><a href="upcomingreleases.html">Upcoming Releases</a></li>
         <li><a href="boxoffice.html">Box Office</a></li>
         <li><a href="movies.html">Movies</a></li>
-        <li><a href="about.html">Contact</a></li>
-      </ul>
-    </nav>
-  </header>
+        <li><a href="about.html">About</a></li>
+    </ul>
+</nav>
+</header>
 
-  <main>
-    <h2>Trending Movies</h2>
-    <div id="trending-movies"></div>
-      <!-- Trending movies will be dynamically inserted here -->
-      <section id="home">
-        <h2>Welcome to Cinemetrics</h2>
+<main>
+    <section id="home">
+        <h4>Welcome to Cinemetrics</h4>
         <p>Your hub for the latest movie trends and insights for 2025.</p>
-      </section>
-      <section id="Movie">
-        <h2>Top Box Office Hits of the 2025</h2>
+    </section>
+    <section id="Movie">
+    <h2>Top Box Office Hits of the 2025</h2>
         <ul class="movie-list">
            <li class="movie-item">
             <div class="movie-info-col">
-              <h3>Lilo & Stitch</h3>
+                        <h3>Lilo & Stitch</h3>
                         <p>Release Date: May 2025</p>
                         <p>Genre: Animation</p>
                         <p class="distributor">Distributor: Disney</p>
@@ -44,7 +47,7 @@
                         <p class="foreign">Foreign: $612,337,701</p>
                         <p class="worldwide">Worldwide: $1,035,802,450</p>
                     </div>
-                    <img src="/images/lilostitch.jpeg" alt="Lilo & Stitch Movie Poster" class="movie-poster">
+                    <img src="doc/images/lilostitch.jpeg" alt="Lilo & Stitch Movie Poster" class="movie-poster">
                 </li>
                 <li class="movie-item">
                     <div class="movie-info-col">
@@ -58,7 +61,7 @@
                         <p class="foreign">Foreign: $260,800,000</p>
                         <p class="worldwide">Worldwide: $614,075,236</p>
                     </div>
-                    <img src="/images/Superman.jpg" alt="Superman Movie Poster" class="movie-poster">
+                    <img src="doc/images/Superman.jpg" alt="Superman Movie Poster" class="movie-poster">
                 </li>
                 <li class="movie-item">
                     <div class="movie-info-col">
@@ -72,7 +75,7 @@
                         <p class="foreign">Foreign: $521,892,000</p>
                         <p class="worldwide">Worldwide: $860,955,930</p>
                     </div>
-                    <img src="/images/jurassicworldrebirth.jpeg" alt="Jurassic World: Rebirth Movie Poster" class="movie-poster">
+                    <img src="doc/images/jurassicworldrebirth.jpeg" alt="Jurassic World: Rebirth Movie Poster" class="movie-poster">
                 </li>
                 <li class="movie-item">
                     <div class="movie-info-col">
@@ -86,7 +89,7 @@
                         <p class="foreign">Foreign: $88,100,000</p>
                         <p class="worldwide">Worldwide: $366,678,513</p>
                     </div>
-                    <img src="/images/sinners.jpeg" alt="Sinners Movie Poster" class="movie-poster">
+                    <img src="doc/images/sinners.jpeg" alt="Sinners Movie Poster" class="movie-poster">
                 </li>
                 <li class="movie-item">
                     <div class="movie-info-col">
@@ -100,7 +103,7 @@
                         <p class="foreign">Foreign: $244,694,022</p>
                         <p class="worldwide">Worldwide: $514,947,001</p>
                     </div>
-                    <img src="/images/fantasticfour.jpeg" alt="Fantastic Four Movie Poster" class="movie-poster">
+                    <img src="doc/images/fantasticfour.jpeg" alt="Fantastic Four Movie Poster" class="movie-poster">
                 </li>
                 <li class="movie-item">
                     <div class="movie-info-col">
@@ -114,7 +117,7 @@
                         <p class="foreign">Foreign: $370,000,000</p>
                         <p class="worldwide">Worldwide: $632,137,100</p>
                     </div>
-                    <img src="/images/howtotrainadragon.jpeg" alt="How To Train Your Dragon Movie Poster" class="movie-poster">
+                    <img src="doc/images/howtotrainadragon.jpeg" alt="How To Train Your Dragon Movie Poster" class="movie-poster">
                 </li>
                 <li class="movie-item">
                     <div class="movie-info-col">
@@ -128,7 +131,7 @@
                         <p class="foreign">Foreign: $214,601,576</p>
                         <p class="worldwide">Worldwide: $415,101,577</p>
                     </div>
-                    <img src="/images/bravenewworld.jpeg" alt="Captain America Brave New World Movie Poster" class="movie-poster">
+                    <img src="doc/images/bravenewworld.jpeg" alt="Captain America Brave New World Movie Poster" class="movie-poster">
                 </li>
                 <li class="movie-item">
                     <div class="movie-info-col">
@@ -142,7 +145,7 @@
                         <p class="foreign">Foreign: $400,642,746</p>
                         <p class="worldwide">Worldwide: $598,056,261</p>
                     </div>
-                    <img src="/images/missionimpossiblethefinalreckoning.jpg" alt="Mission Impossible The Final Reckoning Movie Poster" class="movie-poster">
+                    <img src="doc/images/missionimpossiblethefinalreckoning.jpg" alt="Mission Impossible The Final Reckoning Movie Poster" class="movie-poster">
                 </li>
                 <li class="movie-item">
                     <div class="movie-info-col">
@@ -156,7 +159,7 @@
                         <p class="foreign">Foreign: $192,162,589</p>
                         <p class="worldwide">Worldwide: $382,436,917</p>
                     </div>
-                    <img src="/images/thunderbolts.jpeg" alt="ThunderBolts Movie Poster" class="movie-poster">
+                    <img src="doc/images/thunderbolts.jpeg" alt="ThunderBolts Movie Poster" class="movie-poster">
                 </li>
                 <li class="movie-item">
                     <div class="movie-info-col">
@@ -170,7 +173,7 @@
                         <p class="foreign">Foreign: $430,399,000</p>
                         <p class="worldwide">Worldwide: $619,367,762</p>
                     </div>
-                    <img src="/images/f1.jpeg" alt="F1: Movie Poster" class="movie-poster">
+                    <img src="doc/images/f1.jpeg" alt="F1: Movie Poster" class="movie-poster">
                 </li>
                 <li class="movie-item">
                     <div class="movie-info-col">
@@ -184,15 +187,16 @@
                         <p class="foreign">Foreign: $1,879,015,124</p>
                         <p class="worldwide">Worldwide: $1,902,337,333</p>
                     </div>
-                    <img src="/images/Ne Zha 2.jpg" alt="Ne Zha 2 Movie Poster" class="movie-poster">
+                    <img src="doc/images/Ne Zha 2.jpg" alt="Ne Zha 2 Movie Poster" class="movie-poster">
                 </li>
             </ul>
         </section>
-      </main>
+</main>
 
-      <footer>
-        <p>&copy; 2025 Movies. All rights reserved.</p>
+    <footer>
+        <p>&copy; 2025 Movies. All rights reserved by James Nguyen.</p>
     </footer>
+    <script src="script.js" defer></script>
 </body>
 </html>
 
@@ -204,44 +208,3 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-    </main>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-</body>
