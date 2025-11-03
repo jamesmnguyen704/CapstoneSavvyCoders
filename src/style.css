@@ -1,0 +1,417 @@
+/* updated file to have a more modern CSS Grid and Flexbox Layout
+1. CSS Grid for the movie layout
+2. Flexbox for the navigational and internal components
+3. Move mobile response to the bottom.
+4. More of an organization because Colby said so
+5. Consistence of gap instead of margins
+*/
+
+/* ======================
+   RESET & BASE STYLES
+   ======================
+* - Universal box-sizing reset
+* - padding and borders are include in element's width/height
+* - using CSS gradient for the dynamic background and center all text
+* - set global font and color scheme */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg, #222 60%, #444 100%);
+  color: #f5f5f5;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ======================
+   TYPOGRAPHY
+   ======================
+* -Create hierarchy
+* - h2: sections " Top Box Office Hits"
+* - h3: movie titles with cards gold titles
+* - h4: pages titles "Welcome to Cinemetrics*/
+h2 {
+  font-size: 3rem;
+  margin: 2rem 0 1.5rem;
+  color: #fff;
+}
+
+h3 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  color: #ffd700;
+}
+
+h4 {
+  font-size: 3.5rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+/*Sibiling selectors for text
+* - target paragrah following element h4
+* - hover effect for interactivity*/
+main section h4 + p {
+  margin-top: 0.5rem;
+  font-size: 2.1rem;
+  color: #eee;
+  transition: color 0.2s;
+}
+
+main section h4 + p:hover {
+  color: #ffd700;
+}
+
+main section h3 + p {
+  margin-top: 0.5rem;
+  font-size: 1.5rem;
+  color: #eee;
+}
+
+/* ======================
+   LAYOUT - HEADER & FOOTER
+   ======================
+* - header container for elements within the navbar */
+header {
+  background: #222;
+  color: #fff;
+}
+/* footer using a CSS Grid
+* - display: grid creates a grid container
+* - place-aligns: center is same for align-item justify-item
+* - center both vert and horz*/
+footer {
+  display: grid;
+  place-items: center;
+  background: #222;
+  color: #fff;
+  padding: 1rem 0;
+  margin-top: 2rem;
+  font-weight: bold;
+}
+
+footer p a {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+footer p a:hover {
+  color: #ffd700;
+}
+
+/* ======================
+   NAVIGATION
+   ======================
+* - display: flexbox for container
+* - justify-content: space between pushes link and logo opposite ends
+* - align-items: center vertically center items
+* - position: sticky to keep navbar at top like freeze pain in excel
+* - z-index: 10 to ensure navbar stays above content.
+* - hamburger menu icon just shows on mobile
+*/
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #111;
+  color: #fff;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.logo {
+  font-size: 4rem;
+  font-weight: bold;
+}
+
+.logo a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.logo a:hover {
+  color: #ffd700;
+}
+
+.nav-links {
+  display: flex;
+  list-style: none;
+  gap: 2rem;
+  align-items: center;
+}
+
+.nav-links li {
+  margin: 0;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #fff;
+  font-weight: 500;
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+  color: #f39c12;
+}
+
+#menu-icon {
+  display: none;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+/* ======================
+   MAIN SECTIONS
+   ======================
+* - max-width: to fix different screen sizes
+* - margin: 0 to autocenter and padding adds space internal*/
+main {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+#home {
+  background: rgba(34, 34, 34, 0.8);
+  padding: 3rem 2rem;
+  margin-bottom: 3rem;
+  border-radius: 12px;
+}
+
+#Movie {
+  background: rgba(34, 34, 34, 0.6);
+  padding: 2rem;
+  border-radius: 12px;
+}
+
+/* ======================
+   MOVIE LIST - CSS GRID
+   ======================
+* - display: grid container
+* - gap: 2rem adding space between the grid items for movie card*/
+.movie-list {
+  display: grid;
+  gap: 2rem;
+  list-style: none;
+  padding: 0;
+  margin: 2rem 0;
+}
+/*
+Individual movie card Grid layout
+* - fixed columns for 1 and 2 with 250px
+* - transform: hover effects to lift cards up
+* - box-shadow change adds gold */
+.movie-item {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(200px, 1fr) minmax(200px, 1.5fr);
+  gap: 2rem;
+  align-items: center;
+  background: rgba(17, 17, 17, 0.9);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.movie-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(255, 215, 0, 0.2);
+}
+
+/* Movie Info Column
+* - display: flex direction: to stacks items vertically
+* - gap: 0.5rem adds spacing between items
+* - text-align: left overrides body's center alignment*/
+.movie-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+
+.movie-info-col p {
+  font-size: 1.1rem;
+  color: #ccc;
+  margin: 0;
+}
+
+.movie-info-col .distributor {
+  color: #999;
+  font-style: italic;
+}
+
+/* Box Office Column
+second column in the grid
+* - similar structure for movie-info-col
+* - text-align: right for right aligned numbers
+* - justify-content: center vertically*/
+.boxoffice-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-align: right;
+  justify-content: center;
+}
+
+.boxoffice-col p {
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.domestic {
+  color: #4CAF50;
+}
+
+.foreign {
+  color: #2196F3;
+}
+
+.worldwide {
+  color: #ffd700;
+  font-size: 1.3rem !important;
+  font-weight: bold;
+}
+
+/* Movie Poster */
+.movie-poster {
+  min-width: 200px;
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  border: 3px solid #ffd700;
+  transition: transform 0.3s ease, border-color 0.3s;
+  aspect-ratio: 16 / 9;
+}
+
+.movie-poster:hover {
+  transform: scale(1.08);
+  border-color: #f39c12;
+}
+
+/* ======================
+   RESPONSIVE DESIGN
+   ====================== */
+@media (max-width: 1200px) {
+  .movie-item {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .movie-poster {
+    grid-column: 1 / -1;
+    justify-self: center;
+    width: 100%;
+    max-width: 500px;
+    height: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Mobile Navigation */
+  .nav-links {
+    display: none;
+    position: absolute;
+    top: 60px;
+    right: 0;
+    background-color: #111;
+    flex-direction: column;
+    width: 100%;
+    text-align: center;
+    padding: 1rem 0;
+    gap: 0;
+  }
+
+  .nav-links li {
+    width: 100%;
+    padding: 1rem 0;
+    border-bottom: 1px solid #333;
+  }
+
+  .nav-links a {
+    font-size: 1.5rem;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  #menu-icon {
+    display: block;
+  }
+
+  /* Typography adjustments */
+  .logo {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+  }
+
+  h4 {
+    font-size: 2.5rem;
+  }
+
+  /* Mobile Movie Layout */
+  .movie-item {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.5rem;
+  }
+
+  .movie-info-col,
+  .boxoffice-col {
+    text-align: center;
+  }
+
+  .boxoffice-col {
+    gap: 0.5rem;
+  }
+
+  .movie-poster {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 16/9;
+  }
+
+  main {
+    padding: 1rem;
+  }
+
+  #home {
+    padding: 2rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 2rem;
+  }
+
+  h2 {
+    font-size: 1.5rem;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+  }
+
+  .movie-info-col p,
+  .boxoffice-col p {
+    font-size: 1rem;
+  }
+}
