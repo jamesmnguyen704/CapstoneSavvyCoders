@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "This template repository contains several opinionated, 'starter' files and settings to help Savvy Coder students focus more time and energy on learning how to code and/or craft 'business logic' for projects and less time on configurations.",
   "scripts": {
-    "start": "live-server --port=3000 --open=/index.html",
-    "dev": "live-server --port=3000"
+  "start": "parcel serve index.html --port 3000",
+  "dev": "parcel serve index.html --port 3000",
+  "build": "parcel build index.html --dist-dir dist --public-url ./"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
     "eslint-plugin-prettier": "^3.3.1",
     "live-server": "^1.2.2",
     "node": "^16.13.1",
+    "parcel": "^2.16.1",
     "postcss": "^8.5.6",
     "prettier": "1.19.1",
     "tailwindcss": "^4.1.16"
@@ -27,7 +29,6 @@
     "postcss-cli": "^11.0.1",
     "yargs-parser": ">=13.1.2"
   },
-  "main": "index.js",
   "directories": {
     "doc": "doc"
   },

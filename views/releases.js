@@ -197,8 +197,6 @@ const upcomingReleases = [
   }
 ];
 
-// Generate release cards, use placeholders for image if it fails.
-// making grid view for cards with details, plus I wanted it in chrnological order
 const generateReleaseCards = () =>
   upcomingReleases
     .map(
@@ -206,9 +204,9 @@ const generateReleaseCards = () =>
         <div class="release-card">
           <div class="release-poster">
             <img
-              src="${movie.poster}"
+              src="${movie.poster || 'images/placeholder-poster.jpg'}"
               alt="${movie.title} Poster"
-              onerror="this.src='images/placeholder-poster.jpg'"
+              data-fallback="images/placeholder-poster.jpg"
             />
             <div class="release-overlay">
               <span class="release-date">${movie.releaseDate}</span>
@@ -226,7 +224,6 @@ const generateReleaseCards = () =>
     )
     .join("");
 
-// View export
 export default st => html`
   <div class="releases-container">
     <section class="releases-header">
@@ -273,58 +270,3 @@ export default st => html`
     </section>
   </div>
 `;
-
-// old code
-// import html from "html-literal";
-
-// export default st => html`
-//   <div class="releases-container">
-//     <section class="releases-header">
-//       <h1>${st.header || "Upcoming Releases"}</h1>
-//       <p>Get ready for the most anticipated films coming in 2025.</p>
-//     </section>
-
-//     <section class="releases-grid">
-//       <!-- Static sample cards (replace later with dynamic data) -->
-//       <div class="release-card">
-//         <div class="release-poster">
-//           <img src="images/batman2.jpg" alt="The Batman - Part II Poster" />
-//         </div>
-//         <div class="release-info">
-//           <h3 class="release-title">The Batman - Part II</h3>
-//           <p class="release-genre">Action/Crime</p>
-//           <p class="release-director">Directed by Matt Reeves</p>
-//           <p class="release-studio">Warner Bros</p>
-//           <p class="release-date">October 3, 2025</p>
-//         </div>
-//       </div>
-//     </section>
-//   </div>
-// `;
-
-// import html from "html-literal";// testing//
-
-// import { releases } from "../store";import { fetchUpcomingMovies } from "../utils/timdbApi.js";
-
-// // Releases view - delegates to releases store componentexport default async function ReleasesView() {
-
-// export default () => html`  const movies = await fetechUpcomingMovies();
-
-//   ${releases()}
-
-// `;   return `
-//     <section class="releases">
-//       <h2>🎬 Upcoming Releases</h2>
-//       <div class="movie-grid">
-//         ${movies.map(movie => `
-//           <div class="movie-card">
-//             <img src="${movie.poster}" alt="${movie.title}" />
-//             <h3>${movie.title}</h3>
-//             <p>📅 ${movie.releaseDate}</p>
-//             <p>⭐ ${movie.rating.toFixed(1)}</p>
-//           </div>
-//         `).join("")}
-//       </div>
-//     </section>
-//   `;
-// }
