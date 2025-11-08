@@ -1,4 +1,6 @@
+// creating a "state object" and what this page needs
+
 export default {
-  header: "My Home Page",
-  view: "home"
+  header: "Home Page",
+  view: "Home"
 };

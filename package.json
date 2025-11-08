@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "This template repository contains several opinionated, 'starter' files and settings to help Savvy Coder students focus more time and energy on learning how to code and/or craft 'business logic' for projects and less time on configurations.",
   "scripts": {
-    "start": "cd src && live-server --port=3000 --open=/home.html",
-    "dev": "cd src && live-server --port=3000"
+    "start": "live-server --port=3000 --open=/index.html",
+    "dev": "live-server --port=3000"
   },
   "keywords": [],
   "author": "",
@@ -27,7 +27,7 @@
     "postcss-cli": "^11.0.1",
     "yargs-parser": ">=13.1.2"
   },
-  "main": "about.js",
+  "main": "index.js",
   "directories": {
     "doc": "doc"
   },
