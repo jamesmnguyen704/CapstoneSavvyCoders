@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cinemetrics - Redirecting...</title>
-    <meta http-equiv="refresh" content="0; url=src/home.html">
-    <link rel="canonical" href="src/home.html">
-</head>
-<body>
-    <h1>Redirecting to Cinemetrics...</h1>
-    <p>If you are not redirected automatically, <a href="src/home.html">click here</a>.</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cinemetrics</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+  </head>
 
-    <script>
-        // Fallback JavaScript redirect
-        window.location.href = 'src/home.html';
-    </script>
-</body>
+  <body>
+    <!-- The SPA will render everything inside this root div -->
+    <div id="root"></div>
+
+    <!-- Load your main JS entry file -->
+    <script type="module" src="./index.js"></script>
+  </body>
 </html>

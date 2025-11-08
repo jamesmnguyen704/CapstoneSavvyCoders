@@ -1,4 +1,5 @@
-// Client components index - central export point for all components
+// my aggregator using a "barrel export" "collects" all components into one place
+// "default export" from each components file.
 export { default as Header } from "./header";
 export { default as Footer } from "./footer";
 export { default as Main } from "./main";

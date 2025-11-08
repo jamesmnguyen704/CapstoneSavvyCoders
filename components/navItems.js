@@ -1,61 +1,30 @@
 import html from "html-literal";
 
-// Navigation item component - renders individual nav items
+//reusable nav item template
+
 export default item => html`
   <li>
-    <a
-      href="${item.url || item.href}"
-      ${item.target
-        ? `target="${item.target}"`
-        : `data-page="${item.page || item.href}"`}
-    >
+    <a href="#" data-navigo data-page="${item.page}">
       ${item.text}
     </a>
   </li>
 `;
-
-// Navigation items data
+// function to take any nav item data and return html
 export const navItemsData = [
-  {
-    href: "home.html",
-    url: "home.html",
-    text: "Home",
-    page: "home",
-    isHome: true
-  },
-  {
-    href: "releases.html",
-    url: "releases.html",
-    text: "Upcoming Releases",
-    page: "releases"
-  },
-  {
-    href: "boxoffice.html",
-    url: "boxoffice.html",
-    text: "Box Office",
-    page: "boxoffice"
-  },
-  {
-    href: "movies.html",
-    url: "movies.html",
-    text: "Movies",
-    page: "movies"
-  },
-  {
-    href: "about.html",
-    url: "about.html",
-    text: "About",
-    page: "about"
-  }
+  { url: "/", text: "Home", isHome: true },
+  { url: "/releases", text: "Upcoming Releases" },
+  { url: "/boxoffice", text: "Box Office" },
+  { url: "/movies", text: "Movies" },
+  { url: "/about", text: "About" }
 ];
-
-// Logo configuration
+// consistency and configuration objects
+// clickable home link log
 export const logo = {
-  href: "home.html",
+  href: "/",
   text: "Cinemetrics"
 };
 
-// Mobile menu configuration
+// mobile menu config
 export const mobileMenu = {
   iconClass: "fa-solid fa-bars",
   menuId: "menu-icon",

@@ -1,11 +1,15 @@
-// Views index - central export point for all views// Views index - central export point for all views
+// Views index - central export point for all views
 
-export { default as Home } from "./home.js";export { default as Home } from "./home.js";
+// Components: import { Header, Footer } from "./components"
+// Store: import { Home, Movies } from "./store"
+// Views: import { Home, AboutMe } from "./views"
+// Views → What users see (presentation)
+// Store → Data and state management
+// Components → Reusable UI pieces
 
-export { default as AboutMe } from "./aboutMe.js";export { default as AboutMe } from "./aboutMe.js";
-
-export { default as BoxOffice } from "./boxOffice.js";export { default as BoxOffice } from "./boxOffice.js";
-
-export { default as Movies } from "./movies.js";export { default as Movies } from "./movies.js";
-
-export { default as Releases } from "./releases.js";export { default as Releases } from "./releases.js";
+export { default as Home } from "./home";
+export { default as AboutMe } from "./aboutMe";
+export { default as BoxOffice } from "./boxoffice";
+export { default as Movies } from "./movies";
+export { default as Releases } from "./releases";
+export { default as ViewNotFound } from "./viewNotFound";

@@ -1,13 +1,7 @@
-export { default as home } from "./home";export { default as home } from "./home";
-
-export { default as about } from "./aboutMe";export { default as about } from "./aboutMe";
-
-export { default as boxoffice } from "./boxoffice";export { default as boxoffice } from "./boxoffice";
-
-export { default as releases } from "./releases";export { default as releases } from "./releases";
-
-export { default as movies } from "./movies";export { default as movies } from "./movies";
-
-export { default as viewNotFound } from "./viewNotFound";export { default as viewNotFound } from "./viewNotFound";
-
-export { default as nav } from "./nav";export { default as nav } from "./nav";
+export { default as Home } from "./home";
+export { default as AboutMe } from "./aboutMe";
+export { default as Movies } from "./movies";
+export { default as Releases } from "./releases";
+export { default as BoxOffice } from "./boxoffice";
+export { default as Nav } from "./nav";
+export { default as ViewNotFound } from "./viewNotFound";
