@@ -1,5 +1,6 @@
 import html from "html-literal";
 import navItem, { navItemsData, logo, mobileMenu } from "./navItems.js";
+
 // reusable "navItem" components
 // navigation links using NavItems compenents
 const generateNavLinks = () =>

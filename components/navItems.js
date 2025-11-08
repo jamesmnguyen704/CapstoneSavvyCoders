@@ -1,30 +1,33 @@
 import html from "html-literal";
 
-//reusable nav item template
+// 🧭 Reusable nav item component
+// Creates an <li> element with proper Navigo routing attributes
+export default function navItem(item) {
+  return html`
+    <li>
+      <a data-navigo href="${item.url}">
+        ${item.text}
+      </a>
+    </li>
+  `;
+}
 
-export default item => html`
-  <li>
-    <a href="#" data-navigo data-page="${item.page}">
-      ${item.text}
-    </a>
-  </li>
-`;
-// function to take any nav item data and return html
+// 🧩 Navigation data used by Nav.js
 export const navItemsData = [
-  { url: "/", text: "Home", isHome: true },
+  { url: "/", text: "Home" },
   { url: "/releases", text: "Upcoming Releases" },
   { url: "/boxoffice", text: "Box Office" },
   { url: "/movies", text: "Movies" },
   { url: "/about", text: "About" }
 ];
-// consistency and configuration objects
-// clickable home link log
+
+// 🪩 Logo info
 export const logo = {
-  href: "/",
-  text: "Cinemetrics"
+  text: "Cinemetrics",
+  href: "/"
 };
 
-// mobile menu config
+// 📱 Mobile menu config (optional for later)
 export const mobileMenu = {
   iconClass: "fa-solid fa-bars",
   menuId: "menu-icon",

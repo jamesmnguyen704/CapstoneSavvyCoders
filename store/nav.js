@@ -1,2 +1,9 @@
-// Empty nav store file - nav is handled by components
-export default {};
+export default {
+  links: [
+    { title: "Home", text: "Home" },
+    { title: "Movies", text: "Movies" },
+    { title: "Releases", text: "Releases" },
+    { title: "BoxOffice", text: "Box Office" },
+    { title: "AboutMe", text: "About" }
+  ]
+};

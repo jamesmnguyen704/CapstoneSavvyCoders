@@ -1,6 +1,4 @@
-// creating a "state object" and what this page needs
-
 export default {
-  header: "About My Movie Page",
+  header: "About Me",
   view: "AboutMe"
 };

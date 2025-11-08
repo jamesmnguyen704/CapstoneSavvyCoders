@@ -1,6 +1,4 @@
-// creating a "state object" and what this page needs
-
 export default {
-  header: "Home Page",
+  header: "Cinemetrics",
   view: "Home"
 };

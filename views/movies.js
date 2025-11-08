@@ -1,24 +1,23 @@
 import html from "html-literal";
 
 export default st => html`
-  <div class="movies-containers">
-    <section class="movies-headers">
+  <div class="movies-container">
+    <section class="movies-header">
       <h1>${st.header || "Movies Page"}</h1>
-      <p>Explore our collections of Movies by genre, year, and more</p>
+      <p>Explore our collection of movies by genre, year, and more.</p>
     </section>
 
-    <!--this will be my search and have multiple filters-->
-    <!-- will allow "multi-purpose" search (movies, director, actors,)-->
-    <!-- dual filter search (genre + year), "ALL" to clear.-->
+    <!-- 🔍 Search and filter controls -->
     <section class="search-section">
       <div class="search-bar">
         <input
           type="text"
-          placeholder="Search movies, actors, directors..."
+          placeholder="Search movies, actors, or directors..."
           class="movie-search"
         />
         <button class="search-btn"><i class="fa-solid fa-search"></i></button>
       </div>
+
       <div class="filter-options">
         <select class="genre-filter">
           <option value="">All Genres</option>
@@ -29,6 +28,7 @@ export default st => html`
           <option value="horror">Horror</option>
           <option value="romance">Romance</option>
         </select>
+
         <select class="year-filter">
           <option value="">All Years</option>
           <option value="2025">2025</option>
@@ -38,20 +38,9 @@ export default st => html`
       </div>
     </section>
 
-    <!-- Paste your categories grid/cards here -->
+    <!-- 🎞️ My Movie cards -->
     <section class="categories-grid">
-      <!-- ${"Your generated category cards"} -->
+      <!-- Fot API later -->
     </section>
   </div>
 `;
-// import html from "html-literal";import html from "html-literal";
-
-// import { movies } from "../store";import { movies } from "../store";
-
-// // Movies view - delegates to movies store component// Movies view - delegates to movies store component
-
-// export default () => html`export default () => html`
-
-//   ${movies()}  ${movies()}
-
-// `;`;
