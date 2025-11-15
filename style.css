@@ -1,6 +1,15 @@
-/* Cinemetrics - Modern Movie Website CSS */
+/* ============================================
+   CINEMETRICS - MY MOVIE WEBSITE CSS
+   Made by: James Nguyen for my Savvy Coders Capstone Project
+   What this does: Styles for my single-page movie app
+                   Dark theme with gold vibes, horizontal scrolling
+   ============================================ */
 
-/* Reset and Base Styles */
+/* ============================================
+   RESET AND BASE STYLES
+   What's happening: Getting rid of browser's default styling
+                     so everything looks consistent
+   ============================================ */
 * {
   margin: 0;
   padding: 0;
@@ -9,13 +18,18 @@
 
 body {
   font-family: 'Inter', 'Arial', sans-serif;
+  /* Cool gradient background - dark blue colors give it that movie theater vibe */
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   color: #ffffff;
   line-height: 1.6;
   min-height: 100vh;
 }
 
-/* Typography */
+/* ============================================
+   TYPOGRAPHY
+   What's happening: Setting up my headings and text styles
+                     Using gold (#ffd700) to make important stuff pop
+   ============================================ */
 h1 {
   font-size: 2.5rem;
   font-weight: 700;
@@ -42,14 +56,22 @@ p {
   color: #e0e0e0;
 }
 
-/* Layout */
+/* ============================================
+   LAYOUT
+   What's happening: Using flexbox to make sure my footer
+                     stays at the bottom where it belongs
+   ============================================ */
 #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* Header and Navigation */
+/* ============================================
+   HEADER AND NAVIGATION
+   What's happening: Sticky header that stays at top when you scroll
+                     Got that glass effect going on (backdrop blur)
+   ============================================ */
 header {
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(10px);
@@ -63,27 +85,43 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 2rem;
+  width: 100%; /* Take full width */
+  max-width: none; /* Remove max-width constraint */
+  margin: 0;
+  padding: 0 3rem; /* More padding on sides */
 }
 
 .logo {
-  font-size: 2rem;
+  font-size: clamp(1.5rem, 4vw, 2.5rem); /* Responsive size: min 1.5rem, grows with screen, max 2.5rem */
   font-weight: bold;
-  color: #ffd700;
+  color: #ffd700; /* Already yellow/gold */
+  flex-shrink: 0; /* Keeps logo from shrinking */
+  text-align: left;
+  margin-right: auto; /* Pushes everything else to the right */
+}
+
+.logo a {
+  color: #ffd700; /* Make sure the link is yellow too */
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+}
+
+.logo a:hover {
+  opacity: 0.8; /* Slight fade on hover */
 }
 
 .nav-links {
   display: flex;
   list-style: none;
-  gap: 2rem;
+  gap: 2.5rem; /* Space between links */
+  margin-left: auto; /* Pushes links all the way to the right */
 }
 
 .nav-links a {
   color: #ffffff;
   text-decoration: none;
   font-weight: 500;
+  font-size: 1.3rem; /* Make links bigger */
   transition: color 0.3s ease;
 }
 
@@ -91,7 +129,11 @@ header {
   color: #ffd700;
 }
 
-/* Main Content */
+/* ============================================
+   MAIN CONTENT CONTAINER
+   What's happening: Centers everything and adds some breathing room
+                     Max-width keeps it from getting too wide on big screens
+   ============================================ */
 main {
   flex: 1;
   max-width: 1200px;
@@ -99,10 +141,14 @@ main {
   padding: 2rem;
 }
 
-/* Sections */
+/* ============================================
+   SECTIONS
+   What's happening: Reusable styling for all my sections
+                     That see-through effect with the blur is called glassmorphism
+   ============================================ */
 section {
-  margin-bottom: 3rem;
-  padding: 2rem;
+  margin-bottom: 2rem; /* Reduced from 3rem */
+  padding: 1rem; /* Reduced from 2rem */
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   backdrop-filter: blur(10px);
@@ -129,7 +175,11 @@ section {
   margin: 0 auto;
 }
 
-/* Box Office Styles */
+/* ============================================
+   BOX OFFICE PAGE STYLES
+   What's happening: Tables and stat cards to show box office numbers
+                     Grid layout makes everything line up nice
+   ============================================ */
 .boxoffice-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -183,7 +233,11 @@ section {
   margin: 0.5rem 0;
 }
 
-/* Release Cards */
+/* ============================================
+   RELEASE CARDS
+   What's happening: Grid of upcoming movie cards
+                     Cards lift up and get a gold border when you hover
+   ============================================ */
 .releases-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -222,7 +276,11 @@ section {
   font-weight: 600;
 }
 
-/* Movies Page */
+/* ============================================
+   MOVIES PAGE
+   What's happening: Search bar and filters so people can find movies
+                     Styled the inputs with gold borders to match my theme
+   ============================================ */
 .movies-containers {
   max-width: 1200px;
   margin: 0 auto;
@@ -281,7 +339,11 @@ section {
   color: #ffffff;
 }
 
-/* Calendar */
+/* ============================================
+   RELEASE CALENDAR
+   What's happening: Shows when movies are coming out
+                     Grid layout makes it easy to see different months
+   ============================================ */
 .releases-calendar {
   margin-top: 3rem;
 }
@@ -323,7 +385,13 @@ footer {
   border-top: 1px solid rgba(255, 215, 0, 0.3);
 }
 
-/* Responsive Design */
+/* ============================================
+   RESPONSIVE DESIGN
+   What's happening: Making sure this looks good on phones and tablets
+                     Tablet breakpoint: 768px | Phone: 480px
+   ============================================ */
+
+/* For tablets and smaller */
 @media (max-width: 768px) {
   .navbar {
     flex-direction: column;
@@ -377,4 +445,75 @@ footer {
   .home-banner {
     height: 200px;
   }
+}
+
+
+
+
+/* ============================================
+   HOME PAGE - HORIZONTAL SCROLLING MOVIE GRID
+   This is where I show trending, now playing, and popular movies
+   You can scroll sideways to see more
+   Cool features:
+   - Smooth scrolling (not jumpy) with gold theme, with 200px wide
+   ============================================ */
+/* The container that lets you scroll sideways */
+.movie-grid {
+  display: flex;
+  gap: 1.5rem;
+  overflow-x: auto;
+  padding: 1rem 0;
+  scroll-behavior: smooth; /* Makes the scrolling smooth instead of choppy */
+}
+
+/* Making the scrollbar look good (only works in Chrome/Edge) */
+.movie-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.movie-grid::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.movie-grid::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.5);
+  border-radius: 4px;
+}
+
+.movie-grid::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 215, 0, 0.8);
+}
+
+.movie-card {
+  flex: 0 0 200px; /* Stays 200px wide no matter what */
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* When you hover - card lifts up and gets that gold glow */
+
+.movie-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 16px rgba(255, 215, 0, 0.3);
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.movie-card img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.movie-card h3 {
+  font-size: 1.1rem;
+  color: #ffd700;
+  margin: 0;
+  text-align: center;
+  line-height: 1.3;
 }
