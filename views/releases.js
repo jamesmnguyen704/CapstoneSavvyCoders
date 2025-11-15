@@ -9,7 +9,7 @@ const upcomingReleases = [
     genre: "Sci-Fi/Action",
     director: "James Cameron",
     studio: "20th Century Studios",
-    poster: "images/avatar3.jpg",
+    poster: "./Assets/images/avatar3.jpg",
     description:
       "The third installment in the Avatar saga continues Jake Sully's journey."
   },
@@ -21,7 +21,7 @@ const upcomingReleases = [
     genre: "Horror/Thriller",
     director: "Nia DaCosta",
     studio: "Sony Pictures Releasing",
-    poster: "images/28yearsbone.jpg",
+    poster: "./Assets/images/28yearslater.jpeg",
     description:
       "The fourth installment in the 28 Days Later saga, this post-apocalyptic horror follows a haunting monument and a new viral outbreak. Ralph Fiennes and Jack O’Connell star."
   },
@@ -31,7 +31,7 @@ const upcomingReleases = [
     genre: "Psychological Thriller/Black Comedy",
     director: "Sam Raimi",
     studio: "20th Century Studios",
-    poster: "images/sendhelp.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Rachel McAdams and Dylan O’Brien play plane crash survivors stranded on a deserted island, where survival becomes a twisted battle of wits."
   },
@@ -41,7 +41,7 @@ const upcomingReleases = [
     genre: "Slasher/Horror",
     director: "Kevin Williamson",
     studio: "Paramount Pictures",
-    poster: "images/scream7.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Sidney Prescott returns to face a new Ghostface in a chilling sequel that brings back franchise veterans and introduces fresh blood."
   },
@@ -51,7 +51,7 @@ const upcomingReleases = [
     genre: "Sci-Fi/Adventure",
     director: "Phil Lord & Christopher Miller",
     studio: "Amazon MGM Studios",
-    poster: "images/projecthailmary.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Ryan Gosling stars as an astronaut on a solo mission to save Earth from a cosmic catastrophe, based on Andy Weir’s bestselling novel."
   },
@@ -61,7 +61,7 @@ const upcomingReleases = [
     genre: "Animated Adventure/Comedy",
     director: "Aaron Horvath & Michael Jelenic",
     studio: "Illumination/Nintendo",
-    poster: "images/supermariogalaxy.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Mario and friends blast off into space in this sequel to the 2023 hit, inspired by the beloved Wii game."
   },
@@ -71,7 +71,7 @@ const upcomingReleases = [
     genre: "Action/Fantasy",
     director: "Simon McQuoid",
     studio: "Warner Bros. Pictures",
-    poster: "images/mortalkombat2.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Earthrealm’s champions face off against Shao Kahn in a brutal sequel featuring Johnny Cage and returning fan favorites."
   },
@@ -81,7 +81,7 @@ const upcomingReleases = [
     genre: "Sci-Fi/Adventure",
     director: "Jon Favreau",
     studio: "Lucasfilm",
-    poster: "images/mandogrogu.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Din Djarin and Grogu return in a cinematic Star Wars adventure set after the fall of the Empire."
   },
@@ -91,7 +91,7 @@ const upcomingReleases = [
     genre: "Superhero/Fantasy",
     director: "Travis Knight",
     studio: "Amazon MGM Studios",
-    poster: "images/mastersoftheuniverse.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "He-Man battles Skeletor in this epic reboot starring Nicholas Galitzine, Camila Mendes, and Jared Leto."
   },
@@ -101,7 +101,7 @@ const upcomingReleases = [
     genre: "Animated/Family",
     director: "Andrew Stanton",
     studio: "Pixar Animation Studios",
-    poster: "images/toystory5.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Woody, Buzz, and Jessie face a new challenge as kids turn to tech over toys. Jessie takes the lead in this heartfelt sequel."
   },
@@ -111,7 +111,7 @@ const upcomingReleases = [
     genre: "Superhero/Adventure",
     director: "Craig Gillespie",
     studio: "DC Studios",
-    poster: "images/supergirl2026.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Kara Zor-El teams up with a young alien girl on a revenge quest across the galaxy, based on Tom King’s comic series."
   },
@@ -121,7 +121,7 @@ const upcomingReleases = [
     genre: "Action/Adventure",
     director: "Colin Trevorrow",
     studio: "Universal Pictures",
-    poster: "images/jurassicworld_extinction.jpg",
+    poster: "./Assets/images/jurassicworldrebirth.jpeg",
     description:
       "The final chapter in the Jurassic saga where humans and dinosaurs fight for survival on a changing planet."
   },
@@ -131,7 +131,7 @@ const upcomingReleases = [
     genre: "Superhero/Action",
     director: "Destin Daniel Cretton",
     studio: "Marvel Studios",
-    poster: "images/avengers_secret_wars.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Earth’s mightiest heroes unite for the multiverse-shattering finale of the Avengers saga."
   },
@@ -141,7 +141,7 @@ const upcomingReleases = [
     genre: "Animation/Musical",
     director: "Jennifer Lee",
     studio: "Walt Disney Animation Studios",
-    poster: "images/frozen3.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Elsa and Anna embark on a new journey to uncover the deeper origins of magic in Arendelle."
   },
@@ -151,7 +151,7 @@ const upcomingReleases = [
     genre: "Horror/Thriller",
     director: "James Watkins",
     studio: "DC Studios",
-    poster: "images/clayface.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "A disfigured actor transforms into a monstrous clay entity in this tragic horror tale set in Gotham."
   },
@@ -161,7 +161,7 @@ const upcomingReleases = [
     genre: "Action/Martial Arts",
     director: "Kitao Sakurai",
     studio: "Legendary Pictures/Paramount",
-    poster: "images/streetfighter2026.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "Ryu and Ken reunite for the World Warrior Tournament, facing conspiracies and old rivalries in this reboot of the iconic franchise."
   },
@@ -171,7 +171,7 @@ const upcomingReleases = [
     genre: "Adventure/Comedy",
     director: "Jake Kasdan",
     studio: "Columbia Pictures",
-    poster: "images/jumanji3.jpg",
+    poster: "./Assets/images/placeholder-poster.jpg",
     description:
       "The gang returns for one final game in the jungle, with Dwayne Johnson, Kevin Hart, Jack Black, and Karen Gillan reprising their roles."
   },
@@ -181,7 +181,7 @@ const upcomingReleases = [
     genre: "Superhero/Adventure",
     director: "James Gunn",
     studio: "DC Studios/Warner Bros",
-    poster: "images/superman_legacy.jpg",
+    poster: "./Assets/images/Superman.jpg",
     description:
       "A reimagined tale of Clark Kent balancing his Kryptonian heritage with his humanity in the first film of the DCU reboot."
   },
@@ -191,7 +191,7 @@ const upcomingReleases = [
     genre: "Family/Fantasy",
     director: "Dean DeBlois",
     studio: "Universal Pictures/DreamWorks",
-    poster: "images/howtotrainyourdragon2026.jpg",
+    poster: "./Assets/images/howtotrainadragon.jpeg",
     description:
       "Hiccup and Toothless reunite for one final adventure bridging the human and dragon worlds."
   }
@@ -204,9 +204,9 @@ const generateReleaseCards = () =>
         <div class="release-card">
           <div class="release-poster">
             <img
-              src="${movie.poster || 'images/placeholder-poster.jpg'}"
+              src="${movie.poster || './Assets/images/placeholder-poster.jpg'}"
               alt="${movie.title} Poster"
-              data-fallback="images/placeholder-poster.jpg"
+              data-fallback="./Assets/images/placeholder-poster.jpg"
             />
             <div class="release-overlay">
               <span class="release-date">${movie.releaseDate}</span>
@@ -237,7 +237,7 @@ export default st => html`
     <section class="releases-grid">${generateReleaseCards()}</section>
 
     <section class="releases-calendar">
-      <h2>Release Calendar</h2>
+      <h2>Biggest Movies coming out within the next year</h2>
       <div class="calendar-months">
         <div class="calendar-year">
           <h3>🎬 2025</h3>
