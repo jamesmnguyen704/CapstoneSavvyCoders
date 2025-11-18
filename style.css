@@ -7,8 +7,6 @@
 
 /* ============================================
    RESET AND BASE STYLES
-   What's happening: Getting rid of browser's default styling
-                     so everything looks consistent
    ============================================ */
 * {
   margin: 0;
@@ -18,7 +16,6 @@
 
 body {
   font-family: 'Inter', 'Arial', sans-serif;
-  /* Cool gradient background - dark blue colors give it that movie theater vibe */
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
   color: #ffffff;
   line-height: 1.6;
@@ -27,8 +24,6 @@ body {
 
 /* ============================================
    TYPOGRAPHY
-   What's happening: Setting up my headings and text styles
-                     Using gold (#ffd700) to make important stuff pop
    ============================================ */
 h1 {
   font-size: 2.5rem;
@@ -58,8 +53,6 @@ p {
 
 /* ============================================
    LAYOUT
-   What's happening: Using flexbox to make sure my footer
-                     stays at the bottom where it belongs
    ============================================ */
 #root {
   min-height: 100vh;
@@ -69,8 +62,6 @@ p {
 
 /* ============================================
    HEADER AND NAVIGATION
-   What's happening: Sticky header that stays at top when you scroll
-                     Got that glass effect going on (backdrop blur)
    ============================================ */
 header {
   background: rgba(0, 0, 0, 0.9);
@@ -85,43 +76,40 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%; /* Take full width */
-  max-width: none; /* Remove max-width constraint */
-  margin: 0;
-  padding: 0 3rem; /* More padding on sides */
+  width: 100%;
+  padding: 0 3rem;
 }
 
 .logo {
-  font-size: clamp(1.5rem, 4vw, 2.5rem); /* Responsive size: min 1.5rem, grows with screen, max 2.5rem */
+  font-size: clamp(1.5rem, 4vw, 2.5rem);
   font-weight: bold;
-  color: #ffd700; /* Already yellow/gold */
-  flex-shrink: 0; /* Keeps logo from shrinking */
-  text-align: left;
-  margin-right: auto; /* Pushes everything else to the right */
+  color: #ffd700;
+  flex-shrink: 0;
+  margin-right: auto;
 }
 
 .logo a {
-  color: #ffd700; /* Make sure the link is yellow too */
+  color: #ffd700;
   text-decoration: none;
   transition: opacity 0.3s ease;
 }
 
 .logo a:hover {
-  opacity: 0.8; /* Slight fade on hover */
+  opacity: 0.8;
 }
 
 .nav-links {
   display: flex;
   list-style: none;
-  gap: 2.5rem; /* Space between links */
-  margin-left: auto; /* Pushes links all the way to the right */
+  gap: 2.5rem;
+  margin-left: auto;
 }
 
 .nav-links a {
   color: #ffffff;
   text-decoration: none;
   font-weight: 500;
-  font-size: 1.3rem; /* Make links bigger */
+  font-size: 1.3rem;
   transition: color 0.3s ease;
 }
 
@@ -130,9 +118,7 @@ header {
 }
 
 /* ============================================
-   MAIN CONTENT CONTAINER
-   What's happening: Centers everything and adds some breathing room
-                     Max-width keeps it from getting too wide on big screens
+   MAIN CONTENT
    ============================================ */
 main {
   flex: 1;
@@ -143,19 +129,17 @@ main {
 
 /* ============================================
    SECTIONS
-   What's happening: Reusable styling for all my sections
-                     That see-through effect with the blur is called glassmorphism
    ============================================ */
 section {
-  margin-bottom: 2rem; /* Reduced from 3rem */
-  padding: 1rem; /* Reduced from 2rem */
+  margin-bottom: 2rem;
+  padding: 1rem;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Home Page Styles */
+/* Home Page */
 .home-hero {
   text-align: center;
   padding: 4rem 2rem;
@@ -176,9 +160,7 @@ section {
 }
 
 /* ============================================
-   BOX OFFICE PAGE STYLES
-   What's happening: Tables and stat cards to show box office numbers
-                     Grid layout makes everything line up nice
+   BOX OFFICE
    ============================================ */
 .boxoffice-container {
   max-width: 1200px;
@@ -235,8 +217,6 @@ section {
 
 /* ============================================
    RELEASE CARDS
-   What's happening: Grid of upcoming movie cards
-                     Cards lift up and get a gold border when you hover
    ============================================ */
 .releases-grid {
   display: grid;
@@ -266,20 +246,8 @@ section {
   margin-bottom: 1rem;
 }
 
-.release-title {
-  color: #ffd700;
-  margin-bottom: 0.5rem;
-}
-
-.release-date {
-  color: #ff6b6b;
-  font-weight: 600;
-}
-
 /* ============================================
    MOVIES PAGE
-   What's happening: Search bar and filters so people can find movies
-                     Styled the inputs with gold borders to match my theme
    ============================================ */
 .movies-containers {
   max-width: 1200px;
@@ -341,8 +309,6 @@ section {
 
 /* ============================================
    RELEASE CALENDAR
-   What's happening: Shows when movies are coming out
-                     Grid layout makes it easy to see different months
    ============================================ */
 .releases-calendar {
   margin-top: 3rem;
@@ -376,7 +342,9 @@ section {
   color: #e0e0e0;
 }
 
-/* Footer */
+/* ============================================
+   FOOTER
+   ============================================ */
 footer {
   background: rgba(0, 0, 0, 0.8);
   text-align: center;
@@ -387,11 +355,9 @@ footer {
 
 /* ============================================
    RESPONSIVE DESIGN
-   What's happening: Making sure this looks good on phones and tablets
-                     Tablet breakpoint: 768px | Phone: 480px
    ============================================ */
 
-/* For tablets and smaller */
+/* Tablets */
 @media (max-width: 768px) {
   .navbar {
     flex-direction: column;
@@ -425,6 +391,7 @@ footer {
   }
 }
 
+/* Small phones */
 @media (max-width: 480px) {
   .logo {
     font-size: 1.5rem;
@@ -447,26 +414,19 @@ footer {
   }
 }
 
-
-
-
 /* ============================================
-   HOME PAGE - HORIZONTAL SCROLLING MOVIE GRID
-   This is where I show trending, now playing, and popular movies
-   You can scroll sideways to see more
-   Cool features:
-   - Smooth scrolling (not jumpy) with gold theme, with 200px wide
+   HORIZONTAL MOVIE SCROLLER
+   Home page trending/now playing/popular sections
    ============================================ */
-/* The container that lets you scroll sideways */
 .movie-grid {
   display: flex;
   gap: 1.5rem;
   overflow-x: auto;
   padding: 1rem 0;
-  scroll-behavior: smooth; /* Makes the scrolling smooth instead of choppy */
+  scroll-behavior: smooth; /* Smooth horizontal scrolling */
 }
 
-/* Making the scrollbar look good (only works in Chrome/Edge) */
+/* Custom scrollbar styling (Chrome/Edge only) */
 .movie-grid::-webkit-scrollbar {
   height: 8px;
 }
@@ -486,7 +446,7 @@ footer {
 }
 
 .movie-card {
-  flex: 0 0 200px; /* Stays 200px wide no matter what */
+  flex: 0 0 200px; /* Fixed width cards - won't shrink or grow */
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
   padding: 1rem;
@@ -494,17 +454,15 @@ footer {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* When you hover - card lifts up and gets that gold glow */
-
 .movie-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(255, 215, 0, 0.3);
+  transform: translateY(-5px); /* Lift effect on hover */
+  box-shadow: 0 8px 16px rgba(255, 215, 0, 0.3); /* Gold glow */
   border-color: rgba(255, 215, 0, 0.5);
 }
 
 .movie-card img {
   width: 100%;
-  height: 280px;
+  aspect-ratio: 2 / 3; /* Standard movie poster ratio - learned this fixes stretching on different screens */
   object-fit: cover;
   border-radius: 8px;
   margin-bottom: 0.5rem;
@@ -516,4 +474,156 @@ footer {
   margin: 0;
   text-align: center;
   line-height: 1.3;
+}
+
+/* ============================================
+   MOBILE OPTIMIZATION - Modern Phones
+   iPhone 14-16, Samsung S24, Pixel 9
+   Consolidated from duplicate blocks - fixed layout issues on mobile
+   ============================================ */
+@media (max-width: 430px) {
+
+  /* Global adjustments */
+  body {
+    font-size: 14px; /* Base font size for better readability on small screens */
+  }
+
+  main {
+    padding: 0.5rem; /* Reduced padding - was taking up too much space */
+  }
+
+  section {
+    padding: 0.75rem; /* Reduced from 1rem - tighter spacing */
+    margin-bottom: 1.2rem;
+  }
+
+  /* HEADER + NAVIGATION */
+  header {
+    padding: 0.4rem 0; /* Compact header */
+  }
+
+  .navbar {
+    padding: 0 1rem;
+    flex-direction: column; /* Stack vertically on phones */
+    gap: 0.3rem;
+  }
+
+  .logo {
+    font-size: 1.3rem; /* Smaller logo for mobile */
+    margin: 0;
+    text-align: center;
+  }
+
+  .nav-links {
+    flex-direction: row; /* Keep links horizontal but wrap them */
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .nav-links a {
+    font-size: 0.95rem; /* Smaller nav links */
+    padding: 0.2rem 0.4rem;
+  }
+
+  /* TYPOGRAPHY - Scaled down for mobile */
+  h1 {
+    font-size: 1.4rem; /* Was 2.5rem - way too big on phones */
+    margin-bottom: 0.5rem;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.4rem;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  p {
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+
+  /* MOVIE CARDS - Compact version for phones */
+  .movie-card {
+    flex: 0 0 135px; /* Smaller cards - was 200px, too wide for phones */
+    padding: 0.6rem;
+    border-radius: 10px;
+  }
+
+  .movie-card img {
+    aspect-ratio: 2 / 3; /* Keep poster ratio */
+    border-radius: 6px;
+  }
+
+  .movie-card h3 {
+    font-size: 0.85rem; /* Smaller title text */
+  }
+
+  .movie-grid {
+    gap: 0.8rem; /* Tighter spacing between cards */
+    padding: 0.5rem 0;
+  }
+
+  /* HOME BANNER */
+  .home-banner {
+    height: 140px; /* Much shorter on mobile */
+    margin: 1rem 0;
+  }
+
+  /* BOX OFFICE TABLE - Compact for mobile */
+  .boxoffice-table th,
+  .boxoffice-table td {
+    padding: 0.45rem; /* Was 1rem - too much space */
+    font-size: 0.75rem;
+  }
+
+  /* STAT CARDS */
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem; /* Smaller stat numbers */
+  }
+
+  /* RELEASE GRID */
+  .releases-grid {
+    gap: 1rem;
+  }
+
+  .release-card {
+    padding: 1rem;
+  }
+
+  .release-poster img {
+    height: 170px; /* Adjusted for mobile screens */
+  }
+
+  /* SEARCH BAR + FILTERS - Compact version */
+  .search-bar {
+    gap: 0.5rem;
+  }
+
+  .movie-search {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .search-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .filter-options {
+    gap: 0.5rem;
+  }
+
+  .genre-filter,
+  .year-filter {
+    padding: 0.6rem;
+    font-size: 0.85rem;
+  }
 }
