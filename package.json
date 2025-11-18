@@ -5,7 +5,7 @@
   "scripts": {
     "start": "parcel serve index.html --port 3000",
     "dev": "parcel serve index.html --port 3000",
-    "build": "parcel build index.html --dist-dir dist --public-url ./"
+    "build": "parcel build index.html && cp _redirects ./dist/"
   },
   "keywords": [],
   "author": "",
