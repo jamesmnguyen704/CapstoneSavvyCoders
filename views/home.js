@@ -3,7 +3,7 @@ import html from "html-literal";
 export default st => html`
   <section class="home">
     <p>
-      Welcome to Cinemetrics — the movie app I built instead of having a life for 12 weeks.
+      Welcome to Cinemetrics — the movie app James Nguyen built instead of having a life for 12 weeks.
     </p>
     <p>
       Dive into trending films, box office chaos, and the upcoming releases I definitely didn’t procrastinate on
