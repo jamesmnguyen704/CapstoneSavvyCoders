@@ -1,4 +1,4 @@
-export default { // makes it avaiable to import to other files. default means name can be different
+export default {
   header: "Cinemetrics", // my title will be Cinemetrics
   view: "Home", // identify this is my "home""view"
   trending: [], // where my trending movies will go

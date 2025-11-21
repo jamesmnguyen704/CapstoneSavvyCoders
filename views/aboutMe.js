@@ -1,7 +1,5 @@
 import html from "html-literal";
 
-// view will "CALL" "store" component
-// if "state" has header use it. If not, than default.
 export default st => html`
   <section class="about">
     <h1>${st.header || "About My Movie Page"}</h1>

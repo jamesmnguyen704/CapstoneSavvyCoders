@@ -1,4 +1,5 @@
 export default {
   header: "Movies",
-  view: "Movies"
+  view: "Movies",
+  movies: []
 };

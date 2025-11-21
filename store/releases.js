@@ -1,4 +1,5 @@
 export default {
-  header: "New Releases",
-  view: "Releases"
+  header: "Upcoming Movie Releases",
+  view: "Releases",
+  upcoming: []
 };
