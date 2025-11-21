@@ -1,16 +1,17 @@
-// api.js will handle all TMDB API calls
 import axios from "axios";
 const API_KEY = process.env.TMDB_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
-const buildUrl = (endpoint, params = {}) => { // function to pull api url
+
+const buildUrl = (endpoint, params = {}) => {
   const url = new URL(`${BASE_URL}${endpoint}`);
   url.searchParams.append("api_key", API_KEY);
-  Object.entries(params).forEach(([key, value]) => { // get all of my objects to be in array pair
+  Object.entries(params).forEach(([key, value]) => {
     url.searchParams.append(key, value);
   });
   return url.toString();
 };
-export const fetchTrending = async () => { // api fetch for trend
+
+export const fetchTrending = async () => {
   try {
     const response = await axios.get(buildUrl("/trending/movie/day"));
     return response.data.results;
@@ -19,7 +20,8 @@ export const fetchTrending = async () => { // api fetch for trend
     return [];
   }
 };
-export const fetchNowPlaying = async () => { // api fetch for now
+
+export const fetchNowPlaying = async () => {
   try {
     const response = await axios.get(
       buildUrl("/movie/now_playing", { region: "US" })
@@ -30,7 +32,8 @@ export const fetchNowPlaying = async () => { // api fetch for now
     return [];
   }
 };
-export const fetchPopular = async () => { // api fetch for popular
+
+export const fetchPopular = async () => {
   try {
     const response = await axios.get(
       buildUrl("/movie/popular", { region: "US" })
@@ -41,7 +44,8 @@ export const fetchPopular = async () => { // api fetch for popular
     return [];
   }
 };
-export const fetchHomeData = async () => { // fetchHomeData will pull all three
+
+export const fetchHomeData = async () => {
   console.log("Fetching TMDB Home Data");
   try {
     const [trending, nowPlaying, popular] = await Promise.all([
@@ -53,5 +57,17 @@ export const fetchHomeData = async () => { // fetchHomeData will pull all three
   } catch (error) {
     console.error("TMDB Home API Error:", error);
     return { trending: [], nowPlaying: [], popular: [] };
+  }
+};
+
+export const fetchUpcoming = async () => {
+  try {
+    const response = await axios.get(
+      buildUrl("/movie/upcoming", { region: "US", page: 1 })
+    );
+    return response.data.results;
+  } catch (error) {
+    console.error("Error fetching upcoming movies:", error);
+    return [];
   }
 };

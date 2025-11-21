@@ -2,10 +2,13 @@
   "name": "savvy-starter",
   "version": "1.0.0",
   "description": "This template repository contains several opinionated, 'starter' files and settings to help Savvy Coder students focus more time and energy on learning how to code and/or craft 'business logic' for projects and less time on configurations.",
+  "type": "module",
   "scripts": {
     "start": "parcel serve index.html --port 3000",
     "dev": "parcel serve index.html --port 3000",
-    "build": "parcel build index.html && cp _redirects ./dist/"
+    "build": "parcel build index.html && cp _redirects ./dist/",
+    "server": "node server/app.js",
+    "app:watch": "nodemon --watch ./server -e js ./server/app.js"
   },
   "keywords": [],
   "author": "",
@@ -18,15 +21,19 @@
     "eslint-plugin-prettier": "^3.3.1",
     "live-server": "^1.2.2",
     "node": "^16.13.1",
+    "nodemon": "^3.1.11",
     "parcel": "^2.16.1",
     "postcss": "^8.5.6",
     "prettier": "1.19.1"
   },
   "dependencies": {
     "axios": "^1.13.2",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+    "express": "^5.1.0",
     "html-literal": "^1.1.0",
     "lodash": "^4.17.21",
+    "mongoose": "^8.20.1",
     "navigo": "^8.11.1",
     "postcss-cli": "^11.0.1",
     "yargs-parser": ">=13.1.2"
