@@ -3,6 +3,7 @@ import * as state from "./store";
 import Navigo from "navigo";
 import { camelCase } from "lodash";
 import { fetchHomeData, fetchUpcoming, fetchPopular } from "./services/api";
+import axios from "axios";
 
 const router = new Navigo("/");
 
