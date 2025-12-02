@@ -4,8 +4,8 @@
   "description": "This template repository contains several opinionated, 'starter' files and settings to help Savvy Coder students focus more time and energy on learning how to code and/or craft 'business logic' for projects and less time on configurations.",
   "type": "module",
   "scripts": {
-    "start": "parcel serve index.html --port 3000",
-    "dev": "parcel serve index.html --port 3000",
+    "start": "parcel serve index.html",
+    "dev": "parcel serve index.html",
     "build": "parcel build index.html && cp _redirects ./dist/",
     "server": "node server/app.js",
     "app:watch": "nodemon --watch ./server -e js ./server/app.js"
