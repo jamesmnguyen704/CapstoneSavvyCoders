@@ -1,9 +1,11 @@
-import express from "express";
-import Comment from "../models/comments.js";
+// this file provides API endpoints for getting, creating, and deleting comments
 
-const router = express.Router();
+import express from "express"; // imported to create route
+import Comment from "../models/comments.js"; // imported from mongoose
 
-router.get("/", async (req, res) => {
+const router = express.Router(); // creates express router for comments
+// find all my comments relating to the movieId from url to return as JSON, if error than 500
+router.get("/:movieId", async (req, res) => {
   try {
     const comments = await Comment.find({ movieId: req.params.movieId });
     res.json(comments);
@@ -12,7 +14,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST a new comment
+// creates comments using REQUEST, saves comment to DATABASE, returns save comment as JSON, if error than 400
+
 router.post("/", async (req, res) => {
   try {
     const newComment = new Comment(req.body);
@@ -23,7 +26,7 @@ router.post("/", async (req, res) => {
   }
 });
 
-// DELETE a comment by ID
+// DELETE comment from database, return success message as JSON, if error than 400
 router.delete("/:id", async (req, res) => {
   try {
     await Comment.findByIdAndDelete(req.params.id);

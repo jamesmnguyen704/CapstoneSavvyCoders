@@ -1,44 +1,63 @@
-import express from "express";
-import cors from "cors";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
-import commentsRouter from "./routes/comments.js";
+// Import core libraries for my backend API
+import express from "express"; // framework to create servers and routes
+import cors from "cors"; // Allows my frontend Netlify to talk to localhost "Render"
+import dotenv from "dotenv"; // Loads environment variables from .env file. API keys, and Database urls
+import mongoose from "mongoose"; // something that connects and interacts with MongoDb i think
 
+// utilities i found that will locate the .env file path correctly
+import { fileURLToPath } from "url"; // Used to get the current file
+import { dirname, join } from "path"; // Used to build paths
+
+// Import routers for API endpoints
+import commentsRouter from "./routes/comments.js"; // handles API comments requests server/routes/comments.js
+import moviesRouter from "./routes/movies.js"; // Handles API movies requests server/routes/movies.js
+
+// Create the Express instance
+const app = express();
+
+// gets my directory path in .env
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Load environment variables MongoDB keys, API keys
 dotenv.config({ path: join(__dirname, "..", ".env") });
 
+// handles database connections with the success/error events
 mongoose.connect(process.env.MONGODB);
 
+// Get the database connection and set up error/success logging
 const db = mongoose.connection;
-
-db.on("error", console.error.bind(console, "Connection Error:"));
+db.on("error", console.error.bind(console, "Connection Error:")); // shows/logs connection error
 db.once("open", () => {
-  console.log("Successfully opened connection to Mongo!");
+  console.log("Successfully opened connection to Mongo!"); // shows/logs successful errors
 });
 
+// sets server port ( )
 const PORT = process.env.PORT || 3000;
-const app = express();
 
+// Custom logging middleware: logs every request to the server. this is where i debug and api traffic
 const logging = (request, response, next) => {
   console.log(
     `${request.method} ${request.url} ${new Date().toLocaleString("en-us")}`
   );
-  next();
+  next(); // continue to my next middleware/route
 };
-app.use(cors());
-app.use(express.json());
-app.use(logging);
 
-app.use("/comments", commentsRouter);
+// Set up middleware for all requests, will allow json processing so backend can read request
+app.use(cors()); // lets SPA talk to API
+app.use(express.json()); // allows teh server to read JSON sent in the BODY of POST, PUT, DELETE requests."BODY PARSER"
+app.use(logging); // Logs every request
 
+// Mount routers for API endpoints
+app.use("/comments", commentsRouter); // All /comments requests go to server/routes/comments.js
+app.use("/movies", moviesRouter); // All /movies requests go to server/routes/movies.js
+
+// Basic root route. makes sure my API works
 app.get("/", (req, res) => {
-  res.send("🎬 Welcome to the Cinemetrics Movie Data API!");
+  res.send("Welcome to the Cinemetrics Movie Data API!");
 });
 
+// Health check route (used for monitoring, testing, or deployment checks)
 app.get("/status", (req, res) => {
   res.json({
     service: "Cinemetrics API",
@@ -47,35 +66,7 @@ app.get("/status", (req, res) => {
   });
 });
 
-app.get("/movies", (req, res) => {
-  res.json({
-    message: "Cinemetrics Movie Endpoint",
-    upcoming: "Use /movies/upcoming for future releases",
-    trending: "Use /movies/trending for trending movies"
-  });
-});
-
-app.get("/movies/trending", (req, res) => {
-  res.json({
-    message: "Top Trending Movies (Demo Data)",
-    results: [
-      { id: 1, title: "Deadpool & Wolverine" },
-      { id: 2, title: "Dune: Part Two" },
-      { id: 3, title: "Inside Out 2" }
-    ]
-  });
-});
-
-app.get("/movies/upcoming", (req, res) => {
-  res.json({
-    message: "Upcoming Movie Releases (Demo Data)",
-    results: [
-      { id: 101, title: "Avatar 3" },
-      { id: 102, title: "Spider-Man: Beyond the Spider-Verse" }
-    ]
-  });
-});
-
+// start the server and listen
 const server = app.listen(PORT, () => {
-  console.log(`🎥 Cinemetrics API running on port ${PORT}`);
+  console.log(`Cinemetrics API running on port ${PORT}`);
 });

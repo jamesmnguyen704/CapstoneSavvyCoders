@@ -1,3 +1,7 @@
+// My SPA-side TMDB helper.
+
+
+
 import axios from "axios";
 const API_KEY = process.env.TMDB_API_KEY;
 const BASE_URL = "https://api.themoviedb.org/3";
@@ -13,7 +17,7 @@ const buildUrl = (endpoint, params = {}) => {
 
 export const fetchTrending = async () => {
   try {
-    const response = await axios.get(buildUrl("/trending/movie/day"));
+    const response = await axios.get("/movies/trending");
     return response.data.results;
   } catch (error) {
     console.error("Error fetching trending movies:", error);
