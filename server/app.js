@@ -8,12 +8,7 @@ import mongoose from "mongoose"; // something that connects and interacts with M
 import { fileURLToPath } from "url"; // Used to get the current file
 import { dirname, join } from "path"; // Used to build paths
 
-// Import routers for API endpoints
-import commentsRouter from "./routes/comments.js"; // handles API comments requests server/routes/comments.js
-import moviesRouter from "./routes/movies.js"; // Handles API movies requests server/routes/movies.js
-
-// Create the Express instance
-const app = express();
+// loading env. before importing any router files
 
 // gets my directory path in .env
 const __filename = fileURLToPath(import.meta.url);
@@ -21,6 +16,18 @@ const __dirname = dirname(__filename);
 
 // Load environment variables MongoDB keys, API keys
 dotenv.config({ path: join(__dirname, "..", ".env") });
+
+// Debug: confirm env loaded
+console.log("TMDB KEY FROM ENV TEST:", process.env.TMDB_API_KEY);
+
+// -------------------------------------------------------
+// NOW it is safe to import routers for API endpoints
+// -------------------------------------------------------
+const commentsRouter = (await import("./routes/comments.js")).default; // handles API comments requests server/routes/comments.js
+const moviesRouter = (await import("./routes/movies.js")).default; // Handles API movies requests server/routes/movies.js
+
+// Create the Express instance
+const app = express();
 
 // handles database connections with the success/error events
 mongoose.connect(process.env.MONGODB);
@@ -32,7 +39,7 @@ db.once("open", () => {
   console.log("Successfully opened connection to Mongo!"); // shows/logs successful errors
 });
 
-// sets server port ( )
+// port from env or "render" or falls back to 3000
 const PORT = process.env.PORT || 3000;
 
 // Custom logging middleware: logs every request to the server. this is where i debug and api traffic
@@ -45,7 +52,7 @@ const logging = (request, response, next) => {
 
 // Set up middleware for all requests, will allow json processing so backend can read request
 app.use(cors()); // lets SPA talk to API
-app.use(express.json()); // allows teh server to read JSON sent in the BODY of POST, PUT, DELETE requests."BODY PARSER"
+app.use(express.json()); // allows the server to read JSON sent in the BODY of POST, PUT, DELETE requests."BODY PARSER"
 app.use(logging); // Logs every request
 
 // Mount routers for API endpoints
