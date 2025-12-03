@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "This template repository contains several opinionated, 'starter' files and settings to help Savvy Coder students focus more time and energy on learning how to code and/or craft 'business logic' for projects and less time on configurations.",
   "type": "module",
+  "proxy": "http://localhost:3000",
   "scripts": {
     "start": "parcel serve index.html",
     "dev": "parcel serve index.html",
@@ -30,7 +31,7 @@
     "axios": "^1.13.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.1.0",
+    "express": "^4.22.1",
     "html-literal": "^1.1.0",
     "lodash": "^4.17.21",
     "mongoose": "^8.20.1",
