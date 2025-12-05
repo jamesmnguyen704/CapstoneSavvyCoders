@@ -1,3 +1,4 @@
+// my movies.js routes to tmdb, for trending, now playing, popular and videos for the front end
 import express from "express";
 import axios from "axios";
 
@@ -6,7 +7,7 @@ console.log("DEBUG movies.js — ENV TMDB KEY =", process.env.TMDB_API_KEY);
 const router = express.Router();
 const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
-// get trending movies
+// trending movies for homepage
 router.get("/trending", async (req, res) => {
   try {
     const response = await axios.get(
@@ -23,7 +24,7 @@ router.get("/trending", async (req, res) => {
   }
 });
 
-// now playing in the us
+// now playing in US theaters
 router.get("/now_playing", async (req, res) => {
   try {
     const response = await axios.get(
@@ -40,7 +41,7 @@ router.get("/now_playing", async (req, res) => {
   }
 });
 
-// popular in the us
+// popular movies for Movies view
 router.get("/popular", async (req, res) => {
   try {
     const response = await axios.get(
@@ -54,6 +55,33 @@ router.get("/popular", async (req, res) => {
   } catch (error) {
     console.error("TMDB Popular API Error:", error);
     res.status(500).json({ message: "Failed to load popular movies" });
+  }
+});
+
+// -------------------------
+// GET TRAILERS FOR A MOVIE
+// -------------------------
+router.get("/:id/videos", async (req, res) => {
+  const movieId = req.params.id;
+
+  try {
+    // BEST ENDPOINT — returns way more consistent trailer results
+    const response = await axios.get(
+      `https://api.themoviedb.org/3/movie/${movieId}?api_key=${TMDB_API_KEY}&append_to_response=videos&language=en-US`
+    );
+
+    const videos = response.data.videos?.results || [];
+
+    res.json({
+      message: "Movie videos (trailers, teasers)",
+      results: videos
+    });
+  } catch (error) {
+    console.error("TMDB Videos API Error:", error.message);
+    res.status(500).json({
+      message: "Failed to load movie videos",
+      results: []
+    });
   }
 });
 

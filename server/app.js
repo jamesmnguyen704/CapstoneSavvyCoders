@@ -14,15 +14,13 @@ import { dirname, join } from "path"; // Used to build paths
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Load environment variables MongoDB keys, API keys
+// load my mongodb enviroment
 dotenv.config({ path: join(__dirname, "..", ".env") });
 
-// Debug: confirm env loaded
+// check to see if my env is loaded
 console.log("TMDB KEY FROM ENV TEST:", process.env.TMDB_API_KEY);
 
-// -------------------------------------------------------
-// NOW it is safe to import routers for API endpoints
-// -------------------------------------------------------
+// now i can import my API endpoints
 const commentsRouter = (await import("./routes/comments.js")).default; // handles API comments requests server/routes/comments.js
 const moviesRouter = (await import("./routes/movies.js")).default; // Handles API movies requests server/routes/movies.js
 

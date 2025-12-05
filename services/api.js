@@ -1,75 +1,89 @@
-// My SPA-side TMDB helper.
-
 import axios from "axios";
-const API_KEY = process.env.TMDB_API_KEY;
-const BASE_URL = "https://api.themoviedb.org/3";
 
-const buildUrl = (endpoint, params = {}) => {
-  const url = new URL(`${BASE_URL}${endpoint}`);
-  url.searchParams.append("api_key", API_KEY);
-  Object.entries(params).forEach(([key, value]) => {
-    url.searchParams.append(key, value);
-  });
-  return url.toString();
-};
+const API_BASE = "http://localhost:3000"; // backend
 
-export const fetchTrending = async () => {
-  try {
-    const response = await axios.get("/movies/trending");
-    return response.data.results;
-  } catch (error) {
-    console.error("Error fetching trending movies:", error);
-    return [];
-  }
-};
-
-export const fetchNowPlaying = async () => {
-  try {
-    const response = await axios.get(
-      buildUrl("/movie/now_playing", { region: "US" })
-    );
-    return response.data.results;
-  } catch (error) {
-    console.error("Error fetching now playing movies:", error);
-    return [];
-  }
-};
-
-export const fetchPopular = async () => {
-  try {
-    const response = await axios.get(
-      buildUrl("/movie/popular", { region: "US" })
-    );
-    return response.data.results;
-  } catch (error) {
-    console.error("Error fetching popular movies:", error);
-    return [];
-  }
-};
-
-export const fetchHomeData = async () => {
-  console.log("Fetching TMDB Home Data");
+export async function fetchHomeData() {
   try {
     const [trending, nowPlaying, popular] = await Promise.all([
-      fetchTrending(),
-      fetchNowPlaying(),
-      fetchPopular()
+      axios.get(`${API_BASE}/movies/trending`),
+      axios.get(`${API_BASE}/movies/now_playing`),
+      axios.get(`${API_BASE}/movies/popular`)
     ]);
-    return { trending, nowPlaying, popular };
-  } catch (error) {
-    console.error("TMDB Home API Error:", error);
+
+    return {
+      trending: trending.data.results,
+      nowPlaying: nowPlaying.data.results,
+      popular: popular.data.results
+    };
+  } catch (err) {
+    console.error("HOME DATA ERR:", err);
     return { trending: [], nowPlaying: [], popular: [] };
   }
-};
+}
 
-export const fetchUpcoming = async () => {
+// popular
+export async function fetchPopular() {
+  const response = await axios.get(`${API_BASE}/movies/popular`);
+  return response.data.results;
+}
+
+// upcoming
+export async function fetchUpcoming() {
+  const response = await axios.get(`${API_BASE}/movies/now_playing`);
+  return response.data.results;
+}
+
+// now playing
+export async function fetchNowPlaying() {
+  const response = await axios.get(`${API_BASE}/movies/now_playing`);
+  return response.data.results;
+}
+
+// box office attempt. still not working
+export async function fetchBoxOffice() {
   try {
-    const response = await axios.get(
-      buildUrl("/movie/upcoming", { region: "US", page: 1 })
-    );
-    return response.data.results;
-  } catch (error) {
-    console.error("Error fetching upcoming movies:", error);
+    const res = await axios.get(`${API_BASE}/boxoffice`);
+    return res.data.results;
+  } catch (err) {
+    console.error("BOX OFFICE ERROR:", err);
     return [];
   }
-};
+}
+
+// trailer videos
+export async function fetchMovieVideos(movieId) {
+  try {
+    const response = await axios.get(`${API_BASE}/movies/${movieId}/videos`);
+    return response.data.results;
+  } catch (err) {
+    console.error("VIDEO API ERROR:", err);
+    return [];
+  }
+}
+
+// work in progress for comments
+export async function fetchComments(movieId) {
+  try {
+    const response = await axios.get(`${API_BASE}/comments/${movieId}`);
+    return response.data.comments;
+  } catch (err) {
+    console.error("FETCH COMMENTS ERROR:", err);
+    return [];
+  }
+}
+
+export async function postComment(commentData) {
+  try {
+    await axios.post(`${API_BASE}/comments`, commentData);
+  } catch (err) {
+    console.error("POST COMMENT ERROR:", err);
+  }
+}
+
+export async function deleteComment(id) {
+  try {
+    await axios.delete(`${API_BASE}/comments/${id}`);
+  } catch (err) {
+    console.error("DELETE COMMENT ERROR:", err);
+  }
+}
