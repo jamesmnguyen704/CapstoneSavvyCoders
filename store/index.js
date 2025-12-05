@@ -5,3 +5,4 @@ export { default as BoxOffice } from "./boxoffice";
 export { default as AboutMe } from "./aboutMe";
 export { default as ViewNotFound } from "./viewNotFound";
 export { default as nav } from "./nav";
+export { default as Comments } from "./Comments";
