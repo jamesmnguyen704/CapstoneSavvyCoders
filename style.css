@@ -1,13 +1,4 @@
-/* ============================================
-   CINEMETRICS - MY MOVIE WEBSITE CSS
-   Made by: James Nguyen for my Savvy Coders Capstone Project
-   What this does: Styles for my single-page movie app
-                   Dark theme with gold vibes, horizontal scrolling
-   ============================================ */
-
-/* ============================================
-   RESET AND BASE STYLES
-   ============================================ */
+/* RESET & BASE */
 * {
   margin: 0;
   padding: 0;
@@ -22,9 +13,7 @@ body {
   min-height: 100vh;
 }
 
-/* ============================================
-   TYPOGRAPHY
-   ============================================ */
+/* TYPOGRAPHY */
 h1 {
   font-size: 2.5rem;
   font-weight: 700;
@@ -51,18 +40,14 @@ p {
   color: #e0e0e0;
 }
 
-/* ============================================
-   LAYOUT
-   ============================================ */
+/* LAYOUT */
 #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* ============================================
-   HEADER AND NAVIGATION
-   ============================================ */
+/* HEADER & NAV */
 header {
   background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(10px);
@@ -117,9 +102,7 @@ header {
   color: #ffd700;
 }
 
-/* ============================================
-   MAIN CONTENT
-   ============================================ */
+/* MAIN */
 main {
   flex: 1;
   max-width: 1200px;
@@ -127,9 +110,7 @@ main {
   padding: 2rem;
 }
 
-/* ============================================
-   SECTIONS
-   ============================================ */
+/* SECTIONS */
 section {
   margin-bottom: 2rem;
   padding: 1rem;
@@ -139,7 +120,7 @@ section {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* Home Page */
+/* Home */
 .home-hero {
   text-align: center;
   padding: 4rem 2rem;
@@ -159,9 +140,7 @@ section {
   margin: 0 auto;
 }
 
-/* ============================================
-   BOX OFFICE
-   ============================================ */
+/* BOX OFFICE */
 .boxoffice-container {
   max-width: 1200px;
   margin: 0 auto;
@@ -215,9 +194,7 @@ section {
   margin: 0.5rem 0;
 }
 
-/* ============================================
-   RELEASE CARDS
-   ============================================ */
+/* RELEASE CARDS */
 .releases-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -246,9 +223,7 @@ section {
   margin-bottom: 1rem;
 }
 
-/* ============================================
-   MOVIES PAGE
-   ============================================ */
+/* MOVIES PAGE */
 .movies-containers {
   max-width: 1200px;
   margin: 0 auto;
@@ -307,9 +282,7 @@ section {
   color: #ffffff;
 }
 
-/* ============================================
-   RELEASE CALENDAR
-   ============================================ */
+/* RELEASE CALENDAR */
 .releases-calendar {
   margin-top: 3rem;
 }
@@ -342,9 +315,7 @@ section {
   color: #e0e0e0;
 }
 
-/* ============================================
-   FOOTER
-   ============================================ */
+/* FOOTER */
 footer {
   background: rgba(0, 0, 0, 0.8);
   text-align: center;
@@ -353,9 +324,7 @@ footer {
   border-top: 1px solid rgba(255, 215, 0, 0.3);
 }
 
-/* ============================================
-   RESPONSIVE DESIGN
-   ============================================ */
+/* RESPONSIVE */
 
 /* Tablets */
 @media (max-width: 768px) {
@@ -414,10 +383,7 @@ footer {
   }
 }
 
-/* ============================================
-   HORIZONTAL MOVIE SCROLLER
-   Home page trending/now playing/popular sections
-   ============================================ */
+/* HORIZONTAL MOVIE SCROLLER */
 .movie-grid {
   display: flex;
   gap: 1.5rem;
@@ -426,7 +392,7 @@ footer {
   scroll-behavior: smooth; /* Smooth horizontal scrolling */
 }
 
-/* Custom scrollbar styling (Chrome/Edge only) */
+/* Custom scrollbar */
 .movie-grid::-webkit-scrollbar {
   height: 8px;
 }
@@ -476,11 +442,7 @@ footer {
   line-height: 1.3;
 }
 
-/* ============================================
-   MOBILE OPTIMIZATION - Modern Phones
-   iPhone 14-16, Samsung S24, Pixel 9
-   Consolidated from duplicate blocks - fixed layout issues on mobile
-   ============================================ */
+/* MOBILE OPTIMIZATION */
 @media (max-width: 430px) {
 
   /* Global adjustments */
@@ -626,4 +588,127 @@ footer {
     padding: 0.6rem;
     font-size: 0.85rem;
   }
+}
+.movies-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.movie-card {
+  background: #1b1b2f;
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.movie-card:hover {
+  transform: scale(1.05);
+}
+
+.movie-poster {
+  width: 100%;
+  border-radius: 10px;
+}
+
+.movie-title {
+  margin: 0.5rem 0;
+  font-weight: bold;
+}
+
+.movie-rating {
+  color: #ffd700;
+  margin-bottom: 1rem;
+}
+
+.comment-btn {
+  padding: 0.5rem 1rem;
+  background: #ffd700;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.trailer-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.trailer-modal.hidden {
+  display: none;
+}
+
+.trailer-content {
+  position: relative;
+  background: #000;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.close-modal {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  font-size: 38px;
+  color: white;
+  cursor: pointer;
+}
+.trailer-btn {
+  background: #ffd700;
+  color: black;
+  padding: 8px 15px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+.trailer-btn:hover {
+  background: #ffea4d;
+}
+/* Modern trailer button */
+.trailer-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  background: linear-gradient(135deg, #ffd700, #ffb400);
+  color: #000;
+  font-weight: 600;
+
+  padding: 8px 16px;
+  border-radius: 25px;
+  border: none;
+
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.25);
+
+  font-size: 0.9rem;
+  letter-spacing: 0.4px;
+}
+
+.trailer-btn i {
+  font-size: 0.85rem;
+}
+
+/* Hover animation */
+.trailer-btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  background: linear-gradient(135deg, #ffe066, #ffbf00);
+  box-shadow: 0 6px 18px rgba(255, 215, 0, 0.4);
+}
+
+/* When button is inside card, align it nicely */
+.movie-card .trailer-btn {
+  margin-top: 10px;
 }

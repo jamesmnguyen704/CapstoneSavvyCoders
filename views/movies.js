@@ -1,46 +1,46 @@
 import html from "html-literal";
 
-export default st => html`
-  <div class="movies-container">
-    <section class="movies-header">
-      <h1>${st.header || "Movies Page"}</h1>
-      <p>Explore our collection of movies by genre, year, and more.</p>
-    </section>
+export default function Movies(st) {
+  const movies = st.movies || [];
 
-    <!-- 🔍 Search and filter controls -->
-    <section class="search-section">
-      <div class="search-bar">
-        <input
-          type="text"
-          placeholder="Search movies, actors, or directors..."
-          class="movie-search"
-        />
-        <button class="search-btn"><i class="fa-solid fa-search"></i></button>
-      </div>
+  return html`
+    <div class="movies-container">
+      <section class="movies-header">
+        <h1>${st.header || "Movies"}</h1>
+        <p>Browse the most popular movies available right now.</p>
+      </section>
 
-      <div class="filter-options">
-        <select class="genre-filter">
-          <option value="">All Genres</option>
-          <option value="action">Action</option>
-          <option value="drama">Drama</option>
-          <option value="comedy">Comedy</option>
-          <option value="scifi">Sci-Fi</option>
-          <option value="horror">Horror</option>
-          <option value="romance">Romance</option>
-        </select>
+      <!-- my movie cards -->
+      <section class="movies-grid">
+        ${
+          movies.length > 0
+            ? movies
+                .map(movie => {
+                  const poster = movie.poster_path
+                    ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
+                    : "https://via.placeholder.com/300x450?text=No+Image";
 
-        <select class="year-filter">
-          <option value="">All Years</option>
-          <option value="2025">2025</option>
-          <option value="2024">2024</option>
-          <option value="2023">2023</option>
-        </select>
-      </div>
-    </section>
+                  return html`
+                    <div class="movie-card">
+                      <img src="${poster}" alt="${movie.title}" class="movie-poster"/>
 
-    <!-- 🎞️ My Movie cards -->
-    <section class="categories-grid">
-      <!-- Fot API later -->
-    </section>
-  </div>
-`;
+                      <h3 class="movie-title">${movie.title}</h3>
+
+                      <p class="movie-rating">
+                        ⭐ ${movie.vote_average || "N/A"}
+                      </p>
+
+                      <button class="comment-btn" data-movieid="${movie.id}">
+                        View Comments
+                      </button>
+                    </div>
+                  `;
+                })
+                .join("")
+            : html`<p class="no-movies">No movies found.</p>`
+        }
+      </section>
+
+    </div>
+  `;
+}
