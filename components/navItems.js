@@ -10,14 +10,16 @@ export default function navItem(item) {
   `;
 }
 
+// ⭐ UPDATED NAV ITEMS (Replaced Box Office → Marvel)
 export const navItemsData = [
   { url: "/", text: "Home" },
   { url: "/releases", text: "Upcoming Releases" },
-  { url: "/boxoffice", text: "Box Office" },
+  { url: "/marvel", text: "Marvel" }, // ✅ FIXED
   { url: "/movies", text: "Movies" },
   { url: "/about", text: "About" }
 ];
 
+// No changes needed here
 export const logo = {
   text: "Cinemetrics",
   href: "/"

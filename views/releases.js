@@ -1,7 +1,11 @@
+// version 2 changed from popular list from TMDB because i dont like those movies
+// did a curated list to pull live data from backend fetchupcomingcurated()
+
 import html from "html-literal";
 
-const generateReleaseCards = st =>
-  st.upcoming
+const generateReleaseCards = movies =>
+  movies
+    ?.sort((a, b) => new Date(a.customDate) - new Date(b.customDate))
     .map(
       movie => `
         <div class="release-card">
@@ -12,7 +16,7 @@ const generateReleaseCards = st =>
             />
             <div class="release-overlay">
               <span class="release-date">
-                ${new Date(movie.release_date).toLocaleDateString()}
+                ${new Date(movie.customDate).toLocaleDateString()}
               </span>
             </div>
           </div>
@@ -25,7 +29,7 @@ const generateReleaseCards = st =>
             </p>
 
             <p class="release-genre">
-              ⭐ Rating: ${movie.vote_average || "TBD"}
+              ⭐ Rating: ${movie.vote_average?.toFixed(1) || "TBD"}
             </p>
           </div>
         </div>
@@ -36,14 +40,18 @@ const generateReleaseCards = st =>
 export default st => html`
   <div class="releases-container">
     <section class="releases-header">
-      <h1>${st.header || "Upcoming Movie Releases"}</h1>
+      <h1>My most anticipated movies</h1>
       <p>Discover the biggest movies hitting theaters soon.</p>
     </section>
 
+    <h2 class="year-title">⭐ 2026 Releases</h2>
     <section class="releases-grid">
-      ${st.upcoming && st.upcoming.length
-        ? generateReleaseCards(st)
-        : "<p>No upcoming movies found.</p>"}
+      ${generateReleaseCards(st.movies2026)}
+    </section>
+
+    <h2 class="year-title">⭐ 2027 Releases</h2>
+    <section class="releases-grid">
+      ${generateReleaseCards(st.movies2027)}
     </section>
   </div>
 `;
