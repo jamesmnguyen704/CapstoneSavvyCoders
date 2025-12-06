@@ -87,3 +87,24 @@ export async function deleteComment(id) {
     console.error("DELETE COMMENT ERROR:", err);
   }
 }
+
+// curated upcoming movies
+export async function fetchUpcomingCurated() {
+  try {
+    const response = await axios.get(`${API_BASE}/movies/upcoming-curated`);
+    return response.data; // returns { "2026": [...], "2027": [...] }
+  } catch (err) {
+    console.error("CURATED UPCOMING ERROR:", err);
+    return { "2026": [], "2027": [] };
+  }
+}
+
+export async function fetchMarvelMovies() {
+  try {
+    const response = await axios.get(`${API_BASE}/movies/marvel`);
+    return response.data.movies;
+  } catch (err) {
+    console.error("MARVEL API ERROR:", err);
+    return [];
+  }
+}

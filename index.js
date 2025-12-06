@@ -2,12 +2,13 @@ import { Header, Nav, Main, Footer } from "./components";
 import * as state from "./store";
 import Navigo from "navigo";
 import { camelCase } from "lodash";
+
 import {
   fetchHomeData,
   fetchPopular,
-  fetchUpcoming,
+  fetchUpcomingCurated,
   fetchNowPlaying,
-  fetchBoxOffice,
+  fetchMarvelMovies,
   fetchMovieVideos,
   fetchComments,
   postComment,
@@ -16,7 +17,7 @@ import {
 
 const router = new Navigo("/");
 
-// trailer button
+// ===================== RENDER =====================
 async function render(st = state.Home) {
   console.log("Rendering with state:", st);
 
@@ -29,20 +30,16 @@ async function render(st = state.Home) {
   `;
 
   router.updatePageLinks();
-
   attachTrailerButtons();
 }
 
-// trailer button
+// ===================== TRAILER HANDLING =====================
 function attachTrailerButtons() {
   document.querySelectorAll(".trailer-btn")?.forEach(btn => {
     btn.addEventListener("click", async event => {
       const movieId = event.target.dataset.id;
-
-      // Fetch trailers from backend
       const videos = await fetchMovieVideos(movieId);
 
-      // youtube trailer
       const trailer = videos.find(
         v => v.site === "YouTube" && v.type === "Trailer"
       );
@@ -52,7 +49,6 @@ function attachTrailerButtons() {
         return;
       }
 
-      // Open modal + load YouTube video
       const modal = document.querySelector("#trailerModal");
       const frame = document.querySelector("#trailerFrame");
 
@@ -65,11 +61,8 @@ function attachTrailerButtons() {
     closeTrailerModal();
   });
 
-  // closing it
   document.querySelector("#trailerModal")?.addEventListener("click", e => {
-    if (e.target.id === "trailerModal") {
-      closeTrailerModal();
-    }
+    if (e.target.id === "trailerModal") closeTrailerModal();
   });
 }
 
@@ -81,69 +74,78 @@ function closeTrailerModal() {
   modal.classList.add("hidden");
 }
 
-// my hooks before rendering
+
+// ===================== ROUTER HOOKS =====================
 router.hooks({
   before: async (done, match) => {
     const path = match?.url || "/";
-    let view = path === "/" || path === "" ? "home" : camelCase(path.replace("/", ""));
+    let view =
+      path === "/" || path === "" ? "home" : camelCase(path.replace("/", ""));
 
     console.log("Router resolved view:", view);
 
     switch (view) {
-      case "home":
-        const homeData = await fetchHomeData();
-        state.Home.trending = homeData.trending;
-        state.Home.nowPlaying = homeData.nowPlaying;
-        state.Home.popular = homeData.popular;
+      case "home": {
+        const home = await fetchHomeData();
+        state.Home.trending = home.trending;
+        state.Home.nowPlaying = home.nowPlaying;
+        state.Home.popular = home.popular;
         break;
+      }
 
       case "movies":
         try {
           const popular = await fetchPopular();
           state.Movies.movies = popular;
-
-          const top = await fetchBoxOffice();
-          state.Movies.topGrossing = top || [];
         } catch (err) {
-          console.error("Error loading movies:", err);
           state.Movies.movies = [];
-          state.Movies.topGrossing = [];
+        }
+        break;
+
+      // ================= MARVEL PAGE =================
+      case "marvel":
+        try {
+          console.log("Fetching Marvel movies...");
+          const data = await fetchMarvelMovies();
+          state.Marvel.marvel = Array.isArray(data) ? data : [];
+        } catch (err) {
+          console.error("Error loading Marvel:", err);
+          state.Marvel.marvel = [];
         }
         break;
 
       case "releases":
         try {
-          const upcoming = await fetchUpcoming();
-          state.Releases.upcoming = upcoming;
+          const curated = await fetchUpcomingCurated();
+          state.Releases.movies2026 = curated["2026"];
+          state.Releases.movies2027 = curated["2027"];
         } catch (err) {
-          console.error("Error loading releases:", err);
-          state.Releases.upcoming = [];
+          state.Releases.movies2026 = [];
+          state.Releases.movies2027 = [];
         }
         break;
 
-      case "comments":
+      case "comments": {
         const movieId = match.data.movieId;
         state.Comments.movieId = movieId;
         state.Comments.comments = await fetchComments(movieId);
         break;
+      }
     }
 
     done();
   }
 });
 
-// my routes
+// ===================== ROUTES =====================
 router
   .on({
     "/": () => render(state.Home),
     "/movies": () => render(state.Movies),
     "/releases": () => render(state.Releases),
-    "/boxoffice": () => render(state.BoxOffice),
+    "/marvel": () => render(state.Marvel),     // FINAL ROUTE
     "/about": () => render(state.AboutMe),
     "/comments/:movieId": () => render(state.Comments)
   })
-  .notFound(() => {
-    console.warn("⚠️ Route not found. Rendering ViewNotFound.");
-    render(state.ViewNotFound);
-  })
+  .notFound(() => render(state.ViewNotFound))
   .resolve();

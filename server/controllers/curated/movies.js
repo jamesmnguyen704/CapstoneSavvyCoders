@@ -2,7 +2,7 @@
 import express from "express";
 import axios from "axios";
 
-// import curated data
+// ✅ import curated data
 import { curated2026, curated2027 } from "../controllers/curated/upcoming.js";
 
 console.log("DEBUG movies.js — ENV TMDB KEY =", process.env.TMDB_API_KEY);
@@ -10,13 +10,10 @@ console.log("DEBUG movies.js — ENV TMDB KEY =", process.env.TMDB_API_KEY);
 const router = express.Router();
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 
+// -----------------------------
+// LIVE TMDB ROUTES (trending, now playing, popular, videos)
+// -----------------------------
 
-// ⭐ my marvel movies yayyyyy — MUST BE AT TOP ⭐
-import getMCUMovies from "../controllers/curated/marvel.js";
-router.get("/marvel", getMCUMovies);
-
-
-// trending, now playing, popular, videos
 router.get("/trending", async (req, res) => {
   try {
     const response = await axios.get(
@@ -50,7 +47,7 @@ router.get("/popular", async (req, res) => {
   }
 });
 
-// for trailers
+// VIDEO ROUTE
 router.get("/:id/videos", async (req, res) => {
   const movieId = req.params.id;
   try {
@@ -64,7 +61,10 @@ router.get("/:id/videos", async (req, res) => {
   }
 });
 
-// my favorite upcoming movies
+// -----------------------------
+// ⭐ CURATED UPCOMING RELEASES
+// -----------------------------
+
 router.get("/upcoming-curated", async (req, res) => {
   console.log("Curated route HIT!");
 
@@ -74,27 +74,18 @@ router.get("/upcoming-curated", async (req, res) => {
     };
 
     const fetchMovie = async (m) => {
-      try {
-        const response = await axios.get(
-          `https://api.themoviedb.org/3/movie/${m.id}`,
-          { headers }
-        );
-        return { ...response.data, customDate: m.date };
-      } catch (err) {
-        if (err.response && err.response.status === 404) {
-          console.warn(`Movie ID ${m.id} not found on TMDB, skipping.`);
-          return null;
-        }
-        console.error("CURATED ERROR:", err.response?.data || err.message);
-        return null;
-      }
+      const response = await axios.get(
+        `https://api.themoviedb.org/3/movie/${m.id}`,
+        { headers }
+      );
+      return { ...response.data, customDate: m.date };
     };
 
     console.log("Fetching curated 2026 movies…");
-    const movies2026 = (await Promise.all(curated2026.map(fetchMovie))).filter(Boolean);
+    const movies2026 = await Promise.all(curated2026.map(fetchMovie));
 
     console.log("Fetching curated 2027 movies…");
-    const movies2027 = (await Promise.all(curated2027.map(fetchMovie))).filter(Boolean);
+    const movies2027 = await Promise.all(curated2027.map(fetchMovie));
 
     res.json({
       "2026": movies2026,
@@ -103,21 +94,10 @@ router.get("/upcoming-curated", async (req, res) => {
 
     console.log("SUCCESS! Sending curated JSON.");
   } catch (err) {
-    console.error("CURATED ERROR:", err.response?.data || err.message);
+    console.error("CURATED ERROR:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// fallback for getting single movie
-router.get("/:id", async (req, res) => {
-  try {
-    const response = await axios.get(
-      `https://api.themoviedb.org/3/movie/${req.params.id}?api_key=${process.env.TMDB_API_KEY}&language=en-US`
-    );
-    res.json(response.data);
-  } catch {
-    res.status(404).json({ message: "Movie not found" });
-  }
-});
-
+// -----------------------------
 export default router;
