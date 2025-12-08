@@ -15,14 +15,9 @@ import {
   fetchComments
 } from "./services/api";
 
-// API base URL — prefer env var when available (works with Netlify/Render)
-const API_BASE = (() => {
-  try {
-    return import.meta?.env?.VITE_BACKEND_URL || "http://localhost:3000";
-  } catch (e) {
-    return "http://localhost:3000";
-  }
-})();
+// API base URL — prefer build-time env var when available (works with Netlify/Render)
+// Parcel replaces `process.env.VITE_BACKEND_URL` at build time.
+const API_BASE = process.env.VITE_BACKEND_URL || (typeof window !== "undefined" && window.__API_BASE__) || "http://localhost:3000";
 
 const router = new Navigo("/");
 

@@ -3,7 +3,10 @@
 // Notes: Centralizes API base URL and error handling so views can call simple helpers.
 import axios from "axios";
 
-const API_BASE = "http://localhost:3000"; // backend
+// Determine API base URL from build-time env `VITE_BACKEND_URL` (set on Netlify)
+// Parcel inlines `process.env.*` during build, so use that to avoid parser issues.
+// Fallback to localhost for local development.
+const API_BASE = process.env.VITE_BACKEND_URL || "http://localhost:3000";
 
 export async function fetchHomeData() {
   try {
