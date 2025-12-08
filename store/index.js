@@ -11,8 +11,9 @@ import nav from "./nav";
 import Comments from "./Comments";
 
 // NEW AUTH STORES
-import Login from "./Login";
-import Signup from "./Signup";
+// Use lowercase filenames to avoid case-sensitive resolution errors on CI/Netlify
+import Login from "./login";
+import Signup from "./signup";
 
 export {
   Home,
