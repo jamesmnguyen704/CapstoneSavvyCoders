@@ -1,3 +1,6 @@
+// File: views/movies.js
+// Purpose: Movies view — displays a grid of movies with poster, title, ratings, and trailer/comment buttons.
+// Notes: Expects `st.movies` to be an array of movie objects fetched from the API.
 import html from "html-literal";
 
 export default function Movies(st) {
@@ -32,6 +35,10 @@ export default function Movies(st) {
 
                       <button class="comment-btn" data-movieid="${movie.id}">
                         View Comments
+                      </button>
+
+                      <button class="trailer-btn" data-id="${movie.id}">
+                        ▶ Trailer
                       </button>
                     </div>
                   `;

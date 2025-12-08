@@ -1,3 +1,6 @@
+// File: components/navItems.js
+// Purpose: Data and small helpers for building nav links and the mobile menu.
+// Notes: Keeps nav item data centralized so the nav component stays simple.
 import html from "html-literal";
 
 export default function navItem(item) {

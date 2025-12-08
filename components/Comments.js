@@ -1,4 +1,7 @@
 export default function Comments(state) {
+  // File: components/Comments.js
+  // Purpose: Small reusable component to render a list of comments for a movie.
+  // Notes: Expects `comments` array on the state and a `movieId` when used.
   return `
     <section>
       <h2>Comments</h2>

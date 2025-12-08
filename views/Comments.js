@@ -1,3 +1,6 @@
+// File: views/Comments.js
+// Purpose: Page wrapper for the Comments component; loads comments for a movie.
+// Notes: Expects `state.movieId` and `state.comments` to be populated by router hooks.
 import html from "html-literal";
 import CommentsComponent from "../components/Comments";
 

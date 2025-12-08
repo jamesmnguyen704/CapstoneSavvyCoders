@@ -1,3 +1,6 @@
+// File: services/api.js
+// Purpose: Thin client wrappers around backend endpoints used by the frontend.
+// Notes: Centralizes API base URL and error handling so views can call simple helpers.
 import axios from "axios";
 
 const API_BASE = "http://localhost:3000"; // backend

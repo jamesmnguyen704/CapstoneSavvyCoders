@@ -1,3 +1,6 @@
+// File: index.js
+// Purpose: Client entry point — initializes router, fetches data, and renders views.
+// Notes: Attaches auth handlers, trailer modal logic, and router hooks to populate state.
 import { Header, Nav, Main, Footer } from "./components";
 import * as state from "./store";
 import Navigo from "navigo";
@@ -7,12 +10,9 @@ import {
   fetchHomeData,
   fetchPopular,
   fetchUpcomingCurated,
-  fetchNowPlaying,
   fetchMarvelMovies,
   fetchMovieVideos,
-  fetchComments,
-  postComment,
-  deleteComment
+  fetchComments
 } from "./services/api";
 
 const router = new Navigo("/");
@@ -74,6 +74,105 @@ function closeTrailerModal() {
   modal.classList.add("hidden");
 }
 
+// ===================== AUTH FORM HANDLERS =====================
+
+// SIGNUP
+function attachSignupHandler() {
+  const form = document.querySelector("#signupForm");
+  if (!form) return;
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const username = document.querySelector("#username").value.trim();
+    const email = document.querySelector("#email").value.trim();
+    const password = document.querySelector("#password").value.trim();
+
+    try {
+      const res = await fetch("http://localhost:3000/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Signup failed");
+        return;
+      }
+
+      alert("Signup successful! Please log in.");
+      router.navigate("/login");
+    } catch (err) {
+      console.error("SIGNUP ERROR:", err);
+      alert("Signup error — check console.");
+    }
+  });
+}
+
+// LOGIN
+function attachLoginHandler() {
+  const form = document.querySelector("#loginForm");
+  if (!form) return;
+
+  form.addEventListener("submit", async event => {
+    event.preventDefault();
+
+    const loginId = document.querySelector("#loginId").value.trim();
+    const password = document.querySelector("#password").value.trim();
+
+    try {
+      const res = await fetch("http://localhost:3000/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loginId, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.message || "Login failed");
+        return;
+      }
+
+      // Save token
+      localStorage.setItem("token", data.token);
+
+      alert("Login successful!");
+      router.navigate("/");
+    } catch (err) {
+      console.error("LOGIN ERROR:", err);
+      alert("Login error — check console.");
+    }
+  });
+}
+
+// LOGOUT
+function attachLogout() {
+  const btn = document.querySelector("#logoutBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    localStorage.removeItem("token");
+    alert("Logged out!");
+    router.navigate("/");
+  });
+}
+
+// Attach both form handlers after render
+function attachAuthHandlers() {
+  attachSignupHandler();
+  attachLoginHandler();
+}
+
+// OVERRIDE render to attach handlers after DOM loads
+const originalRender = render;
+render = async function (st) {
+  await originalRender(st);
+  attachAuthHandlers();
+  attachLogout();
+};
 
 // ===================== ROUTER HOOKS =====================
 router.hooks({
@@ -97,19 +196,16 @@ router.hooks({
         try {
           const popular = await fetchPopular();
           state.Movies.movies = popular;
-        } catch (err) {
+        } catch {
           state.Movies.movies = [];
         }
         break;
 
-      // ================= MARVEL PAGE =================
       case "marvel":
         try {
-          console.log("Fetching Marvel movies...");
           const data = await fetchMarvelMovies();
           state.Marvel.marvel = Array.isArray(data) ? data : [];
-        } catch (err) {
-          console.error("Error loading Marvel:", err);
+        } catch {
           state.Marvel.marvel = [];
         }
         break;
@@ -119,7 +215,7 @@ router.hooks({
           const curated = await fetchUpcomingCurated();
           state.Releases.movies2026 = curated["2026"];
           state.Releases.movies2027 = curated["2027"];
-        } catch (err) {
+        } catch {
           state.Releases.movies2026 = [];
           state.Releases.movies2027 = [];
         }
@@ -131,6 +227,10 @@ router.hooks({
         state.Comments.comments = await fetchComments(movieId);
         break;
       }
+
+      case "login":
+      case "signup":
+        break;
     }
 
     done();
@@ -143,9 +243,13 @@ router
     "/": () => render(state.Home),
     "/movies": () => render(state.Movies),
     "/releases": () => render(state.Releases),
-    "/marvel": () => render(state.Marvel),     // FINAL ROUTE
+    "/marvel": () => render(state.Marvel),
     "/about": () => render(state.AboutMe),
-    "/comments/:movieId": () => render(state.Comments)
+    "/comments/:movieId": () => render(state.Comments),
+
+    // AUTH ROUTES
+    "/login": () => render(state.Login),
+    "/signup": () => render(state.Signup)
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();
