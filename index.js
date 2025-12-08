@@ -15,6 +15,15 @@ import {
   fetchComments
 } from "./services/api";
 
+// API base URL — prefer env var when available (works with Netlify/Render)
+const API_BASE = (() => {
+  try {
+    return import.meta?.env?.VITE_BACKEND_URL || "http://localhost:3000";
+  } catch (e) {
+    return "http://localhost:3000";
+  }
+})();
+
 const router = new Navigo("/");
 
 // ===================== RENDER =====================
@@ -89,7 +98,7 @@ function attachSignupHandler() {
     const password = document.querySelector("#password").value.trim();
 
     try {
-      const res = await fetch("http://localhost:3000/auth/signup", {
+      const res = await fetch(`${API_BASE}/auth/signup`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password })
@@ -123,7 +132,7 @@ function attachLoginHandler() {
     const password = document.querySelector("#password").value.trim();
 
     try {
-      const res = await fetch("http://localhost:3000/auth/login", {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ loginId, password })

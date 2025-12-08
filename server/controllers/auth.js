@@ -1,20 +1,6 @@
 import User from "../models/user.js";
 import jwt from "jsonwebtoken";
-import { Resend } from "resend";
-
-// Warn if API key missing (prevents hard crashes)
-if (!process.env.RESEND_API_KEY) {
-  console.warn("⚠️ WARNING: RESEND_API_KEY missing — emails will not send");
-}
-
-// Safe Resend initialization so server doesn't crash
-let resend = null;
-if (process.env.RESEND_API_KEY) {
-  resend = new Resend(process.env.RESEND_API_KEY);
-} else {
-  // fallback prevents throwing "Missing API key" error
-  resend = null;
-}
+import { sendEmail } from "../utils/sendEmail.js";
 
 // ---------------------- SIGNUP ----------------------
 export const signup = async (req, res) => {
@@ -40,22 +26,40 @@ export const signup = async (req, res) => {
     // Create user
     const user = await User.create({ username, email, password });
 
-    // OPTIONAL — Send welcome email (only if resend is active)
-    if (resend) {
-      try {
-        await resend.emails.send({
-          from: process.env.EMAIL_FROM,
-          to: user.email,
-          subject: "Welcome to Cinemetrics!",
-          html: `
-            <h2>Hello ${user.username}!</h2>
-            <p>Your Cinemetrics account is now active.</p>
-            <p>Enjoy exploring movies, trailers, and stats!</p>
-          `
-        });
-      } catch (emailErr) {
-        console.log("Email send error:", emailErr.message);
-      }
+    // Send welcome email (uses helper which handles missing API key)
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: "Welcome to Cinemetrics!",
+        html: `
+          <h1>Welcome to Cinemetrics!</h1>
+
+          <p>Every great story begins with a single moment… and this is yours.</p>
+
+          <p>You’re now part of a platform built to elevate the movie experience — from massive upcoming blockbusters to hidden indie gems.</p>
+
+          <p><strong>Your Cinemetrics membership unlocks:</strong></p>
+          <ul>
+            <li>🚀 Curated lists of 2026–2027’s most anticipated films</li>
+            <li>🎞️ High-quality trailers and cast details</li>
+            <li>📊 Real-time movie ratings and insights</li>
+            <li>🗣️ A growing community of movie fans</li>
+          </ul>
+
+          <p>The Cinemetrics universe is expanding fast — and now you’re at the center of it.</p>
+
+          <p><strong>Lights. Camera. Action.</strong></p>
+
+          <p><strong>James Nguyen</strong><br>
+          CEO of Cinemetrics<br>
+          <em>“Together, we’re building the future of movie discovery.”</em></p>
+        `
+      });
+    } catch (emailErr) {
+      console.log(
+        "Email send error:",
+        emailErr && emailErr.message ? emailErr.message : emailErr
+      );
     }
 
     res.json({ message: "User registered successfully" });
