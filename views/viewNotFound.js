@@ -1,3 +1,6 @@
+// File: views/viewNotFound.js
+// Purpose: 404 view — displayed when a route is not found by the router.
+// Notes: Simple user-facing message with a link back to the home page.
 import html from "html-literal";
 import oops404 from "url:../Assets/images/oops-404.jpg";
 

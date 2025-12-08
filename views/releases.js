@@ -24,13 +24,14 @@ const generateReleaseCards = movies =>
           <div class="release-info">
             <h3 class="release-title">${movie.title}</h3>
 
-            <p class="release-description">
-              ${movie.overview || "No description available."}
-            </p>
+            <!-- description removed for cleaner card layout -->
 
             <p class="release-genre">
               ⭐ Rating: ${movie.vote_average?.toFixed(1) || "TBD"}
             </p>
+            <button class="trailer-btn" data-id="${movie.id}">
+              ▶ Trailer
+            </button>
           </div>
         </div>
       `

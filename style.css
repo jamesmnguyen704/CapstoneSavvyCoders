@@ -1,12 +1,6 @@
-  .marvel-card-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 0.3rem;
-    text-align: left;
-    width: 100%;
-  }
-/* RESET & BASE */
+/* ============================================
+   RESET & BASE
+============================================ */
 * {
   margin: 0;
   padding: 0;
@@ -21,7 +15,9 @@ body {
   min-height: 100vh;
 }
 
-/* TYPOGRAPHY */
+/* ============================================
+   TYPOGRAPHY
+============================================ */
 h1 {
   font-size: 2.5rem;
   font-weight: 700;
@@ -39,113 +35,97 @@ h2 {
 h3 {
   font-size: 1.5rem;
   font-weight: 500;
-  }
+}
 
-  .marvel-phase-title {
-    font-size: 2rem;
-    font-weight: 600;
-    color: #e62429;
-    margin: 2rem 0 1rem 0;
-    text-align: left;
-  }
+/* ============================================
+   NAVIGATION
+============================================ */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+}
 
-  .marvel-phase-row {
-      max-height: 520px !important;
-      padding-top: 2rem !important;
-      padding-bottom: 3rem !important;
-      align-items: flex-start !important;
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
-    gap: 1rem !important;
-    overflow-x: auto !important;
-    padding-bottom: 1rem !important;
-    margin-bottom: 2rem !important;
-    white-space: nowrap !important;
-    scrollbar-width: thin;
-    scrollbar-color: #e62429 #222;
-  }
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
 
-  .marvel-card {
-      min-height: 520px;
-    background: rgba(20, 20, 40, 0.95);
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
-    overflow: hidden;
-    transition: transform 0.2s;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 0.75rem;
-    min-width: 170px;
-    max-width: 170px;
-    flex: 0 0 170px;
-  }
-
-  .marvel-card:hover {
-    transform: scale(1.04);
-    box-shadow: 0 4px 24px rgba(0,0,0,0.6);
-  }
-
-  .marvel-poster {
-    width: 100%;
-    height: 220px;
-    object-fit: cover;
-    border-radius: 0.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .marvel-info {
-    text-align: left;
-    width: 100%;
-  }
-
-  .marvel-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #fff;
-    margin-bottom: 0.3rem;
-    text-align: center;
-    width: 100%;
-
-  .marvel-subtitle {
-    font-size: 1.2rem;
-    color: #fff;
-    text-align: center;
-    margin-bottom: 2rem;
-  }
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  list-style: none;
+}
 
 .nav-links a {
   color: #ffffff;
   text-decoration: none;
   font-weight: 500;
-  font-size: 1.3rem;
-  transition: color 0.3s ease;
+  font-size: 1.2rem;
+  transition: 0.3s ease;
 }
 
 .nav-links a:hover {
   color: #ffd700;
 }
 
-/* MAIN */
+.logo {
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: #ffd700 !important;
+  text-decoration: none;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.welcome {
+  font-weight: 600;
+  color: #ffd700;
+}
+
+#logoutBtn {
+  background: transparent;
+  border: 1px solid #ffd700;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  color: #ffd700;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+#logoutBtn:hover {
+  background: #ffd700;
+  color: #111;
+}
+
+/* ============================================
+   MAIN LAYOUT
+============================================ */
 main {
-  flex: 1;
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
 }
 
-/* SECTIONS */
 section {
   margin-bottom: 2rem;
   padding: 1rem;
-  background: rgba(255,255,255,0.05);
+  background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* HOME */
+/* ============================================
+   HOME PAGE
+============================================ */
 .home-hero {
   text-align: center;
   padding: 4rem 2rem;
@@ -153,7 +133,7 @@ section {
 }
 
 .home-banner {
-  max-width: 100%;
+  width: 100%;
   height: 300px;
   object-fit: cover;
   border-radius: 12px;
@@ -165,15 +145,91 @@ section {
   margin: 0 auto;
 }
 
-/* ================================
-      ⭐ MARVEL PAGE STYLES
-   ================================ */
+/* ============================================
+   MOVIES GRID (Home + Movies Page)
+============================================ */
+.movies-grid,
+.movie-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+  gap: 1.5rem !important;
+}
 
+.movie-card {
+  background: #1b1b2f;
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  transition: 0.2s ease;
+}
+
+.movie-card:hover {
+  transform: scale(1.05);
+}
+
+.movie-poster,
+.movie-card img {
+  width: 100%;
+  height: 360px; /* fixed poster height so titles don't change poster size */
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  flex: 0 0 auto;
+  background: #111; /* placeholder background to avoid layout shift while loading */
+  aspect-ratio: 2/3; /* keep consistent aspect ratio where supported */
+}
+
+.movie-title {
+  margin: 0.5rem 0;
+  font-weight: bold;
+  color: #fff;
+}
+
+/* Limit titles so they can't push the poster size. Clamp to 2 lines. */
+.movie-title,
+.marvel-card-title,
+.release-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2rem;
+  min-height: 2.4rem; /* reserve space for two lines */
+}
+
+/* Ensure card content stretches and buttons stick to bottom */
+.movie-card,
+.marvel-card,
+.release-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.movie-card .movie-info,
+.release-card .release-info,
+.marvel-card .marvel-info {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Keep footer buttons clickable above any poster overlays */
+.trailer-btn,
+.comment-btn {
+  position: relative;
+  z-index: 2;
+}
+
+/* ============================================
+   MARVEL PAGE
+============================================ */
 .marvel-container {
   padding: 2rem;
-  display: block !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
+  width: 100%;
 }
 
 .marvel-header {
@@ -182,28 +238,87 @@ section {
 }
 
 .marvel-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
+  gap: 1rem !important;
+}
+
+.marvel-phase-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: #ffd700; /* changed to yellow/gold */
+  margin: 2rem 0 1rem;
+}
+
+.marvel-phase-row {
+  display: flex !important;
+  overflow-x: auto !important;
+  flex-wrap: nowrap !important;
+  gap: 0.75rem !important;
+  padding: 0.75rem 0 !important;
+  max-height: 420px !important;
+  margin-bottom: 1rem !important;
+  scrollbar-width: thin;
+  scrollbar-color: #ffd700 #222; /* gold thumb, dark track */
+}
+
+.marvel-card {
+  background: rgba(20,20,40,0.95);
+  border-radius: 0.75rem;
+  padding: 0.75rem;
+  min-width: 180px; /* match movie grid min width */
+  flex: 0 0 180px;
+  text-align: center;
+  transition: 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.marvel-card:hover {
+  transform: scale(1.04);
+}
+
+.marvel-poster {
+  width: 100%;
+  /* match movie poster sizing so cards align visually */
+  height: 360px;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+  aspect-ratio: 2/3;
+  flex: 0 0 auto;
+}
+
+.marvel-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0.3rem 0;
+}
+
+/* Make trailer buttons in marvel cards full-width to match Home */
+.marvel-card .trailer-btn {
+  width: 100% !important;
+  margin-top: auto;
 }
 
 
-/* ================================
-      RELEASES PAGE (KEEP)
-   ================================ */
-
+/* ============================================
+   RELEASES PAGE
+============================================ */
 .releases-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+  gap: 2rem !important;
 }
 
 .release-card {
   background: rgba(255,255,255,0.05);
-  border-radius: 5px;
-  padding: 0.6rem;
   border: 1px solid rgba(255,255,255,0.1);
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  padding: 0.6rem;
+  border-radius: 5px;
+  transition: 0.3s ease;
 }
 
 .release-card:hover {
@@ -216,44 +331,11 @@ section {
   height: 200px;
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 1rem;
 }
 
-/* MOVIES PAGE GRID */
-.movies-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-.movie-card {
-  background: #1b1b2f;
-  padding: 1rem;
-  border-radius: 10px;
-  text-align: center;
-  transition: transform 0.2s ease;
-}
-
-.movie-card:hover {
-  transform: scale(1.05);
-}
-
-.movie-poster {
-  width: 100%;
-  border-radius: 10px;
-}
-
-.movie-title {
-  margin: 0.5rem 0;
-  font-weight: bold;
-}
-
-.movie-rating {
-  color: #ffd700;
-}
-
-/* TRAILER AREA */
+/* ============================================
+   TRAILER MODAL
+============================================ */
 .trailer-modal {
   position: fixed;
   inset: 0;
@@ -262,6 +344,37 @@ section {
   align-items: center;
   justify-content: center;
   z-index: 9999;
+}
+
+/* Global scrollbar styling: thinner and gold-colored */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #ffd700 rgba(0,0,0,0.25);
+}
+
+/* WebKit browsers (Chrome, Edge, Safari) */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #ffd700, #ffb400);
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,0.16);
+}
+
+/* Slightly larger thumb for horizontal phase rows for easier dragging */
+.marvel-phase-row::-webkit-scrollbar {
+  height: 10px;
+}
+
+.marvel-phase-row::-webkit-scrollbar-thumb {
+  height: 10px;
 }
 
 .trailer-modal.hidden {
@@ -292,7 +405,6 @@ section {
   font-weight: 600;
   padding: 8px 16px;
   border-radius: 25px;
-  border: none;
   cursor: pointer;
   transition: 0.25s ease;
   box-shadow: 0 4px 12px rgba(255,215,0,0.25);
@@ -301,10 +413,48 @@ section {
 .trailer-btn:hover {
   transform: translateY(-2px) scale(1.05);
   box-shadow: 0 6px 18px rgba(255,215,0,0.4);
-  background: linear-gradient(135deg, #ffe066, #ffbf00);
 }
 
-/* FOOTER */
+/* Ensure trailer button sits at the bottom of movie-like cards */
+.movie-card .trailer-btn,
+.marvel-card .trailer-btn,
+.release-card .trailer-btn {
+  margin-top: auto;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Ensure Marvel page trailer buttons use the same gold styling (override any leftover red) */
+.marvel-card .trailer-btn {
+  background: linear-gradient(135deg, #ffd700, #ffb400) !important;
+  color: #000 !important;
+  box-shadow: 0 4px 12px rgba(255,215,0,0.25) !important;
+  border-radius: 20px !important;
+  padding: 8px 12px !important;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Keep the small horizontal scrolling Marvel phase row visually tidy */
+.marvel-phase-row .marvel-card .trailer-btn {
+  /* keep centered but full-width within the card so sizing is consistent */
+  width: 100% !important;
+  margin: 0.45rem 0 0 0;
+}
+
+/* On very narrow screens, allow the button to expand more for tap targets */
+@media (max-width: 420px) {
+  .marvel-phase-row .marvel-card .trailer-btn {
+    width: 90%;
+  }
+}
+
+/* ============================================
+   FOOTER
+============================================ */
 footer {
   background: rgba(0,0,0,0.8);
   text-align: center;
@@ -312,20 +462,16 @@ footer {
   border-top: 1px solid rgba(255,215,0,0.3);
 }
 
-/* RESPONSIVE */
+/* ============================================
+   RESPONSIVE
+============================================ */
 @media (max-width: 768px) {
   .navbar {
     flex-direction: column;
     gap: 1rem;
   }
-
   .nav-links {
     flex-direction: column;
-    text-align: center;
-  }
-
-  main {
-    padding: 1rem;
   }
 }
 

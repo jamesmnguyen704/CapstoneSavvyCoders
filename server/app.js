@@ -3,6 +3,7 @@ import express from "express"; // Framework to create servers and routes
 import cors from "cors"; // Allows my frontend (Netlify) or Render to say whats up to my backend API
 import dotenv from "dotenv"; // loads environment variables from .env file (API keys, MongoDB URL)
 import mongoose from "mongoose"; // MongoDB library that connects and interacts
+import authRoutes from "./routes/auth.js";
 
 // my utilities to help with my .emv
 import { fileURLToPath } from "url"; // to get the current file path
@@ -13,7 +14,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // loading my enviroment variables locally and render to ignore path
-dotenv.config({ path: join(__dirname, "..", ".env") });
+dotenv.config({ path: join(process.cwd(), ".env") });
+
 
 // testing .env variables are being read
 console.log("TMDB KEY FROM ENV TEST:", process.env.TMDB_API_KEY);
@@ -38,8 +40,8 @@ db.once("open", () => {
   console.log("Successfully opened connection to Mongo!");
 });
 
-// defining my port. port comes from .env for 3000 for local. render overridden as fallback
-const PORT = process.env.PORT || 3000;
+// defining my port. Prefer BACKEND_PORT for local dev, fall back to PORT, then 3000
+const PORT = process.env.BACKEND_PORT || process.env.PORT || 3000;
 
 // custom middleware logging when it hits API
 const logging = (request, response, next) => {
@@ -57,6 +59,7 @@ app.use(logging); //loggin request for debug
 // mounting the router
 app.use("/comments", commentsRouter); // Forward /comments requests
 app.use("/movies", moviesRouter); // Forward /movies requests
+app.use("/auth", authRoutes); // user auth routes
 
 // testing starts here
 // Root route to confirm backend is running
@@ -72,7 +75,6 @@ app.get("/status", (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-
 
 // Serve static files from the root directory
 import path from "path";

@@ -1,3 +1,6 @@
+// File: views/marvel.js
+// Purpose: Render the Marvel Cinematic Universe pages grouped by phase.
+// Notes: Groups fetched MCU movies by hard-coded phase IDs and renders horizontal rows.
 import html from "html-literal";
 
 const phaseIDs = {
@@ -53,26 +56,18 @@ export default state => {
                       .map(movie =>
                         movie
                           ? html`
-                              <div
-                                class="marvel-card"
-                                style="min-width:170px;max-width:170px;flex:0 0 170px;display:flex;flex-direction:column;align-items:center;margin-right:1.2rem;box-sizing:border-box;"
-                              >
+                              <div class="marvel-card">
                                 <img
                                   class="marvel-poster"
                                   src="https://image.tmdb.org/t/p/w500${movie.poster_path}"
                                   alt="${movie.title}"
-                                  style="width:160px;height:220px;object-fit:cover;border-radius:0.5rem;margin-bottom:0.5rem;"
                                 />
                                 <div class="marvel-info">
                                   <div class="marvel-card-title">
                                     ${movie.title}
                                   </div>
-                                  <button
-                                    class="trailer-btn"
-                                    data-id="${movie.id}"
-                                    style="margin:0.3rem 0 0.3rem 0;width:80px;background:#e62429;color:#fff;border:none;border-radius:0.3rem;padding:0.2rem 0;font-size:0.95rem;font-weight:600;cursor:pointer;display:block;"
-                                  >
-                                    Trailer
+                                  <button class="trailer-btn" data-id="${movie.id}">
+                                    ▶ Trailer
                                   </button>
                                   <div class="marvel-release">
                                     ${movie.release_date
@@ -85,15 +80,7 @@ export default state => {
                                         })
                                       : "TBA"}
                                   </div>
-                                  <div class="marvel-rating">
-                                    ${movie.vote_average
-                                      ? movie.vote_average.toFixed(1)
-                                      : "TBD"}
-                                  </div>
-                                  <div class="marvel-overview">
-                                    ${movie.overview ||
-                                      "No description available."}
-                                  </div>
+                                  <!-- overview removed to keep card compact -->
                                 </div>
                               </div>
                             `
@@ -102,10 +89,7 @@ export default state => {
                                 <div class="marvel-card-title">
                                   Missing Movie Data
                                 </div>
-                                <div class="marvel-overview">
-                                  This MCU movie could not be loaded. Check
-                                  backend/API.
-                                </div>
+                                  <!-- missing overview removed -->
                               </div>
                             `
                       )

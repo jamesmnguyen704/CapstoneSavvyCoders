@@ -1,3 +1,6 @@
+// File: views/home.js
+// Purpose: Home page view — displays trending, now playing, and popular movies.
+// Notes: Uses state passed from the router to render movie grids and trailer buttons.
 import html from "html-literal";
 
 export default st => html`
