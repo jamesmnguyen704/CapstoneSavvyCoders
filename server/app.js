@@ -1,7 +1,9 @@
 // importing libraries for my backend API
+import dotenv from "dotenv"; // loads environment variables from .env file (API keys, MongoDB URL)
+// Load environment variables immediately so other modules see them at import time
+dotenv.config();
 import express from "express"; // Framework to create servers and routes
 import cors from "cors"; // Allows my frontend (Netlify) or Render to say whats up to my backend API
-import dotenv from "dotenv"; // loads environment variables from .env file (API keys, MongoDB URL)
 import mongoose from "mongoose"; // MongoDB library that connects and interacts
 import authRoutes from "./routes/auth.js";
 
@@ -12,10 +14,6 @@ import { dirname, join } from "path"; // build paths for loading .env
 // Get my directory path to reference .env
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// loading my enviroment variables locally and render to ignore path
-dotenv.config({ path: join(process.cwd(), ".env") });
-
 
 // testing .env variables are being read
 console.log("TMDB KEY FROM ENV TEST:", process.env.TMDB_API_KEY);

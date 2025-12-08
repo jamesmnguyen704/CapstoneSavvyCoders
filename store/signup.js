@@ -5,11 +5,11 @@
 // Notes: Form values are read by the client-side signup handler when submitting.
 export default {
   header: "Sign Up",
-  view: "Signup", // Must match capitalized view component name
+  view: "signup", // view key must match exported view name in `views/index.js`
   form: {
-    username: "",  // Chosen username
-    email: "",     // User's email address
-    password: ""   // Account password
+    username: "", // Chosen username
+    email: "", // User's email address
+    password: "" // Account password
   }
 };
 

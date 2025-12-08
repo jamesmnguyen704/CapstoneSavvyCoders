@@ -5,10 +5,10 @@
 // Notes: Form values are read by the client-side auth handler when submitting.
 export default {
   header: "Login",
-  view: "Login", // Must match the component name exactly
+  view: "login", // view key must match exported view name in `views/index.js`
   form: {
-    loginId: "",   // Username or email input
-    password: ""   // Password input
+    loginId: "", // Username or email input
+    password: "" // Password input
   }
 };
 

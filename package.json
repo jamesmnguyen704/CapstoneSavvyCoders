@@ -9,8 +9,8 @@
     "start": "parcel serve index.html --port 1234",
     "dev": "parcel serve index.html --port 1234",
     "build": "parcel build index.html && cp _redirects ./dist/",
-    "server": "node server/app.js",
-    "app:watch": "nodemon --watch ./server -e js ./server/app.js"
+    "server": "node server/start.js",
+    "app:watch": "nodemon --watch ./server -e js ./server/start.js"
   },
 
   "keywords": [],
