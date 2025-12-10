@@ -1,18 +1,20 @@
+// auth.js file handles user authentication such as for my signup and login.
+
 import User from "../models/user.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../utils/sendEmail.js";
 
-// ---------------------- SIGNUP ----------------------
+// SIGNUP: create a new user account
 export const signup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    // Validate required fields
+    // make sure all fields were filled in
     if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields required" });
     }
 
-    // Check if username or email already exists
+    // check if user already exists by username or email
     const exists = await User.findOne({
       $or: [{ email }, { username }]
     });
@@ -23,10 +25,10 @@ export const signup = async (req, res) => {
         .json({ message: "User already exists with email or username" });
     }
 
-    // Create user
+    // create the actual user in the database
     const user = await User.create({ username, email, password });
 
-    // Send welcome email (uses helper which handles missing API key)
+    // send the welcome email (if email fails, it won't stop the signup)
     try {
       await sendEmail({
         to: user.email,
@@ -40,13 +42,11 @@ export const signup = async (req, res) => {
 
           <p><strong>Your Cinemetrics membership unlocks:</strong></p>
           <ul>
-            <li>🚀 Curated lists of 2026–2027’s most anticipated films</li>
-            <li>🎞️ High-quality trailers and cast details</li>
-            <li>📊 Real-time movie ratings and insights</li>
-            <li>🗣️ A growing community of movie fans</li>
+            <li>🚀 Curated lists of 2026–2027 anticipated films</li>
+            <li>🎞️ Trailers and cast info</li>
+            <li>📊 Ratings and insights</li>
+            <li>🗣️ A growing movie community</li>
           </ul>
-
-          <p>The Cinemetrics universe is expanding fast — and now you’re at the center of it.</p>
 
           <p><strong>Lights. Camera. Action.</strong></p>
 
@@ -56,26 +56,26 @@ export const signup = async (req, res) => {
         `
       });
     } catch (emailErr) {
-      console.log(
-        "Email send error:",
-        emailErr && emailErr.message ? emailErr.message : emailErr
-      );
+      // log email failure but still allow signup to succeed
+      console.log("Email send error:", emailErr?.message || emailErr);
     }
 
+    // tell frontend that signup worked
     res.json({ message: "User registered successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// ---------------------- LOGIN ----------------------
+// LOGIN: check username/email + password, then return a JWT token
 export const login = async (req, res) => {
   try {
     const { loginId, password } = req.body;
 
-    // Login with either username OR email
-    // Normalize lookup to lowercase because User schema lowercases username/email on save
-    const lookup = (loginId || "").toString().toLowerCase();
+    // user can login with username or email, so normalize it
+    const lookup = (loginId || "").toLowerCase();
+
+    // find the user in the database
     const user = await User.findOne({
       $or: [{ username: lookup }, { email: lookup }]
     });
@@ -84,14 +84,14 @@ export const login = async (req, res) => {
       return res.status(400).json({ message: "User not found" });
     }
 
-    // Check password against hashed password
+    // compare entered password to the hashed password in DB
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
       return res.status(400).json({ message: "Incorrect password" });
     }
 
-    // Create signed JWT token
+    // create a signed JWT token so the frontend knows this user is authenticated
     const token = jwt.sign(
       {
         id: user._id,
@@ -99,9 +99,10 @@ export const login = async (req, res) => {
         email: user.email
       },
       process.env.JWT_SECRET,
-      { expiresIn: "12h" }
+      { expiresIn: "12h" } // token good for 12 hours
     );
 
+    // send token back to the frontend
     res.json({ token });
   } catch (err) {
     res.status(500).json({ error: err.message });

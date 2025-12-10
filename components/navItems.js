@@ -13,7 +13,7 @@ export default function navItem(item) {
   `;
 }
 
-// ⭐ UPDATED NAV ITEMS (Replaced Box Office → Marvel)
+// updated and change this to Marvel(Replaced Box Office → Marvel)
 export const navItemsData = [
   { url: "/", text: "Home" },
   { url: "/releases", text: "Upcoming Releases" },
@@ -22,7 +22,6 @@ export const navItemsData = [
   { url: "/about", text: "About" }
 ];
 
-// No changes needed here
 export const logo = {
   text: "Cinemetrics",
   href: "/"

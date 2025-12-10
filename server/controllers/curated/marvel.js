@@ -5,7 +5,6 @@
 
 import axios from "axios";
 import dotenv from "dotenv";
-dotenv.config();
 
 const API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE = "https://api.themoviedb.org/3/movie";
