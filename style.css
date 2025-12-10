@@ -532,3 +532,175 @@ footer {
   .marvel-card { padding: 0.8rem; }
   .marvel-title { font-size: 1.1rem; }
 }
+
+
+/* ==========================================
+   ABOUT PAGE ADVANCED STYLING (No Conflicts)
+   ========================================== */
+
+.about {
+  max-width: 1100px;
+  margin: 4rem auto;
+  padding: 2.5rem;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(8px);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.55);
+  color: #fff;
+}
+
+/* Remove global <section> card styling ONLY inside About page */
+.about section,
+.about > section {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+/* Banner/Header */
+.about-banner {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.about-banner h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 0.3rem;
+  color: #ffd700;
+}
+
+.about-banner h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #cfd7ff;
+}
+
+.about-banner p {
+  opacity: 0.85;
+  font-size: 1rem;
+}
+
+/* Profile Layout */
+.about-profile {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.about-photo {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #ffd700;
+  box-shadow: 0 0 18px rgba(255,215,0,0.4);
+}
+
+/* Fallback initials if image fails to load */
+.about-photo-fallback {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg,#0f1724,#0b1220);
+  color: #ffd700;
+  font-weight: 800;
+  font-size: 2.2rem;
+  border: 4px solid #ffd700;
+  box-shadow: 0 0 18px rgba(255,215,0,0.4);
+}
+
+/* Headline items */
+.about-headline p {
+  margin: 0.4rem 0;
+  font-size: 1.15rem;
+  opacity: 0.95;
+}
+
+/* Section Headers Override Global h2 */
+.about h2 {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 2px solid rgba(255,215,0,0.25);
+  font-size: 1.8rem;
+  color: #ffd700 !important;
+}
+
+/* Paragraphs */
+.about p {
+  max-width: 950px;
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+
+/* Skills List */
+.about-skills ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.about-skills ul li {
+  background: rgba(255,255,255,0.06);
+  padding: 0.6rem 1rem;
+  margin: 0.35rem 0;
+  border-radius: 8px;
+  border-left: 4px solid #ffd700;
+  transition: 0.2s ease-in-out;
+}
+
+.about-skills ul li:hover {
+  background: rgba(255,255,255,0.15);
+  transform: translateX(4px);
+}
+
+/* Skill subheaders */
+.about-skills h3 {
+  font-size: 1.3rem;
+  margin: 1.5rem 0 0.5rem;
+  color: #cfd7ff;
+}
+
+/* Project accomplishments list */
+.about-project ul {
+  padding-left: 1rem;
+}
+
+.about-project li {
+  margin-bottom: 0.6rem;
+  line-height: 1.6;
+}
+
+.closing {
+  margin-top: 3rem;
+  font-size: 1.2rem;
+  text-align: center;
+  color: #ffd700;
+  opacity: 0.9;
+}
+
+/* Responsive for mobile */
+@media (max-width: 768px) {
+  .about {
+    padding: 1.5rem;
+  }
+
+  .about-profile {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .about-photo {
+    width: 140px;
+    height: 140px;
+  }
+
+  .about-banner h1 {
+    font-size: 2.3rem;
+  }
+}

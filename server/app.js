@@ -1,7 +1,6 @@
 // importing libraries for my backend API
 import dotenv from "dotenv"; // loads environment variables from .env file (API keys, MongoDB URL)
 // Load environment variables immediately so other modules see them at import time
-dotenv.config();
 import express from "express"; // Framework to create servers and routes
 import cors from "cors"; // Allows my frontend (Netlify) or Render to say whats up to my backend API
 import mongoose from "mongoose"; // MongoDB library that connects and interacts

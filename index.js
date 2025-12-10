@@ -1,5 +1,5 @@
 // File: index.js
-// Purpose: Client entry point — initializes router, fetches data, and renders views.
+// client side— initializes router, fetches data, and renders views.
 // Notes: Attaches auth handlers, trailer modal logic, and router hooks to populate state.
 import { Header, Nav, Main, Footer } from "./components";
 import * as state from "./store";
@@ -15,13 +15,13 @@ import {
   fetchComments
 } from "./services/api";
 
-// API base URL — prefer build-time env var when available (works with Netlify/Render)
+// API base URL works with Netlify and Render
 // Parcel replaces `process.env.VITE_BACKEND_URL` at build time.
 const API_BASE = process.env.VITE_BACKEND_URL || (typeof window !== "undefined" && window.__API_BASE__) || "http://localhost:3000";
 
 const router = new Navigo("/");
 
-// ===================== RENDER =====================
+// handles Render
 async function render(st = state.Home) {
   console.log("Rendering with state:", st);
 
@@ -37,7 +37,7 @@ async function render(st = state.Home) {
   attachTrailerButtons();
 }
 
-// ===================== TRAILER HANDLING =====================
+// handles my trailer button
 function attachTrailerButtons() {
   document.querySelectorAll(".trailer-btn")?.forEach(btn => {
     btn.addEventListener("click", async event => {
@@ -78,9 +78,9 @@ function closeTrailerModal() {
   modal.classList.add("hidden");
 }
 
-// ===================== AUTH FORM HANDLERS =====================
+// Auth for my Handlers
 
-// SIGNUP
+// signup. testing my email login
 function attachSignupHandler() {
   const form = document.querySelector("#signupForm");
   if (!form) return;
@@ -178,7 +178,7 @@ render = async function (st) {
   attachLogout();
 };
 
-// ===================== ROUTER HOOKS =====================
+// My Router Hooks
 router.hooks({
   before: async (done, match) => {
     const path = match?.url || "/";
@@ -241,7 +241,7 @@ router.hooks({
   }
 });
 
-// ===================== ROUTES =====================
+// Routes
 router
   .on({
     "/": () => render(state.Home),
@@ -251,7 +251,7 @@ router
     "/about": () => render(state.AboutMe),
     "/comments/:movieId": () => render(state.Comments),
 
-    // AUTH ROUTES
+    // Auth Routes
     "/login": () => render(state.Login),
     "/signup": () => render(state.Signup)
   })
