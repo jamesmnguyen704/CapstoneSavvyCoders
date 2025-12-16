@@ -17,7 +17,7 @@ export default function navItem(item) {
 export const navItemsData = [
   { url: "/", text: "Home" },
   { url: "/releases", text: "Upcoming Releases" },
-  { url: "/marvel", text: "Marvel" }, // ✅ FIXED
+  { url: "/marvel", text: "Marvel" },
   { url: "/movies", text: "Movies" },
   { url: "/about", text: "About" }
 ];

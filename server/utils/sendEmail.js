@@ -3,7 +3,7 @@
 // environments that may not have global fetch/Headers.
 export async function sendEmail({ to, subject, html, from = process.env.EMAIL_FROM }) {
   if (!process.env.RESEND_API_KEY) {
-    console.warn("⚠️ WARNING: RESEND_API_KEY missing — skipping email send");
+    console.warn("WARNING: RESEND_API_KEY missing — skipping email send");
     return null;
   }
 

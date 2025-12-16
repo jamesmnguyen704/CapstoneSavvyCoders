@@ -1,7 +1,7 @@
 <!--
   Cinemetrics — index.html
   Purpose: Single-page app entry HTML. Loads styles and the client bundle.
-  Notes: Contains a modal used by trailer embeds and mounts the client into `#root`.
+  Notes: Contains a modal used by trailer embeds AND the Cinemetrics intro teaser MP4.
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -16,19 +16,30 @@
     />
 
     <link rel="stylesheet" href="style.css" />
-
     <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
   </head>
 
   <body>
     <div id="root"></div>
 
+    <!-- Reusable modal for BOTH: intro MP4 (video) + trailers (iframe) -->
     <div id="trailerModal" class="trailer-modal hidden">
-      <div class="trailer-content">
-        <span class="close-modal">&times;</span>
+      <div class="trailer-content" role="dialog" aria-modal="true" aria-label="Video modal">
+        <button class="close-modal" type="button" aria-label="Close video">&times;</button>
 
+        <!-- Intro MP4 (teaser) -->
+        <video
+          id="introVideo"
+          class="hidden"
+          controls
+          preload="metadata"
+          playsinline
+        ></video>
+
+        <!-- Trailer embed (YouTube / etc.) -->
         <iframe
           id="trailerFrame"
+          class="hidden"
           width="900"
           height="500"
           frameborder="0"
