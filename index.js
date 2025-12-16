@@ -1,11 +1,14 @@
 // File: index.js
 // client side— initializes router, fetches data, and renders views.
-// Notes: Attaches auth handlers, trailer modal logic, and router hooks to populate state.
+// Notes: Attaches auth handlers, intro/trailer modal logic, and router hooks to populate state.
+
 import { Header, Nav, Main, Footer } from "./components";
 import * as state from "./store";
 import Navigo from "navigo";
 import { camelCase } from "lodash";
 
+// Local intro MP4 (Parcel will bundle/serve this)
+import teaserMp4 from "./Assets/images/teaser.mp4";
 import {
   fetchHomeData,
   fetchPopular,
@@ -17,11 +20,135 @@ import {
 
 // API base URL works with Netlify and Render
 // Parcel replaces `process.env.VITE_BACKEND_URL` at build time.
-const API_BASE = process.env.VITE_BACKEND_URL || (typeof window !== "undefined" && window.__API_BASE__) || "http://localhost:3000";
+const API_BASE =
+  process.env.VITE_BACKEND_URL ||
+  (typeof window !== "undefined" && window.__API_BASE__) ||
+  "http://localhost:3000";
 
 const router = new Navigo("/");
 
-// handles Render
+// my modal helper
+function getModalEls() {
+  const modal = document.querySelector("#trailerModal");
+  const frame = document.querySelector("#trailerFrame");
+  const video = document.querySelector("#introVideo");
+  return { modal, frame, video };
+}
+
+function openIntroModal() {
+  const { modal, frame, video } = getModalEls();
+  if (!modal || !frame || !video) return;
+
+  // show modal
+  modal.classList.remove("hidden");
+
+  // hide iframe trailer
+  frame.src = "";
+  frame.classList.add("hidden");
+
+  // show video teaser
+  video.classList.remove("hidden");
+  video.src = teaserMp4;
+  video.currentTime = 0;
+  video.play().catch(() => {});
+}
+
+function openTrailerModal(youtubeKey) {
+  const { modal, frame, video } = getModalEls();
+  if (!modal || !frame || !video) return;
+
+  // show modal
+  modal.classList.remove("hidden");
+
+  // stop/hide intro video
+  video.pause();
+  video.src = "";
+  video.load();
+  video.classList.add("hidden");
+
+  // show iframe trailer
+  frame.classList.remove("hidden");
+  frame.src = `https://www.youtube.com/embed/${youtubeKey}`;
+}
+
+function closeTrailerModal() {
+  const { modal, frame, video } = getModalEls();
+  if (!modal || !frame || !video) return;
+
+  // stop iframe
+  frame.src = "";
+  frame.classList.add("hidden");
+
+  // stop video
+  video.pause();
+  video.src = "";
+  video.load();
+  video.classList.add("hidden");
+
+  // hide modal
+  modal.classList.add("hidden");
+}
+
+// to prevent duplicate event listeners
+let modalListenersAttached = false;
+
+function attachModalListenersOnce() {
+  if (modalListenersAttached) return;
+  modalListenersAttached = true;
+
+  // One delegated click handler
+  document.addEventListener("click", async e => {
+    // NAV: Play Intro button
+    if (e.target.closest("#playIntroNavBtn")) {
+      e.preventDefault();
+      openIntroModal();
+      return;
+    }
+
+    // Cards: Trailer buttons
+    const trailerBtn = e.target.closest(".trailer-btn");
+    if (trailerBtn) {
+      e.preventDefault();
+      const movieId = trailerBtn.dataset.id;
+
+      try {
+        const videos = await fetchMovieVideos(movieId);
+        const trailer = videos.find(v => v.site === "YouTube" && v.type === "Trailer");
+
+        if (!trailer) {
+          alert("No trailer available");
+          return;
+        }
+
+        openTrailerModal(trailer.key);
+      } catch (err) {
+        console.error("Trailer fetch error:", err);
+        alert("Trailer error — check console.");
+      }
+      return;
+    }
+
+    // Close button
+    if (e.target.closest(".close-modal")) {
+      e.preventDefault();
+      closeTrailerModal();
+      return;
+    }
+
+    // Click outside content closes (backdrop)
+    const modal = document.querySelector("#trailerModal");
+    if (modal && e.target === modal) {
+      closeTrailerModal();
+    }
+  });
+
+  // ESC closes
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") closeTrailerModal();
+  });
+}
+
+// where my rendering happens
 async function render(st = state.Home) {
   console.log("Rendering with state:", st);
 
@@ -34,53 +161,17 @@ async function render(st = state.Home) {
   `;
 
   router.updatePageLinks();
-  attachTrailerButtons();
+
+  //  attaching my event listeners
+  attachModalListenersOnce();
+
+  // auth handlers (need to reattach after each render)
+  attachAuthHandlers();
+  attachLogout();
 }
 
-// handles my trailer button
-function attachTrailerButtons() {
-  document.querySelectorAll(".trailer-btn")?.forEach(btn => {
-    btn.addEventListener("click", async event => {
-      const movieId = event.target.dataset.id;
-      const videos = await fetchMovieVideos(movieId);
-
-      const trailer = videos.find(
-        v => v.site === "YouTube" && v.type === "Trailer"
-      );
-
-      if (!trailer) {
-        alert("No trailer available");
-        return;
-      }
-
-      const modal = document.querySelector("#trailerModal");
-      const frame = document.querySelector("#trailerFrame");
-
-      frame.src = `https://www.youtube.com/embed/${trailer.key}`;
-      modal.classList.remove("hidden");
-    });
-  });
-
-  document.querySelector(".close-modal")?.addEventListener("click", () => {
-    closeTrailerModal();
-  });
-
-  document.querySelector("#trailerModal")?.addEventListener("click", e => {
-    if (e.target.id === "trailerModal") closeTrailerModal();
-  });
-}
-
-function closeTrailerModal() {
-  const modal = document.querySelector("#trailerModal");
-  const frame = document.querySelector("#trailerFrame");
-
-  frame.src = "";
-  modal.classList.add("hidden");
-}
-
-// Auth for my Handlers
-
-// signup. testing my email login
+// auth handlers
+// signup
 function attachSignupHandler() {
   const form = document.querySelector("#signupForm");
   if (!form) return;
@@ -115,7 +206,7 @@ function attachSignupHandler() {
   });
 }
 
-// LOGIN
+// login
 function attachLoginHandler() {
   const form = document.querySelector("#loginForm");
   if (!form) return;
@@ -140,9 +231,7 @@ function attachLoginHandler() {
         return;
       }
 
-      // Save token
       localStorage.setItem("token", data.token);
-
       alert("Login successful!");
       router.navigate("/");
     } catch (err) {
@@ -152,7 +241,7 @@ function attachLoginHandler() {
   });
 }
 
-// LOGOUT
+// logout
 function attachLogout() {
   const btn = document.querySelector("#logoutBtn");
   if (!btn) return;
@@ -164,26 +253,16 @@ function attachLogout() {
   });
 }
 
-// Attach both form handlers after render
 function attachAuthHandlers() {
   attachSignupHandler();
   attachLoginHandler();
 }
 
-// OVERRIDE render to attach handlers after DOM loads
-const originalRender = render;
-render = async function (st) {
-  await originalRender(st);
-  attachAuthHandlers();
-  attachLogout();
-};
-
-// My Router Hooks
+// where my router hooks happen
 router.hooks({
   before: async (done, match) => {
     const path = match?.url || "/";
-    let view =
-      path === "/" || path === "" ? "home" : camelCase(path.replace("/", ""));
+    const view = path === "/" || path === "" ? "home" : camelCase(path.replace("/", ""));
 
     console.log("Router resolved view:", view);
 
@@ -250,8 +329,6 @@ router
     "/marvel": () => render(state.Marvel),
     "/about": () => render(state.AboutMe),
     "/comments/:movieId": () => render(state.Comments),
-
-    // Auth Routes
     "/login": () => render(state.Login),
     "/signup": () => render(state.Signup)
   })

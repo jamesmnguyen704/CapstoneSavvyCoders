@@ -2,7 +2,7 @@
 import express from "express";
 import axios from "axios";
 
-// ✅ import curated data
+// import curated data
 import { curated2026, curated2027 } from "../controllers/curated/upcoming.js";
 
 console.log("DEBUG movies.js — ENV TMDB KEY =", process.env.TMDB_API_KEY);

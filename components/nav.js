@@ -35,7 +35,7 @@ const generateAuthLinks = () => {
 
   return html`
     <span class="welcome">Welcome, ${username}!</span>
-    <button id="logoutBtn">Logout</button>
+    <button id="logoutBtn" type="button">Logout</button>
   `;
 };
 
@@ -49,6 +49,17 @@ export default state => html`
     </div>
 
     <div class="nav-right">
+      <!-- Cinemetrics Intro / Teaser -->
+      <button
+        id="playIntroNavBtn"
+        type="button"
+        class="nav__btn play-intro-btn"
+        aria-label="Play intro video"
+      >
+        <span class="play-icon"><i class="fa-solid fa-play"></i></span>
+        <span class="play-text">Play Intro</span>
+      </button>
+
       ${generateAuthLinks()}
     </div>
   </nav>

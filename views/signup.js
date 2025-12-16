@@ -1,5 +1,3 @@
-// BACKUP of views/signup.js — saved before rollback
-// === BEGIN BACKUP ===
 // File: views/signup.js
 // Purpose: Signup view — renders a signup form and posts to /auth/signup.
 // Notes (James-style):

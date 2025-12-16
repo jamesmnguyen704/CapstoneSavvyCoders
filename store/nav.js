@@ -3,7 +3,7 @@ export default {
     { title: "Home", text: "Home" },
     { title: "Movies", text: "Movies" },
     { title: "Releases", text: "Releases" },
-    { title: "Marvel", text: "Marvel" },    // 💥 Updated
+    { title: "Marvel", text: "Marvel" },    //
     { title: "AboutMe", text: "About" }
   ]
 };
