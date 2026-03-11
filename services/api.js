@@ -29,20 +29,35 @@ export async function fetchHomeData() {
 
 // popular
 export async function fetchPopular() {
-  const response = await axios.get(`${API_BASE}/movies/popular`);
-  return response.data.results;
+  try {
+    const response = await axios.get(`${API_BASE}/movies/popular`);
+    return response.data.results;
+  } catch (err) {
+    console.error("POPULAR MOVIES ERROR:", err);
+    return [];
+  }
 }
 
 // upcoming
 export async function fetchUpcoming() {
-  const response = await axios.get(`${API_BASE}/movies/now_playing`);
-  return response.data.results;
+  try {
+    const response = await axios.get(`${API_BASE}/movies/now_playing`);
+    return response.data.results;
+  } catch (err) {
+    console.error("UPCOMING MOVIES ERROR:", err);
+    return [];
+  }
 }
 
 // now playing
 export async function fetchNowPlaying() {
-  const response = await axios.get(`${API_BASE}/movies/now_playing`);
-  return response.data.results;
+  try {
+    const response = await axios.get(`${API_BASE}/movies/now_playing`);
+    return response.data.results;
+  } catch (err) {
+    console.error("NOW PLAYING ERROR:", err);
+    return [];
+  }
 }
 
 // box office attempt. still not working

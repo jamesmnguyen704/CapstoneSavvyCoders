@@ -3,7 +3,7 @@
 
 import html from "html-literal";
 
-export default st => html`
+export default () => html`
   <section class="about linkedIn-style">
     <!-- Banner / Header -->
     <div class="about-banner">
@@ -15,13 +15,13 @@ export default st => html`
     <!-- Profile Image + Quick Info -->
     <div class="about-profile">
       <img
-        src="/Assets/images/aboutme.png"
+        src="https://media.licdn.com/dms/image/v2/D4E03AQGUc462d9VCVQ/profile-displayphoto-scale_200_200/B4EZnZztGfGcAY-/0/1760295834665?e=1775088000&v=beta&t=Jlue1bMyJ0XVTVq6a4wqFw8bBLxNinnZwAdwmpFq9NY"
         alt="James Nguyen Profile Photo"
         class="about-photo"
         width="340"
         height="340"
         loading="lazy"
-        onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class='about-photo-fallback'>JN</div>')"
+        onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'about-photo-fallback\\'>JN</div>')"
       />
 
       <div class="about-headline">
@@ -32,6 +32,16 @@ export default st => html`
         </p>
         <p>
           <strong>Current:</strong> Day & Night Solar | Savvy Coders Graduate
+        </p>
+        <p>
+          <strong>LinkedIn:</strong>
+          <a
+            href="https://www.linkedin.com/in/jamesmnguyen704/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style="color: #ffd700; text-decoration: underline;"
+            >jamesmnguyen704</a
+          >
         </p>
       </div>
     </div>
@@ -53,6 +63,14 @@ export default st => html`
         integrating authentication, APIs, databases, and modern web
         architecture.
       </p>
+
+      <p>
+        Most recently at <strong>Day & Night Solar</strong>, I am engineering an
+        internal operations platform ("Project Waffles") that uses Python,
+        Pandas, and SQLAlchemy to extract complex data from operational PDFs and
+        Excel documents, build cohesive relational databases, and automate
+        QuickBooks imports and business KPI dashboards.
+      </p>
     </div>
 
     <!-- Skills Section -->
@@ -64,9 +82,9 @@ export default st => html`
         <li>JavaScript (ES6+)</li>
         <li>HTML5 & CSS3</li>
         <li>Node.js + Express</li>
-        <li>MongoDB + Mongoose</li>
-        <li>SQL / PostgreSQL</li>
-        <li>Python (NumPy, Pandas, Scikit-learn)</li>
+        <li>MongoDB + Mongoose & SQLite</li>
+        <li>SQL / PostgreSQL / SQLAlchemy ORM</li>
+        <li>Python (Pandas, FastAPI, Automations)</li>
       </ul>
 
       <h3>Frontend Tools</h3>
@@ -78,9 +96,10 @@ export default st => html`
 
       <h3>Backend & API Technologies</h3>
       <ul>
+        <li>FastAPI & RESTful API Design</li>
         <li>JWT Authentication (Login, Signup, Protected Routes)</li>
         <li>TMDB API (Movie, Box Office, Release Data)</li>
-        <li>RESTful API Design</li>
+        <li>Data Engineering & ETL Pipelines</li>
       </ul>
 
       <h3>Cloud, Deployment & DevOps</h3>
@@ -93,12 +112,11 @@ export default st => html`
 
       <h3>Other Tools & Software</h3>
       <ul>
-        <li>VS Code</li>
+        <li>VS Code & Jupyter Notebooks</li>
         <li>Postman (API Testing)</li>
-        <li>MongoDB Atlas</li>
-        <li>QuickBooks Enterprise (Finance/Accounting background)</li>
-        <li>Excel automation & financial modeling</li>
-        <li>Resend (Automated Email Service)</li>
+        <li>QuickBooks Enterprise, SAP, SAGE CRE 300</li>
+        <li>Financial Modeling & Corporate Reporting</li>
+        <li>Excel automation (openpyxl) & XLOOKUP/Macros</li>
       </ul>
     </div>
 

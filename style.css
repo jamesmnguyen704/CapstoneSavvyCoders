@@ -173,31 +173,92 @@ main {
 
 section {
   margin-bottom: 2rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 }
 
-/* HOME PAGE – hero + banner */
-.home-hero {
-  text-align: center;
-  padding: 4rem 2rem;
-  background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.05));
-}
-
-.home-banner {
+/* AUTO-SLIDING HERO (Netflix Style, Used Across All Pages) */
+.hero-slider-container {
+  position: relative;
   width: 100%;
-  height: 300px;
-  object-fit: cover;
-  border-radius: 12px;
-  margin: 2rem 0;
+  height: 450px;
+  border-radius: 16px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+  background: #000;
 }
 
-.home-intro {
-  max-width: 600px;
-  margin: 0 auto;
+.hero-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  animation: heroFadeInOut 25s infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stagger 5 slides for a 25s loop */
+.hero-slide:nth-child(1) { animation-delay: 0s; }
+.hero-slide:nth-child(2) { animation-delay: 5s; }
+.hero-slide:nth-child(3) { animation-delay: 10s; }
+.hero-slide:nth-child(4) { animation-delay: 15s; }
+.hero-slide:nth-child(5) { animation-delay: 20s; }
+
+@keyframes heroFadeInOut {
+  0%   { opacity: 0; visibility: hidden; }
+  4%   { opacity: 1; visibility: visible; }
+  20%  { opacity: 1; visibility: visible; }
+  24%  { opacity: 0; visibility: hidden; }
+  100% { opacity: 0; visibility: hidden; }
+}
+
+.hero-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+  filter: brightness(0.4);
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 800px;
+  padding: 2rem;
+  color: #fff;
+}
+
+.hero-content h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
+  color: #ffd700;
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 /* MOVIES GRID (Home + Movies Page) – cards + posters */
@@ -208,18 +269,43 @@ section {
   gap: 1.5rem !important;
 }
 
+/* DASHBOARD CAROUSEL (Netflix Style) */
+.movie-carousel {
+  display: flex !important;
+  overflow-x: auto !important;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  gap: 1rem !important;
+  padding: 1rem 0 2rem 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.movie-carousel::-webkit-scrollbar {
+  display: none; /* Hide scrollbar for seamless app look */
+}
+
+.movie-carousel .movie-card {
+  flex: 0 0 200px;
+  scroll-snap-align: start;
+}
+
 .movie-card {
-  background: #1b1b2f;
+  background: rgba(27, 27, 47, 0.6);
   padding: 1rem;
-  border-radius: 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   text-align: center;
   display: flex;
   flex-direction: column;
-  transition: 0.2s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .movie-card:hover {
-  transform: scale(1.05);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.3);
 }
 
 .movie-poster,
@@ -314,20 +400,25 @@ section {
 }
 
 .marvel-card {
-  background: rgba(20,20,40,0.95);
+  background: rgba(20, 20, 40, 0.65);
   border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   padding: 0.75rem;
   min-width: 180px;
   flex: 0 0 180px;
   text-align: center;
-  transition: 0.2s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   display: flex;
   flex-direction: column;
   align-items: stretch;
 }
 
 .marvel-card:hover {
-  transform: scale(1.04);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.3);
 }
 
 .marvel-poster {
@@ -361,21 +452,29 @@ section {
 }
 
 .release-card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  padding: 0.6rem;
-  border-radius: 5px;
-  transition: 0.3s ease;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 0.8rem;
+  border-radius: 12px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  flex: 0 0 250px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
 }
 
 .release-card:hover {
-  transform: translateY(-5px);
-  border-color: #ffd700;
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.4);
 }
 
 .release-poster img {
   width: 100%;
-  height: 200px;
+  height: 360px;
+  aspect-ratio: 2/3;
   object-fit: cover;
   border-radius: 8px;
 }
@@ -384,7 +483,9 @@ section {
 .trailer-modal {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.85);
+  background: rgba(0,0,0,0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   display: flex;
   align-items: center;
   justify-content: center;

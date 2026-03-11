@@ -36,20 +36,57 @@ function groupMoviesByPhase(movies) {
 export default state => {
   const movies = Array.isArray(state.marvel) ? state.marvel : [];
   const phases = groupMoviesByPhase(movies);
+
+  // Take the 5 most recently released MCU movies for the Hero Banner
+  const heroMovies = [...movies]
+    .filter(m => m.release_date && new Date(m.release_date) <= new Date())
+    .sort((a, b) => new Date(b.release_date) - new Date(a.release_date))
+    .slice(0, 5);
+
   return html`
+    <section class="hero-slider-container">
+      ${heroMovies.length > 0
+        ? heroMovies
+            .map(
+              movie => `
+          <div class="hero-slide">
+            <img 
+              class="hero-backdrop" 
+              src="https://image.tmdb.org/t/p/original${movie.backdrop_path}" 
+              alt="${movie.title} Backdrop" 
+              onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+            />
+            <div class="hero-content">
+              <h1>${movie.title}</h1>
+              <p>${movie.overview}</p>
+              <button class="trailer-btn hero-btn" data-id="${movie.id}">▶ Watch Trailer</button>
+            </div>
+          </div>
+        `
+            )
+            .join("")
+        : `
+          <div class="hero-content">
+            <h1>Marvel Cinematic Universe</h1>
+            <p>Complete MCU Timeline from Iron Man → Secret Wars</p>
+          </div>
+        `}
+    </section>
+
     <section class="marvel-container">
-      <h1 class="marvel-title">Marvel Cinematic Universe</h1>
-      <p class="marvel-subtitle">
-        Complete MCU Timeline from Iron Man → Secret Wars
-      </p>
+      <h1 class="marvel-title" style="margin-left: 1rem;">
+        MCU Timeline (Chronological By Phase)
+      </h1>
       ${Object.entries(phases)
         .map(
           ([phase, phaseMovies]) =>
             html`
-              <h2 class="marvel-phase-title">${phase}</h2>
+              <h2 class="marvel-phase-title" style="margin-left: 1rem;">
+                ${phase}
+              </h2>
               <div
-                class="marvel-phase-row"
-                style="display:flex;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:1rem;max-height:520px;align-items:flex-start;"
+                class="movie-carousel"
+                style="align-items: flex-start; margin-left: 1rem;"
               >
                 ${phaseMovies.length
                   ? phaseMovies
@@ -66,7 +103,10 @@ export default state => {
                                   <div class="marvel-card-title">
                                     ${movie.title}
                                   </div>
-                                  <button class="trailer-btn" data-id="${movie.id}">
+                                  <button
+                                    class="trailer-btn"
+                                    data-id="${movie.id}"
+                                  >
                                     ▶ Trailer
                                   </button>
                                   <div class="marvel-release">
@@ -89,7 +129,7 @@ export default state => {
                                 <div class="marvel-card-title">
                                   Missing Movie Data
                                 </div>
-                                  <!-- missing overview removed -->
+                                <!-- missing overview removed -->
                               </div>
                             `
                       )
