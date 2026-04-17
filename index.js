@@ -170,6 +170,22 @@ async function render(st = state.Home) {
   attachLogout();
 }
 
+// Render inline status text inside an auth form (#authMsg is the <p> in the view).
+function setAuthMsg(text, kind = "error") {
+  const el = document.querySelector("#authMsg");
+  if (!el) return;
+  el.textContent = text || "";
+  el.classList.remove("auth-msg--error", "auth-msg--success");
+  if (text) el.classList.add(`auth-msg--${kind}`);
+}
+
+function setAuthSubmitting(form, submitting, labelWhenIdle) {
+  const btn = form?.querySelector("button[type='submit']");
+  if (!btn) return;
+  btn.disabled = submitting;
+  btn.textContent = submitting ? "Please wait…" : labelWhenIdle;
+}
+
 // auth handlers
 // signup
 function attachSignupHandler() {
@@ -178,11 +194,22 @@ function attachSignupHandler() {
 
   form.addEventListener("submit", async event => {
     event.preventDefault();
+    setAuthMsg("");
 
     const username = document.querySelector("#username").value.trim();
     const email = document.querySelector("#email").value.trim();
-    const password = document.querySelector("#password").value.trim();
+    const password = document.querySelector("#password").value;
 
+    if (!username || !email || !password) {
+      setAuthMsg("All fields are required.");
+      return;
+    }
+    if (password.length < 6) {
+      setAuthMsg("Password must be at least 6 characters.");
+      return;
+    }
+
+    setAuthSubmitting(form, true, "Sign Up");
     try {
       const res = await fetch(`${API_BASE}/auth/signup`, {
         method: "POST",
@@ -193,15 +220,17 @@ function attachSignupHandler() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Signup failed");
+        setAuthMsg(data.message || "Signup failed. Try a different username or email.");
         return;
       }
 
-      alert("Signup successful! Please log in.");
-      router.navigate("/login");
+      setAuthMsg("Account created! Redirecting to login…", "success");
+      setTimeout(() => router.navigate("/login"), 900);
     } catch (err) {
       console.error("SIGNUP ERROR:", err);
-      alert("Signup error — check console.");
+      setAuthMsg("Network error. Please try again.");
+    } finally {
+      setAuthSubmitting(form, false, "Sign Up");
     }
   });
 }
@@ -213,10 +242,17 @@ function attachLoginHandler() {
 
   form.addEventListener("submit", async event => {
     event.preventDefault();
+    setAuthMsg("");
 
     const loginId = document.querySelector("#loginId").value.trim();
-    const password = document.querySelector("#password").value.trim();
+    const password = document.querySelector("#password").value;
 
+    if (!loginId || !password) {
+      setAuthMsg("Enter your username/email and password.");
+      return;
+    }
+
+    setAuthSubmitting(form, true, "Login");
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
@@ -227,16 +263,18 @@ function attachLoginHandler() {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || "Login failed");
+        setAuthMsg(data.message || "Invalid credentials.");
         return;
       }
 
       localStorage.setItem("token", data.token);
-      alert("Login successful!");
-      router.navigate("/");
+      setAuthMsg("Welcome back! Redirecting…", "success");
+      setTimeout(() => router.navigate("/"), 600);
     } catch (err) {
       console.error("LOGIN ERROR:", err);
-      alert("Login error — check console.");
+      setAuthMsg("Network error. Please try again.");
+    } finally {
+      setAuthSubmitting(form, false, "Login");
     }
   });
 }
@@ -248,7 +286,6 @@ function attachLogout() {
 
   btn.addEventListener("click", () => {
     localStorage.removeItem("token");
-    alert("Logged out!");
     router.navigate("/");
   });
 }
@@ -313,6 +350,7 @@ router.hooks({
 
       case "login":
       case "signup":
+      case "profile":
         break;
     }
 
@@ -330,7 +368,8 @@ router
     "/about": () => render(state.AboutMe),
     "/comments/:movieId": () => render(state.Comments),
     "/login": () => render(state.Login),
-    "/signup": () => render(state.Signup)
+    "/signup": () => render(state.Signup),
+    "/profile": () => render(state.Profile)
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();

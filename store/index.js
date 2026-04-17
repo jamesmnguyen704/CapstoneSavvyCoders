@@ -14,6 +14,7 @@ import Comments from "./Comments";
 // Use lowercase filenames to avoid case-sensitive resolution errors on CI/Netlify
 import Login from "./login";
 import Signup from "./signup";
+import Profile from "./profile";
 
 export {
   Home,
@@ -25,7 +26,8 @@ export {
   nav,
   Comments,
   Login,
-  Signup
+  Signup,
+  Profile
 };
 
 export default {
@@ -38,5 +40,6 @@ export default {
   nav,
   Comments,
   Login,
-  Signup
+  Signup,
+  Profile
 };

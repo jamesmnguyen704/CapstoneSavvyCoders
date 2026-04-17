@@ -34,7 +34,7 @@ const generateAuthLinks = () => {
   }
 
   return html`
-    <span class="welcome">Welcome, ${username}!</span>
+    <a href="/profile" data-navigo class="welcome">Welcome, ${username}!</a>
     <button id="logoutBtn" type="button">Logout</button>
   `;
 };
