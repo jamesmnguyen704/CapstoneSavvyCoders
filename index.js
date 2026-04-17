@@ -22,8 +22,12 @@ import {
   fetchTopRated,
   fetchMovieDetails,
   fetchAwards,
-  searchMovies
+  searchMovies,
+  fetchGenres,
+  discoverMovies,
+  fetchPersonDetails
 } from "./services/api";
+import { renderDiscoverResults } from "./views/discover";
 import {
   listWatchlist,
   toggleWatchlist,
@@ -185,6 +189,8 @@ async function render(st = state.Home) {
   attachSearchHandlers();
   attachWatchlistHandler();
   attachInfoButtonHandler();
+  attachDiscoverFilterHandlers();
+  attachPersonClickHandler();
   syncBookmarkButtons();
 }
 
@@ -576,7 +582,7 @@ async function openInfoModal(movieId) {
   const cast = (data.cast || [])
     .map(
       c => `
-    <div class="info-cast-card">
+    <div class="info-cast-card" data-person-id="${c.id}" role="button" tabindex="0" aria-label="View ${escapeHtml(c.name)}">
       ${
         c.profile_path
           ? `<img src="https://image.tmdb.org/t/p/w185${c.profile_path}" alt="${escapeHtml(c.name)}" loading="lazy" />`
@@ -869,6 +875,258 @@ function attachSearchHandlers() {
   });
 }
 
+// -------- Discover filters (live, debounced) --------
+let discoverDebounceId = null;
+
+async function refreshDiscover() {
+  state.Discover.loading = true;
+  renderDiscoverResults(state.Discover);
+  const data = await discoverMovies({
+    genres: state.Discover.selectedGenres,
+    year: state.Discover.year,
+    minRating: state.Discover.minRating,
+    sort: state.Discover.sort
+  });
+  state.Discover.results = data.results || [];
+  state.Discover.total_results = data.total_results || 0;
+  state.Discover.loading = false;
+  renderDiscoverResults(state.Discover);
+  syncBookmarkButtons();
+}
+
+function debounceDiscover() {
+  clearTimeout(discoverDebounceId);
+  discoverDebounceId = setTimeout(refreshDiscover, 220);
+}
+
+function attachDiscoverFilterHandlers() {
+  const filters = document.querySelector("#discoverFilters");
+  if (!filters || filters.__bound) return;
+  filters.__bound = true;
+
+  // Genre chip toggle
+  filters.addEventListener("click", e => {
+    const chip = e.target.closest(".discover-chip");
+    if (chip) {
+      const id = Number(chip.dataset.genreId);
+      const set = new Set(state.Discover.selectedGenres);
+      if (set.has(id)) set.delete(id);
+      else set.add(id);
+      state.Discover.selectedGenres = Array.from(set);
+      chip.classList.toggle("discover-chip--active");
+      debounceDiscover();
+      return;
+    }
+    if (e.target.id === "discoverReset") {
+      state.Discover.selectedGenres = [];
+      state.Discover.year = "";
+      state.Discover.minRating = 0;
+      state.Discover.sort = "popularity.desc";
+      // Re-render the whole view so chip UI resets cleanly.
+      render(state.Discover);
+    }
+  });
+
+  const year = filters.querySelector("#discoverYear");
+  if (year) {
+    year.addEventListener("change", () => {
+      state.Discover.year = year.value;
+      debounceDiscover();
+    });
+  }
+  const rating = filters.querySelector("#discoverRating");
+  const ratingOut = filters.querySelector("#discoverRatingValue");
+  if (rating) {
+    rating.addEventListener("input", () => {
+      state.Discover.minRating = Number(rating.value);
+      if (ratingOut) ratingOut.textContent = rating.value;
+      debounceDiscover();
+    });
+  }
+  const sort = filters.querySelector("#discoverSort");
+  if (sort) {
+    sort.addEventListener("change", () => {
+      state.Discover.sort = sort.value;
+      debounceDiscover();
+    });
+  }
+}
+
+// -------- Person (cast) modal --------
+function ensurePersonModal() {
+  if (document.querySelector("#personModal")) return;
+  const modal = document.createElement("div");
+  modal.id = "personModal";
+  modal.className = "info-modal hidden";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-label", "Person details");
+  modal.innerHTML = `
+    <div class="info-modal-backdrop"></div>
+    <div class="info-modal-sheet person-modal-sheet">
+      <button class="info-modal-close" type="button" aria-label="Close">&times;</button>
+      <div class="info-modal-body person-modal-body">
+        <div class="info-modal-loading">Loading…</div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const close = () => {
+    modal.classList.add("hidden");
+    // Only pop body scroll-lock if no other modal is open.
+    const infoOpen = !document
+      .querySelector("#infoModal")
+      ?.classList.contains("hidden");
+    if (!infoOpen) document.body.classList.remove("no-scroll");
+  };
+  modal.querySelector(".info-modal-backdrop").addEventListener("click", close);
+  modal.querySelector(".info-modal-close").addEventListener("click", close);
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !modal.classList.contains("hidden")) close();
+  });
+}
+
+async function openPersonModal(personId) {
+  ensurePersonModal();
+  const modal = document.querySelector("#personModal");
+  const body = modal.querySelector(".person-modal-body");
+  body.innerHTML = `<div class="info-modal-loading">Loading…</div>`;
+  modal.classList.remove("hidden");
+  document.body.classList.add("no-scroll");
+
+  const data = await fetchPersonDetails(personId);
+  if (!data) {
+    body.innerHTML = `<div class="info-modal-loading">Could not load person details.</div>`;
+    return;
+  }
+
+  const escapeHtml = v =>
+    String(v ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  const age = (() => {
+    if (!data.birthday) return "";
+    const birth = new Date(data.birthday);
+    const end = data.deathday ? new Date(data.deathday) : new Date();
+    const years = Math.floor((end - birth) / (365.25 * 24 * 3600 * 1000));
+    return `${years}${data.deathday ? " at death" : ""}`;
+  })();
+
+  const fmtDate = iso => {
+    if (!iso) return "";
+    try {
+      return new Date(iso).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      });
+    } catch {
+      return "";
+    }
+  };
+
+  const cast = (data.cast || [])
+    .map(c => {
+      const year = (c.release_date || "").slice(0, 4);
+      const rating =
+        typeof c.vote_average === "number" && c.vote_average > 0
+          ? c.vote_average.toFixed(1)
+          : null;
+      return `
+        <div class="person-credit-card" data-movie-id="${c.id}" role="button" tabindex="0">
+          <img src="https://image.tmdb.org/t/p/w300${c.poster_path}" alt="${escapeHtml(c.title)}" loading="lazy" />
+          <div class="person-credit-body">
+            <span class="person-credit-title">${escapeHtml(c.title)}</span>
+            ${c.character ? `<span class="person-credit-character">as ${escapeHtml(c.character)}</span>` : ""}
+            <span class="person-credit-meta">
+              ${year ? year : ""}${rating ? ` · ★ ${rating}` : ""}
+            </span>
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+
+  body.innerHTML = `
+    <div class="person-header">
+      ${
+        data.profile_path
+          ? `<img class="person-photo" src="https://image.tmdb.org/t/p/w342${data.profile_path}" alt="${escapeHtml(data.name)}" />`
+          : `<div class="person-photo person-photo--placeholder" aria-hidden="true">👤</div>`
+      }
+      <div class="person-meta-block">
+        <span class="news-kicker">${escapeHtml(data.known_for_department || "Artist")}</span>
+        <h2 class="person-name">${escapeHtml(data.name)}</h2>
+        <dl class="person-meta">
+          ${
+            data.birthday
+              ? `<div><dt>Born</dt><dd>${escapeHtml(fmtDate(data.birthday))}${age ? ` · ${escapeHtml(age)}` : ""}</dd></div>`
+              : ""
+          }
+          ${data.deathday ? `<div><dt>Died</dt><dd>${escapeHtml(fmtDate(data.deathday))}</dd></div>` : ""}
+          ${data.place_of_birth ? `<div><dt>From</dt><dd>${escapeHtml(data.place_of_birth)}</dd></div>` : ""}
+        </dl>
+        ${
+          data.imdb_id
+            ? `<a class="info-link" href="https://www.imdb.com/name/${escapeHtml(data.imdb_id)}" target="_blank" rel="noopener noreferrer">
+                <i class="fa-brands fa-imdb"></i> IMDb profile
+              </a>`
+            : ""
+        }
+      </div>
+    </div>
+    ${
+      data.biography
+        ? `<div class="person-section">
+             <h3>Biography</h3>
+             <p class="person-bio">${escapeHtml(data.biography)}</p>
+           </div>`
+        : ""
+    }
+    ${
+      cast
+        ? `<div class="person-section">
+             <h3>Filmography</h3>
+             <div class="person-credits">${cast}</div>
+           </div>`
+        : ""
+    }
+  `;
+
+  // Clicking any credit card opens the movie info modal.
+  body.querySelectorAll(".person-credit-card").forEach(el => {
+    const open = () => {
+      const id = el.dataset.movieId;
+      if (id) openInfoModal(id);
+    };
+    el.addEventListener("click", open);
+    el.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        open();
+      }
+    });
+  });
+}
+
+// Cast cards inside the info modal are clickable — open the person modal.
+function attachPersonClickHandler() {
+  if (document.__personBound) return;
+  document.__personBound = true;
+  document.addEventListener("click", e => {
+    const card = e.target.closest(".info-cast-card");
+    if (!card) return;
+    const id = card.dataset.personId;
+    if (!id) return;
+    openPersonModal(id);
+  });
+}
+
 // where my router hooks happen
 router.hooks({
   before: async (done, match) => {
@@ -952,6 +1210,27 @@ router.hooks({
           state.Awards.sections = [];
         }
         break;
+
+      case "discover":
+        try {
+          if (!state.Discover.genres.length) {
+            state.Discover.genres = await fetchGenres();
+          }
+          state.Discover.loading = true;
+          const data = await discoverMovies({
+            genres: state.Discover.selectedGenres,
+            year: state.Discover.year,
+            minRating: state.Discover.minRating,
+            sort: state.Discover.sort
+          });
+          state.Discover.results = data.results || [];
+          state.Discover.total_results = data.total_results || 0;
+          state.Discover.loading = false;
+        } catch {
+          state.Discover.results = [];
+          state.Discover.loading = false;
+        }
+        break;
     }
 
     done();
@@ -972,7 +1251,8 @@ router
     "/profile": () => render(state.Profile),
     "/news": () => render(state.News),
     "/my-list": () => render(state.MyList),
-    "/awards": () => render(state.Awards)
+    "/awards": () => render(state.Awards),
+    "/discover": () => render(state.Discover)
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();

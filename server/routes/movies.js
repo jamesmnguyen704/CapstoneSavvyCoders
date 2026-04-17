@@ -56,6 +56,65 @@ router.get("/awards", async (req, res) => {
   }
 });
 
+// GENRES: TMDB's canonical movie genre list. Used by the Discover page.
+router.get("/genres", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://api.themoviedb.org/3/genre/movie/list",
+      {
+        params: { api_key: process.env.TMDB_API_KEY, language: "en-US" },
+        timeout: 6000
+      }
+    );
+    res.json({ genres: response.data.genres || [] });
+  } catch (err) {
+    console.error("GENRES ERROR:", err.message);
+    res.status(500).json({ genres: [] });
+  }
+});
+
+// DISCOVER: filterable movie browser. Accepts:
+//   genres   = comma-separated TMDB genre ids (AND-joined)
+//   year     = primary release year (optional)
+//   minRating= vote_average lower bound (optional)
+//   sort     = TMDB sort string (popularity.desc by default)
+//   page     = 1-based page number
+router.get("/discover", async (req, res) => {
+  try {
+    const page = Math.max(1, Math.min(500, Number(req.query.page) || 1));
+    const sort = String(req.query.sort || "popularity.desc");
+    const genres = String(req.query.genres || "").trim();
+    const year = Number(req.query.year) || null;
+    const minRating = Number(req.query.minRating) || null;
+
+    const params = {
+      api_key: process.env.TMDB_API_KEY,
+      language: "en-US",
+      include_adult: false,
+      sort_by: sort,
+      page,
+      "vote_count.gte": 25
+    };
+    if (genres) params.with_genres = genres;
+    if (year) params.primary_release_year = year;
+    if (minRating) params["vote_average.gte"] = minRating;
+
+    const response = await axios.get(
+      "https://api.themoviedb.org/3/discover/movie",
+      { params, timeout: 8000 }
+    );
+    res.json({
+      page: response.data.page,
+      total_pages: Math.min(response.data.total_pages || 0, 500),
+      total_results: response.data.total_results,
+      results: (response.data.results || []).filter(m => m.poster_path)
+    });
+  } catch (err) {
+    console.error("DISCOVER ERROR:", err.response?.data || err.message);
+    res.status(500).json({ results: [], page: 1, total_pages: 0 });
+  }
+});
+
 // SEARCH: proxy TMDB's movie search. Keeps our API key server-side.
 router.get("/search", async (req, res) => {
   const query = String(req.query.q || "").trim();

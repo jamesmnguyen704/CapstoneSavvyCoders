@@ -115,6 +115,45 @@ export async function fetchAwards() {
   }
 }
 
+// Genres — TMDB's movie genre list (used by the Discover page).
+export async function fetchGenres() {
+  try {
+    const response = await axios.get(`${API_BASE}/movies/genres`);
+    return Array.isArray(response.data?.genres) ? response.data.genres : [];
+  } catch (err) {
+    console.error("GENRES ERROR:", err);
+    return [];
+  }
+}
+
+// Discover — filterable browse. Accepts { genres, year, minRating, sort, page }.
+export async function discoverMovies(filters = {}) {
+  const params = {};
+  if (filters.genres && filters.genres.length) params.genres = filters.genres.join(",");
+  if (filters.year) params.year = filters.year;
+  if (filters.minRating) params.minRating = filters.minRating;
+  if (filters.sort) params.sort = filters.sort;
+  if (filters.page) params.page = filters.page;
+  try {
+    const response = await axios.get(`${API_BASE}/movies/discover`, { params });
+    return response.data || { results: [], page: 1, total_pages: 0 };
+  } catch (err) {
+    console.error("DISCOVER ERROR:", err);
+    return { results: [], page: 1, total_pages: 0 };
+  }
+}
+
+// Person detail + filmography (cast credits sorted by popularity).
+export async function fetchPersonDetails(id) {
+  try {
+    const response = await axios.get(`${API_BASE}/person/${id}/details`);
+    return response.data;
+  } catch (err) {
+    console.error("PERSON ERROR:", err);
+    return null;
+  }
+}
+
 // Movie search — proxied through our backend (TMDB /search/movie).
 export async function searchMovies(query) {
   const q = String(query || "").trim();

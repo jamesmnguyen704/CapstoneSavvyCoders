@@ -12,4 +12,5 @@ export { default as Profile } from "./profile";
 export { default as News } from "./news";
 export { default as MyList } from "./myList";
 export { default as Awards } from "./awards";
+export { default as Discover } from "./discover";
 export { default as ViewNotFound } from "./viewNotFound";

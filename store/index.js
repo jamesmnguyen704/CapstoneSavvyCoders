@@ -18,6 +18,7 @@ import Profile from "./profile";
 import News from "./news";
 import MyList from "./myList";
 import Awards from "./awards";
+import Discover from "./discover";
 
 export {
   Home,
@@ -33,7 +34,8 @@ export {
   Profile,
   News,
   MyList,
-  Awards
+  Awards,
+  Discover
 };
 
 export default {
@@ -50,5 +52,6 @@ export default {
   Profile,
   News,
   MyList,
-  Awards
+  Awards,
+  Discover
 };
