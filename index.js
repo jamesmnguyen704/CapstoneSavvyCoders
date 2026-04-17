@@ -15,7 +15,9 @@ import {
   fetchUpcomingCurated,
   fetchMarvelMovies,
   fetchMovieVideos,
-  fetchComments
+  fetchComments,
+  postComment,
+  deleteComment
 } from "./services/api";
 
 // API base URL works with Netlify and Render
@@ -168,6 +170,8 @@ async function render(st = state.Home) {
   // auth handlers (need to reattach after each render)
   attachAuthHandlers();
   attachLogout();
+  attachCommentHandlers();
+  attachScrollAwareNav();
 }
 
 // Render inline status text inside an auth form (#authMsg is the <p> in the view).
@@ -293,6 +297,73 @@ function attachLogout() {
 function attachAuthHandlers() {
   attachSignupHandler();
   attachLoginHandler();
+}
+
+// Comments: submit + delete handlers (re-attached after each render).
+function attachCommentHandlers() {
+  const form = document.querySelector("#commentForm");
+  const list = document.querySelector(".comment-list");
+  const movieId = state.Comments?.movieId;
+
+  if (form && movieId) {
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const msg = document.querySelector("#commentMsg");
+      const username = document.querySelector("#author").value.trim();
+      const text = document.querySelector("#text").value.trim();
+
+      if (!username || !text) {
+        if (msg) {
+          msg.textContent = "Name and comment are required.";
+          msg.classList.add("auth-msg--error");
+        }
+        return;
+      }
+
+      try {
+        await postComment({ movieId: Number(movieId), username, text });
+        state.Comments.comments = await fetchComments(movieId);
+        render(state.Comments);
+      } catch {
+        if (msg) {
+          msg.textContent = "Couldn't post comment. Please try again.";
+          msg.classList.add("auth-msg--error");
+        }
+      }
+    });
+  }
+
+  if (list && movieId) {
+    list.addEventListener("click", async event => {
+      const btn = event.target.closest(".delete-comment");
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (!id) return;
+
+      btn.disabled = true;
+      try {
+        await deleteComment(id);
+        state.Comments.comments = await fetchComments(movieId);
+        render(state.Comments);
+      } catch {
+        btn.disabled = false;
+      }
+    });
+  }
+}
+
+// Scroll-aware nav: adds .scrolled when page is scrolled past threshold.
+function attachScrollAwareNav() {
+  const nav = document.querySelector(".navbar");
+  if (!nav || nav.__scrollBound) return;
+  nav.__scrollBound = true;
+
+  const setScrolled = () => {
+    if (window.scrollY > 24) nav.classList.add("scrolled");
+    else nav.classList.remove("scrolled");
+  };
+  setScrolled();
+  window.addEventListener("scroll", setScrolled, { passive: true });
 }
 
 // where my router hooks happen

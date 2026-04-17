@@ -82,11 +82,11 @@ export async function fetchMovieVideos(movieId) {
   }
 }
 
-// work in progress for comments
+// Comments API helpers. Route returns an array of comment docs directly.
 export async function fetchComments(movieId) {
   try {
     const response = await axios.get(`${API_BASE}/comments/${movieId}`);
-    return response.data.comments;
+    return Array.isArray(response.data) ? response.data : [];
   } catch (err) {
     console.error("FETCH COMMENTS ERROR:", err);
     return [];
@@ -95,17 +95,21 @@ export async function fetchComments(movieId) {
 
 export async function postComment(commentData) {
   try {
-    await axios.post(`${API_BASE}/comments`, commentData);
+    const response = await axios.post(`${API_BASE}/comments`, commentData);
+    return response.data;
   } catch (err) {
     console.error("POST COMMENT ERROR:", err);
+    throw err;
   }
 }
 
 export async function deleteComment(id) {
   try {
     await axios.delete(`${API_BASE}/comments/${id}`);
+    return true;
   } catch (err) {
     console.error("DELETE COMMENT ERROR:", err);
+    throw err;
   }
 }
 

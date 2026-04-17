@@ -1,27 +1,56 @@
+// File: components/Comments.js
+// Purpose: Renders the comment form + list for a movie.
+// Notes:
+//   - Backend model uses `username` + `text` (not `author`). We accept either
+//     for back-compat when reading, and always post `username`.
+//   - All user-supplied values are HTML-escaped to prevent XSS.
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export default function Comments(state) {
-  // File: components/Comments.js
-  // Purpose: Small reusable component to render a list of comments for a movie.
-  // Notes: Expects `comments` array on the state and a `movieId` when used.
+  const comments = Array.isArray(state.comments) ? state.comments : [];
+
+  const list = comments.length
+    ? comments
+        .map(c => {
+          const name = escapeHtml(c.username || c.author || "Anonymous");
+          const text = escapeHtml(c.text || "");
+          const id = escapeHtml(c._id || "");
+          return `
+            <li class="comment-item">
+              <div class="comment-body">
+                <strong class="comment-author">${name}</strong>
+                <p class="comment-text">${text}</p>
+              </div>
+              <button data-id="${id}" class="delete-comment" aria-label="Delete comment">
+                <i class="fa-solid fa-trash"></i>
+              </button>
+            </li>
+          `;
+        })
+        .join("")
+    : `<li class="comment-empty">Be the first to comment.</li>`;
+
   return `
-    <section>
+    <section class="comments-section">
       <h2>Comments</h2>
-      <form id="commentForm">
-        <input type="text" id="author" placeholder="Your Name" required />
-        <textarea id="text" placeholder="Your Comment" required></textarea>
-        <button type="submit">Submit</button>
+
+      <form id="commentForm" class="comment-form" novalidate>
+        <input type="text" id="author" placeholder="Your name" maxlength="60" required />
+        <textarea id="text" placeholder="Share your thoughts…" maxlength="600" required></textarea>
+        <button type="submit" class="auth-btn comment-submit">Post comment</button>
+        <p id="commentMsg" class="auth-msg" role="alert" aria-live="polite"></p>
       </form>
 
-      <ul>
-        ${state.comments
-          .map(
-            c => `
-          <li>
-            <strong>${c.author}:</strong> ${c.text}
-            <button data-id="${c._id}" class="delete-comment">Delete</button>
-          </li>
-        `
-          )
-          .join("")}
+      <ul class="comment-list">
+        ${list}
       </ul>
     </section>
   `;

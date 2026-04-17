@@ -1111,3 +1111,523 @@ footer {
 .profile-logout {
   width: 100%;
 }
+
+/* ============================================================
+   STREAMING LAYER — Netflix/HBO Max-style overrides.
+   Applied last so selectors override the base theme.
+   Palette stays on the Cinemetrics gold/amber accent.
+   ============================================================ */
+
+:root {
+  --cm-bg: #0a0a0a;
+  --cm-surface: #141414;
+  --cm-surface-2: #1c1c1c;
+  --cm-border: rgba(255, 255, 255, 0.08);
+  --cm-text: #f5f5f7;
+  --cm-muted: rgba(245, 245, 247, 0.65);
+  --cm-accent: #ffd700;
+  --cm-accent-2: #ff8a00;
+  --cm-accent-grad: linear-gradient(90deg, #ffd700 0%, #ffb400 50%, #ff8a00 100%);
+  --cm-row-gap: clamp(0.6rem, 1vw, 1rem);
+}
+
+/* True-black background with a soft gold vignette behind everything. */
+body {
+  background: var(--cm-bg) !important;
+  color: var(--cm-text);
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      1100px 600px at 85% -10%,
+      rgba(255, 215, 0, 0.08),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at -10% 110%,
+      rgba(255, 138, 0, 0.06),
+      transparent 60%
+    );
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+/* Full-bleed main; kill the global "glass card" on every section. */
+main {
+  max-width: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+section {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Row headings — left-aligned, tight tracking. */
+#trending,
+#now-playing,
+#popular,
+.marvel-container,
+.releases-grid {
+  padding: 0 clamp(1rem, 4vw, 3.5rem) !important;
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem) !important;
+}
+
+#trending h2,
+#now-playing h2,
+#popular h2,
+.marvel-phase-title,
+.releases-title {
+  font-size: clamp(1.15rem, 1.4vw, 1.45rem) !important;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  margin: 0.5rem 0 0.75rem !important;
+  color: var(--cm-text);
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  position: relative;
+  padding-left: 0.75rem !important;
+}
+
+#trending h2::before,
+#now-playing h2::before,
+#popular h2::before,
+.marvel-phase-title::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--cm-accent-grad);
+}
+
+/* =================== NAVBAR =================== */
+.navbar {
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 10, 0.85) 0%,
+    rgba(10, 10, 10, 0.35) 60%,
+    transparent 100%
+  ) !important;
+  backdrop-filter: blur(0px) !important;
+  -webkit-backdrop-filter: blur(0px) !important;
+  border-bottom: 1px solid transparent;
+  transition: background 220ms ease, border-color 220ms ease, backdrop-filter 220ms ease;
+  padding: 0.9rem clamp(1rem, 4vw, 3.5rem) !important;
+}
+
+.navbar.scrolled {
+  background: rgba(10, 10, 10, 0.92) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border-bottom-color: var(--cm-border);
+}
+
+.nav-links a {
+  font-size: 0.98rem !important;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
+  transition: color 180ms ease;
+}
+
+.nav-links a:hover {
+  color: var(--cm-accent);
+}
+
+.logo {
+  font-size: 1.5rem !important;
+  letter-spacing: 0.03em;
+}
+
+/* =================== HERO =================== */
+.hero-slider-container {
+  width: 100vw !important;
+  margin-left: calc(50% - 50vw) !important;
+  margin-right: calc(50% - 50vw) !important;
+  height: 82vh !important;
+  min-height: 520px;
+  max-height: 820px;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin-bottom: 2rem !important;
+  position: relative;
+}
+
+/* Dark fade at bottom for text readability + smooth transition into rows. */
+.hero-slider-container::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -1px 0;
+  height: 55%;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(10, 10, 10, 0.5) 55%,
+    var(--cm-bg) 100%
+  );
+  z-index: 3;
+}
+
+.hero-backdrop {
+  filter: brightness(0.55) saturate(1.05) !important;
+}
+
+.hero-content {
+  position: absolute !important;
+  left: clamp(1.25rem, 4vw, 3.5rem) !important;
+  bottom: 18% !important;
+  top: auto !important;
+  max-width: min(640px, 55%) !important;
+  text-align: left !important;
+  padding: 0 !important;
+  z-index: 4;
+}
+
+.hero-content h1 {
+  font-size: clamp(2rem, 4.2vw, 3.75rem) !important;
+  line-height: 1.05;
+  color: #fff !important;
+  margin-bottom: 0.75rem !important;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
+  letter-spacing: -0.015em;
+}
+
+.hero-content p {
+  font-size: clamp(0.95rem, 1vw, 1.08rem) !important;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 100%;
+  margin-bottom: 1.2rem !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.75);
+  -webkit-line-clamp: 3;
+}
+
+.hero-content .hero-btn,
+.hero-content .trailer-btn.hero-btn {
+  padding: 0.75rem 1.6rem !important;
+  font-size: 1rem !important;
+  font-weight: 700;
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(255, 138, 0, 0.35);
+}
+
+/* =================== ROWS / CAROUSELS =================== */
+.movie-carousel,
+.marvel-phase-row {
+  gap: var(--cm-row-gap) !important;
+  padding: 0 !important;
+  /* Fade edges so cards scroll under a soft mask instead of hard-clipping. */
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 2.5%,
+    #000 97.5%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 2.5%,
+    #000 97.5%,
+    transparent 100%
+  );
+  overflow-y: visible !important;
+  padding-top: 0.5rem !important;
+  padding-bottom: 1.25rem !important;
+}
+
+/* Cards: drop the glass card chrome. The poster IS the card. */
+.movie-card,
+.marvel-card,
+.release-card {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-radius: 6px !important;
+  overflow: visible !important;
+  transition: transform 220ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 220ms ease, z-index 0s linear 220ms;
+}
+
+.movie-carousel .movie-card,
+.marvel-phase-row .marvel-card {
+  flex: 0 0 clamp(150px, 15vw, 220px) !important;
+  scroll-snap-align: start;
+}
+
+.movie-card img,
+.movie-poster,
+.marvel-poster,
+.release-poster img {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 2 / 3 !important;
+  object-fit: cover;
+  border-radius: 6px !important;
+  background: var(--cm-surface);
+  transition: transform 220ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 220ms ease, filter 220ms ease;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.55);
+  display: block;
+}
+
+.movie-card h3,
+.marvel-title,
+.release-title {
+  margin: 0.55rem 0 0 !important;
+  font-size: 0.92rem !important;
+  font-weight: 500 !important;
+  color: var(--cm-muted) !important;
+  line-height: 1.25;
+  min-height: 2.4em;
+  padding: 0 !important;
+  border: none !important;
+}
+
+/* Hover: signature streaming lift + scale, card pops above its row. */
+.movie-card:hover,
+.marvel-card:hover,
+.release-card:hover {
+  transform: translateY(-4px) scale(1.045) !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+  z-index: 10;
+  transition: transform 220ms cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 220ms ease, z-index 0s;
+}
+
+.movie-card:hover img,
+.movie-card:hover .movie-poster,
+.marvel-card:hover .marvel-poster,
+.release-card:hover .release-poster img {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 215, 0, 0.25);
+  filter: brightness(1.05);
+}
+
+.movie-card:hover h3,
+.marvel-card:hover .marvel-title,
+.release-card:hover .release-title {
+  color: #fff !important;
+}
+
+/* Trailer buttons: tighter, Netflix-pill feel. */
+.trailer-btn {
+  padding: 0.55rem 1rem !important;
+  font-size: 0.88rem !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  font-weight: 700;
+  background: var(--cm-accent-grad) !important;
+}
+
+.trailer-btn:hover {
+  transform: translateY(-1px) scale(1.02) !important;
+  box-shadow: 0 6px 18px rgba(255, 215, 0, 0.35) !important;
+}
+
+.movie-card .trailer-btn,
+.marvel-card .trailer-btn,
+.release-card .trailer-btn {
+  margin-top: 0.5rem !important;
+  width: 100%;
+}
+
+/* Marvel grid/row spacing parity with the streaming rows. */
+.marvel-phase-row {
+  max-height: none !important;
+  padding: 0.5rem 0 1.25rem !important;
+}
+
+.marvel-header {
+  padding: 1.5rem clamp(1rem, 4vw, 3.5rem) 0.5rem !important;
+  text-align: left !important;
+  margin-bottom: 0 !important;
+}
+
+.marvel-header h1 {
+  font-size: clamp(1.75rem, 3vw, 2.5rem) !important;
+  letter-spacing: -0.01em;
+}
+
+/* Releases page: breathing room. */
+.releases-grid {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+  gap: clamp(0.75rem, 1.5vw, 1.25rem) !important;
+}
+
+/* =================== FOOTER =================== */
+footer {
+  background: #000 !important;
+  border-top: 1px solid var(--cm-border) !important;
+  color: var(--cm-muted);
+  padding: 2.5rem clamp(1rem, 4vw, 3.5rem) !important;
+  margin-top: 3rem;
+}
+
+/* =================== COMMENTS (also restyled) =================== */
+.comments-page {
+  max-width: 760px;
+  margin: 4rem auto !important;
+  padding: 0 1rem !important;
+}
+
+.comments-section h2 {
+  color: var(--cm-accent);
+  margin-bottom: 1rem;
+}
+
+.comment-form {
+  display: grid;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: var(--cm-surface);
+  border: 1px solid var(--cm-border);
+  border-radius: 10px;
+}
+
+.comment-form input,
+.comment-form textarea {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid var(--cm-border);
+  color: var(--cm-text);
+  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.comment-form textarea {
+  min-height: 110px;
+}
+
+.comment-form input:focus,
+.comment-form textarea:focus {
+  outline: none;
+  border-color: var(--cm-accent);
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+}
+
+.comment-submit {
+  justify-self: end;
+  width: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.comment-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.comment-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  background: var(--cm-surface);
+  border: 1px solid var(--cm-border);
+  border-radius: 10px;
+}
+
+.comment-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment-author {
+  display: block;
+  color: var(--cm-accent);
+  font-size: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.comment-text {
+  margin: 0;
+  color: var(--cm-text);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.delete-comment {
+  background: transparent;
+  border: 1px solid var(--cm-border);
+  color: var(--cm-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.15s ease;
+}
+
+.delete-comment:hover {
+  color: #ff6b6b;
+  border-color: rgba(255, 107, 107, 0.5);
+}
+
+.comment-empty {
+  color: var(--cm-muted);
+  font-style: italic;
+  list-style: none;
+}
+
+/* =================== RESPONSIVE =================== */
+@media (max-width: 768px) {
+  .hero-slider-container {
+    height: 72vh !important;
+    min-height: 420px;
+  }
+
+  .hero-content {
+    max-width: 100% !important;
+    bottom: 12% !important;
+    left: 1rem !important;
+    right: 1rem;
+  }
+
+  .movie-carousel .movie-card,
+  .marvel-phase-row .marvel-card {
+    flex: 0 0 40vw !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .movie-carousel .movie-card,
+  .marvel-phase-row .marvel-card {
+    flex: 0 0 48vw !important;
+  }
+}
