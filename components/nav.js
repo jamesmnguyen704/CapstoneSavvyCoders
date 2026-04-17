@@ -49,6 +49,20 @@ export default state => html`
     </div>
 
     <div class="nav-right">
+      <!-- Live search -->
+      <div class="nav-search" role="combobox" aria-haspopup="listbox" aria-expanded="false">
+        <i class="fa-solid fa-magnifying-glass nav-search-icon" aria-hidden="true"></i>
+        <input
+          id="navSearch"
+          type="search"
+          autocomplete="off"
+          placeholder="Search movies…"
+          aria-label="Search movies"
+        />
+        <kbd class="nav-search-kbd" aria-hidden="true">/</kbd>
+        <div id="navSearchResults" class="nav-search-results" role="listbox"></div>
+      </div>
+
       <!-- Cinemetrics Intro / Teaser -->
       <button
         id="playIntroNavBtn"

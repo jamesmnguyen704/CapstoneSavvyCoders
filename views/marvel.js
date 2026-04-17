@@ -90,49 +90,70 @@ export default state => {
               >
                 ${phaseMovies.length
                   ? phaseMovies
-                      .map(movie =>
-                        movie
-                          ? html`
-                              <div class="marvel-card">
-                                <img
-                                  class="marvel-poster"
-                                  src="https://image.tmdb.org/t/p/w500${movie.poster_path}"
-                                  alt="${movie.title}"
-                                />
-                                <div class="marvel-info">
-                                  <div class="marvel-card-title">
-                                    ${movie.title}
-                                  </div>
-                                  <button
-                                    class="trailer-btn"
-                                    data-id="${movie.id}"
-                                  >
-                                    ▶ Trailer
-                                  </button>
-                                  <div class="marvel-release">
-                                    ${movie.release_date
-                                      ? new Date(
-                                          movie.release_date
-                                        ).toLocaleDateString("en-US", {
-                                          year: "numeric",
-                                          month: "short",
-                                          day: "numeric"
-                                        })
-                                      : "TBA"}
-                                  </div>
-                                  <!-- overview removed to keep card compact -->
-                                </div>
+                      .map(movie => {
+                        if (!movie) {
+                          return html`
+                            <div class="marvel-card missing">
+                              <div class="marvel-card-title">Missing Movie Data</div>
+                            </div>
+                          `;
+                        }
+                        const year = (movie.release_date || "").slice(0, 4);
+                        const rating =
+                          typeof movie.vote_average === "number" && movie.vote_average > 0
+                            ? movie.vote_average.toFixed(1)
+                            : null;
+                        const movieJson = JSON.stringify({
+                          id: movie.id,
+                          title: movie.title,
+                          poster_path: movie.poster_path || null,
+                          release_date: movie.release_date || null,
+                          vote_average: movie.vote_average || null
+                        })
+                          .replace(/"/g, "&quot;");
+                        return html`
+                          <div class="marvel-card" data-movie-id="${movie.id}">
+                            <div class="movie-poster-wrap">
+                              <img
+                                class="marvel-poster"
+                                src="https://image.tmdb.org/t/p/w500${movie.poster_path}"
+                                alt="${movie.title}"
+                                loading="lazy"
+                              />
+                              <div class="card-badges">
+                                ${year ? `<span class="card-badge card-badge--year">${year}</span>` : ""}
+                                ${rating ? `<span class="card-badge card-badge--rating">★ ${rating}</span>` : ""}
                               </div>
-                            `
-                          : html`
-                              <div class="marvel-card missing">
-                                <div class="marvel-card-title">
-                                  Missing Movie Data
-                                </div>
-                                <!-- missing overview removed -->
+                              <button
+                                class="card-bookmark"
+                                type="button"
+                                aria-label="Add to My List"
+                                data-movie='${movieJson}'
+                              >
+                                <i class="fa-regular fa-bookmark"></i>
+                              </button>
+                            </div>
+                            <div class="marvel-info">
+                              <div class="marvel-card-title">${movie.title}</div>
+                              <div class="card-actions">
+                                <button class="trailer-btn" data-id="${movie.id}">▶ Trailer</button>
+                                <button class="info-btn" type="button" data-id="${movie.id}" aria-label="More info">
+                                  <i class="fa-solid fa-circle-info"></i>
+                                </button>
                               </div>
-                            `
-                      )
+                              <div class="marvel-release">
+                                ${movie.release_date
+                                  ? new Date(movie.release_date).toLocaleDateString("en-US", {
+                                      year: "numeric",
+                                      month: "short",
+                                      day: "numeric"
+                                    })
+                                  : "TBA"}
+                              </div>
+                            </div>
+                          </div>
+                        `;
+                      })
                       .join("")
                   : `<p>No movies found for this phase.</p>`}
               </div>

@@ -18,8 +18,17 @@ import {
   fetchComments,
   postComment,
   deleteComment,
-  fetchMovieNews
+  fetchMovieNews,
+  fetchTopRated,
+  fetchMovieDetails,
+  fetchAwards,
+  searchMovies
 } from "./services/api";
+import {
+  listWatchlist,
+  toggleWatchlist,
+  inWatchlist
+} from "./services/watchlist";
 
 // API base URL works with Netlify and Render
 // Parcel replaces `process.env.VITE_BACKEND_URL` at build time.
@@ -173,6 +182,10 @@ async function render(st = state.Home) {
   attachLogout();
   attachCommentHandlers();
   attachScrollAwareNav();
+  attachSearchHandlers();
+  attachWatchlistHandler();
+  attachInfoButtonHandler();
+  syncBookmarkButtons();
 }
 
 // Render inline status text inside an auth form (#authMsg is the <p> in the view).
@@ -354,17 +367,506 @@ function attachCommentHandlers() {
 }
 
 // Scroll-aware nav: adds .scrolled when page is scrolled past threshold.
+// Also drives the top progress bar + back-to-top visibility.
 function attachScrollAwareNav() {
   const nav = document.querySelector(".navbar");
   if (!nav || nav.__scrollBound) return;
   nav.__scrollBound = true;
 
-  const setScrolled = () => {
-    if (window.scrollY > 24) nav.classList.add("scrolled");
+  ensureChrome();
+
+  const progress = document.querySelector("#scrollProgress");
+  const backToTop = document.querySelector("#backToTop");
+
+  const onScroll = () => {
+    const y = window.scrollY;
+    if (y > 24) nav.classList.add("scrolled");
     else nav.classList.remove("scrolled");
+
+    if (progress) {
+      const h = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = h > 0 ? Math.min(100, Math.max(0, (y / h) * 100)) : 0;
+      progress.style.width = `${pct}%`;
+    }
+
+    if (backToTop) {
+      if (y > 600) backToTop.classList.add("visible");
+      else backToTop.classList.remove("visible");
+    }
   };
-  setScrolled();
-  window.addEventListener("scroll", setScrolled, { passive: true });
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+}
+
+// Inject site-wide chrome (toast host, scroll progress bar, back-to-top,
+// info modal) into <body> exactly once.
+function ensureChrome() {
+  if (document.querySelector("#scrollProgress")) return;
+
+  const progress = document.createElement("div");
+  progress.id = "scrollProgress";
+  progress.setAttribute("aria-hidden", "true");
+  document.body.appendChild(progress);
+
+  const backToTop = document.createElement("button");
+  backToTop.id = "backToTop";
+  backToTop.type = "button";
+  backToTop.setAttribute("aria-label", "Back to top");
+  backToTop.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
+  backToTop.addEventListener("click", () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  document.body.appendChild(backToTop);
+
+  const toastHost = document.createElement("div");
+  toastHost.id = "toastHost";
+  toastHost.setAttribute("aria-live", "polite");
+  document.body.appendChild(toastHost);
+
+  // Movie detail (Info) modal — lazy-populated on open.
+  const infoModal = document.createElement("div");
+  infoModal.id = "infoModal";
+  infoModal.className = "info-modal hidden";
+  infoModal.setAttribute("role", "dialog");
+  infoModal.setAttribute("aria-modal", "true");
+  infoModal.setAttribute("aria-label", "Movie details");
+  infoModal.innerHTML = `
+    <div class="info-modal-backdrop"></div>
+    <div class="info-modal-sheet">
+      <button class="info-modal-close" type="button" aria-label="Close">&times;</button>
+      <div class="info-modal-body"><div class="info-modal-loading">Loading…</div></div>
+    </div>
+  `;
+  document.body.appendChild(infoModal);
+
+  // Close on backdrop click + Escape key.
+  infoModal
+    .querySelector(".info-modal-backdrop")
+    .addEventListener("click", closeInfoModal);
+  infoModal
+    .querySelector(".info-modal-close")
+    .addEventListener("click", closeInfoModal);
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !infoModal.classList.contains("hidden")) {
+      closeInfoModal();
+    }
+  });
+}
+
+// -------- Toasts --------
+function showToast(message, kind = "info", timeout = 2600) {
+  ensureChrome();
+  const host = document.querySelector("#toastHost");
+  if (!host) return;
+  const t = document.createElement("div");
+  t.className = `toast toast--${kind}`;
+  t.innerHTML = `
+    <span class="toast-icon" aria-hidden="true">
+      ${kind === "success" ? "✓" : kind === "error" ? "!" : "i"}
+    </span>
+    <span class="toast-msg"></span>
+  `;
+  t.querySelector(".toast-msg").textContent = message;
+  host.appendChild(t);
+  // Force reflow so the transition runs.
+  requestAnimationFrame(() => t.classList.add("toast--show"));
+  setTimeout(() => {
+    t.classList.remove("toast--show");
+    setTimeout(() => t.remove(), 300);
+  }, timeout);
+}
+
+// -------- Watchlist bookmark delegation --------
+function attachWatchlistHandler() {
+  if (document.__watchlistBound) return;
+  document.__watchlistBound = true;
+
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".card-bookmark");
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    let movie;
+    try {
+      movie = JSON.parse(btn.dataset.movie || "null");
+    } catch {
+      movie = null;
+    }
+    if (!movie || movie.id == null) return;
+
+    const result = toggleWatchlist(movie);
+    if (result === "added") {
+      btn.classList.add("card-bookmark--active");
+      btn.querySelector("i").className = "fa-solid fa-bookmark";
+      btn.setAttribute("aria-label", "Remove from My List");
+      showToast(`"${movie.title || "Movie"}" added to My List`, "success");
+    } else if (result === "removed") {
+      btn.classList.remove("card-bookmark--active");
+      btn.querySelector("i").className = "fa-regular fa-bookmark";
+      btn.setAttribute("aria-label", "Add to My List");
+      showToast("Removed from My List", "info");
+    }
+  });
+
+  // When /my-list is showing and localStorage changes, re-render.
+  window.addEventListener("watchlist:change", () => {
+    if (location.pathname === "/my-list") {
+      render(state.MyList);
+    }
+  });
+}
+
+// Reflect current watchlist state on any visible bookmark buttons.
+function syncBookmarkButtons() {
+  document.querySelectorAll(".card-bookmark").forEach(btn => {
+    let movie;
+    try {
+      movie = JSON.parse(btn.dataset.movie || "null");
+    } catch {
+      movie = null;
+    }
+    if (!movie || movie.id == null) return;
+    if (inWatchlist(movie.id)) {
+      btn.classList.add("card-bookmark--active");
+      const icon = btn.querySelector("i");
+      if (icon) icon.className = "fa-solid fa-bookmark";
+    }
+  });
+}
+
+// -------- Movie detail (Info) modal --------
+async function openInfoModal(movieId) {
+  ensureChrome();
+  const modal = document.querySelector("#infoModal");
+  const body = modal.querySelector(".info-modal-body");
+  if (!modal || !body) return;
+
+  body.innerHTML = `<div class="info-modal-loading">Loading…</div>`;
+  modal.classList.remove("hidden");
+  document.body.classList.add("no-scroll");
+
+  const data = await fetchMovieDetails(movieId);
+  if (!data) {
+    body.innerHTML = `<div class="info-modal-loading">Could not load details.</div>`;
+    return;
+  }
+
+  const escapeHtml = v =>
+    String(v ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+
+  const runtime = data.runtime
+    ? `${Math.floor(data.runtime / 60)}h ${data.runtime % 60}m`
+    : "";
+  const year = (data.release_date || "").slice(0, 4);
+  const rating =
+    typeof data.vote_average === "number" && data.vote_average > 0
+      ? data.vote_average.toFixed(1)
+      : null;
+
+  const genres = (data.genres || [])
+    .map(g => `<span class="info-chip">${escapeHtml(g)}</span>`)
+    .join("");
+
+  const cast = (data.cast || [])
+    .map(
+      c => `
+    <div class="info-cast-card">
+      ${
+        c.profile_path
+          ? `<img src="https://image.tmdb.org/t/p/w185${c.profile_path}" alt="${escapeHtml(c.name)}" loading="lazy" />`
+          : `<div class="info-cast-placeholder" aria-hidden="true">👤</div>`
+      }
+      <span class="info-cast-name">${escapeHtml(c.name)}</span>
+      <span class="info-cast-character">${escapeHtml(c.character || "")}</span>
+    </div>
+  `
+    )
+    .join("");
+
+  const providers = data.watchProviders || {};
+  const renderProviders = (list, label) =>
+    list && list.length
+      ? `
+        <div class="info-provider-row">
+          <span class="info-provider-label">${label}</span>
+          <div class="info-provider-logos">
+            ${list
+              .map(
+                p => `
+                  <span class="info-provider" title="${escapeHtml(p.name)}">
+                    ${
+                      p.logo
+                        ? `<img src="${escapeHtml(p.logo)}" alt="${escapeHtml(p.name)}" />`
+                        : escapeHtml(p.name)
+                    }
+                  </span>
+                `
+              )
+              .join("")}
+          </div>
+        </div>
+      `
+      : "";
+
+  const providersHtml =
+    renderProviders(providers.stream, "Stream") +
+    renderProviders(providers.rent, "Rent") +
+    renderProviders(providers.buy, "Buy");
+
+  const similar = (data.similar || [])
+    .map(
+      m => `
+    <div class="info-similar-card" data-movie-id="${m.id}">
+      <img src="https://image.tmdb.org/t/p/w300${m.poster_path}" alt="${escapeHtml(m.title)}" loading="lazy" />
+      <div class="info-similar-body">
+        <span class="info-similar-title">${escapeHtml(m.title)}</span>
+        <button class="info-btn-inline" data-id="${m.id}" type="button">More info</button>
+      </div>
+    </div>
+  `
+    )
+    .join("");
+
+  body.innerHTML = `
+    ${
+      data.backdrop_path
+        ? `<div class="info-backdrop" style="background-image: url('https://image.tmdb.org/t/p/original${data.backdrop_path}')"></div>`
+        : `<div class="info-backdrop info-backdrop--placeholder"></div>`
+    }
+    <div class="info-content">
+      <div class="info-poster">
+        ${
+          data.poster_path
+            ? `<img src="https://image.tmdb.org/t/p/w500${data.poster_path}" alt="${escapeHtml(data.title)} Poster" />`
+            : ""
+        }
+      </div>
+      <div class="info-main">
+        <h2 class="info-title">${escapeHtml(data.title)}</h2>
+        ${data.tagline ? `<p class="info-tagline">${escapeHtml(data.tagline)}</p>` : ""}
+        <div class="info-meta">
+          ${year ? `<span>${year}</span>` : ""}
+          ${runtime ? `<span class="news-dot">·</span><span>${runtime}</span>` : ""}
+          ${rating ? `<span class="news-dot">·</span><span>★ ${rating}</span>` : ""}
+          ${data.director ? `<span class="news-dot">·</span><span>Dir. ${escapeHtml(data.director.name)}</span>` : ""}
+        </div>
+        ${genres ? `<div class="info-chips">${genres}</div>` : ""}
+        ${data.overview ? `<p class="info-overview">${escapeHtml(data.overview)}</p>` : ""}
+
+        <div class="info-cta">
+          <button class="trailer-btn" data-id="${data.id}">▶ Watch Trailer</button>
+          <button
+            class="auth-btn info-save-btn"
+            data-movie='${escapeHtml(
+              JSON.stringify({
+                id: data.id,
+                title: data.title,
+                poster_path: data.poster_path,
+                release_date: data.release_date,
+                vote_average: data.vote_average
+              })
+            )}'
+            type="button"
+          >
+            <i class="fa-regular fa-bookmark"></i>
+            <span>Add to My List</span>
+          </button>
+          ${
+            data.homepage || data.imdb_id
+              ? `<a class="info-link" href="${
+                  data.imdb_id
+                    ? `https://www.imdb.com/title/${data.imdb_id}`
+                    : data.homepage
+                }" target="_blank" rel="noopener noreferrer">
+                  <i class="fa-brands fa-imdb"></i> More on IMDb
+                </a>`
+              : ""
+          }
+        </div>
+
+        ${providersHtml ? `<div class="info-providers"><h3>Where to Watch</h3>${providersHtml}</div>` : ""}
+      </div>
+    </div>
+
+    ${cast ? `<div class="info-section"><h3>Top Cast</h3><div class="info-cast">${cast}</div></div>` : ""}
+    ${similar ? `<div class="info-section"><h3>If you liked this</h3><div class="info-similar">${similar}</div></div>` : ""}
+  `;
+
+  // Wire the "Add to My List" inside the modal.
+  const saveBtn = body.querySelector(".info-save-btn");
+  if (saveBtn) {
+    const icon = saveBtn.querySelector("i");
+    const label = saveBtn.querySelector("span");
+    const refresh = () => {
+      if (inWatchlist(data.id)) {
+        icon.className = "fa-solid fa-bookmark";
+        label.textContent = "In My List";
+        saveBtn.classList.add("info-save-btn--saved");
+      } else {
+        icon.className = "fa-regular fa-bookmark";
+        label.textContent = "Add to My List";
+        saveBtn.classList.remove("info-save-btn--saved");
+      }
+    };
+    refresh();
+    saveBtn.addEventListener("click", () => {
+      let movie;
+      try {
+        movie = JSON.parse(saveBtn.dataset.movie);
+      } catch {
+        return;
+      }
+      const result = toggleWatchlist(movie);
+      if (result === "added") {
+        showToast(`"${movie.title}" added to My List`, "success");
+      } else if (result === "removed") {
+        showToast("Removed from My List", "info");
+      }
+      refresh();
+    });
+  }
+
+  // Clicking a similar card opens its own detail modal.
+  body.querySelectorAll(".info-similar-card, .info-btn-inline").forEach(el => {
+    el.addEventListener("click", e => {
+      e.preventDefault();
+      const id = el.dataset.id || el.dataset.movieId;
+      if (id) openInfoModal(id);
+    });
+  });
+}
+
+function closeInfoModal() {
+  const modal = document.querySelector("#infoModal");
+  if (!modal) return;
+  modal.classList.add("hidden");
+  document.body.classList.remove("no-scroll");
+}
+
+function attachInfoButtonHandler() {
+  if (document.__infoBound) return;
+  document.__infoBound = true;
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".info-btn");
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const id = btn.dataset.id;
+    if (id) openInfoModal(id);
+  });
+}
+
+// -------- Search (debounced live dropdown) --------
+let searchDebounceId = null;
+let searchActiveIndex = -1;
+let searchResults = [];
+
+function attachSearchHandlers() {
+  const input = document.querySelector("#navSearch");
+  const dropdown = document.querySelector("#navSearchResults");
+  if (!input || !dropdown || input.__searchBound) return;
+  input.__searchBound = true;
+
+  const closeDropdown = () => {
+    dropdown.classList.remove("open");
+    searchActiveIndex = -1;
+  };
+
+  const renderResults = items => {
+    if (!items.length) {
+      dropdown.innerHTML = `<div class="search-empty">No matches.</div>`;
+      return;
+    }
+    dropdown.innerHTML = items
+      .map(
+        (m, i) => `
+        <button class="search-item" role="option" data-idx="${i}" data-id="${m.id}" type="button">
+          ${
+            m.poster_path
+              ? `<img src="https://image.tmdb.org/t/p/w92${m.poster_path}" alt="" loading="lazy" />`
+              : `<div class="search-thumb-placeholder">🎬</div>`
+          }
+          <span class="search-item-body">
+            <span class="search-item-title">${(m.title || "").replace(/</g, "&lt;")}</span>
+            <span class="search-item-meta">${(m.release_date || "").slice(0, 4)} ${
+          typeof m.vote_average === "number" && m.vote_average > 0
+            ? `· ★ ${m.vote_average.toFixed(1)}`
+            : ""
+        }</span>
+          </span>
+        </button>
+      `
+      )
+      .join("");
+  };
+
+  input.addEventListener("input", () => {
+    const q = input.value.trim();
+    clearTimeout(searchDebounceId);
+    if (q.length < 2) {
+      closeDropdown();
+      searchResults = [];
+      return;
+    }
+    dropdown.innerHTML = `<div class="search-loading">Searching…</div>`;
+    dropdown.classList.add("open");
+    searchDebounceId = setTimeout(async () => {
+      const results = await searchMovies(q);
+      searchResults = results;
+      renderResults(results);
+    }, 260);
+  });
+
+  input.addEventListener("keydown", e => {
+    if (!dropdown.classList.contains("open")) return;
+    const items = dropdown.querySelectorAll(".search-item");
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      searchActiveIndex = Math.min(items.length - 1, searchActiveIndex + 1);
+      items.forEach((el, i) => el.classList.toggle("active", i === searchActiveIndex));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      searchActiveIndex = Math.max(0, searchActiveIndex - 1);
+      items.forEach((el, i) => el.classList.toggle("active", i === searchActiveIndex));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const pick = searchActiveIndex >= 0 ? items[searchActiveIndex] : items[0];
+      if (pick) {
+        openInfoModal(pick.dataset.id);
+        closeDropdown();
+        input.value = "";
+      }
+    } else if (e.key === "Escape") {
+      closeDropdown();
+    }
+  });
+
+  dropdown.addEventListener("click", e => {
+    const btn = e.target.closest(".search-item");
+    if (!btn) return;
+    openInfoModal(btn.dataset.id);
+    closeDropdown();
+    input.value = "";
+  });
+
+  document.addEventListener("click", e => {
+    if (!e.target.closest(".nav-search")) closeDropdown();
+  });
+
+  // Global "/" shortcut focuses search (classic streaming UX).
+  document.addEventListener("keydown", e => {
+    if (e.key !== "/" || e.ctrlKey || e.metaKey) return;
+    const tag = document.activeElement?.tagName?.toLowerCase();
+    if (tag === "input" || tag === "textarea") return;
+    e.preventDefault();
+    input.focus();
+  });
 }
 
 // where my router hooks happen
@@ -377,10 +879,14 @@ router.hooks({
 
     switch (view) {
       case "home": {
-        const home = await fetchHomeData();
+        const [home, topRated] = await Promise.all([
+          fetchHomeData(),
+          fetchTopRated()
+        ]);
         state.Home.trending = home.trending;
         state.Home.nowPlaying = home.nowPlaying;
         state.Home.popular = home.popular;
+        state.Home.topRated = topRated;
         break;
       }
 
@@ -405,11 +911,13 @@ router.hooks({
       case "releases":
         try {
           const curated = await fetchUpcomingCurated();
-          state.Releases.movies2026 = curated["2026"];
-          state.Releases.movies2027 = curated["2027"];
+          state.Releases.movies2026 = curated["2026"] || [];
+          state.Releases.movies2027 = curated["2027"] || [];
+          state.Releases.popular = curated.popular || [];
         } catch {
           state.Releases.movies2026 = [];
           state.Releases.movies2027 = [];
+          state.Releases.popular = [];
         }
         break;
 
@@ -432,6 +940,18 @@ router.hooks({
           state.News.articles = [];
         }
         break;
+
+      case "myList":
+        // Pure-local data; render() reads it from localStorage on its own.
+        break;
+
+      case "awards":
+        try {
+          state.Awards.sections = await fetchAwards();
+        } catch {
+          state.Awards.sections = [];
+        }
+        break;
     }
 
     done();
@@ -450,7 +970,9 @@ router
     "/login": () => render(state.Login),
     "/signup": () => render(state.Signup),
     "/profile": () => render(state.Profile),
-    "/news": () => render(state.News)
+    "/news": () => render(state.News),
+    "/my-list": () => render(state.MyList),
+    "/awards": () => render(state.Awards)
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();

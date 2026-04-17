@@ -16,6 +16,8 @@ import Login from "./login";
 import Signup from "./signup";
 import Profile from "./profile";
 import News from "./news";
+import MyList from "./myList";
+import Awards from "./awards";
 
 export {
   Home,
@@ -29,7 +31,9 @@ export {
   Login,
   Signup,
   Profile,
-  News
+  News,
+  MyList,
+  Awards
 };
 
 export default {
@@ -44,5 +48,7 @@ export default {
   Login,
   Signup,
   Profile,
-  News
+  News,
+  MyList,
+  Awards
 };

@@ -82,6 +82,54 @@ export async function fetchMovieVideos(movieId) {
   }
 }
 
+// Top-rated movies on TMDB (complements Trending / Now Playing / Popular).
+export async function fetchTopRated() {
+  try {
+    const response = await axios.get(`${API_BASE}/movies/top_rated`);
+    return response.data.results || [];
+  } catch (err) {
+    console.error("TOP RATED ERROR:", err);
+    return [];
+  }
+}
+
+// Full movie detail — runtime, genres, cast, similar, where to watch.
+export async function fetchMovieDetails(id) {
+  try {
+    const response = await axios.get(`${API_BASE}/movies/${id}/details`);
+    return response.data;
+  } catch (err) {
+    console.error("MOVIE DETAIL ERROR:", err);
+    return null;
+  }
+}
+
+// Oscars Best Picture — curated + enriched with TMDB data, grouped by ceremony.
+export async function fetchAwards() {
+  try {
+    const response = await axios.get(`${API_BASE}/movies/awards`);
+    return Array.isArray(response.data?.sections) ? response.data.sections : [];
+  } catch (err) {
+    console.error("AWARDS ERROR:", err);
+    return [];
+  }
+}
+
+// Movie search — proxied through our backend (TMDB /search/movie).
+export async function searchMovies(query) {
+  const q = String(query || "").trim();
+  if (q.length < 2) return [];
+  try {
+    const response = await axios.get(`${API_BASE}/movies/search`, {
+      params: { q }
+    });
+    return Array.isArray(response.data?.results) ? response.data.results : [];
+  } catch (err) {
+    console.error("SEARCH ERROR:", err);
+    return [];
+  }
+}
+
 // Movie news — proxied through our backend (Guardian Film section).
 export async function fetchMovieNews() {
   try {
@@ -128,10 +176,10 @@ export async function deleteComment(id) {
 export async function fetchUpcomingCurated() {
   try {
     const response = await axios.get(`${API_BASE}/movies/upcoming-curated`);
-    return response.data; // returns { "2026": [...], "2027": [...] }
+    return response.data; // { "2026": [...], "2027": [...], popular: [...] }
   } catch (err) {
     console.error("CURATED UPCOMING ERROR:", err);
-    return { "2026": [], "2027": [] };
+    return { "2026": [], "2027": [], popular: [] };
   }
 }
 
