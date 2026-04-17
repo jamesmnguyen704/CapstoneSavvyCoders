@@ -15,6 +15,10 @@ import Comments from "./Comments";
 import Login from "./login";
 import Signup from "./signup";
 import Profile from "./profile";
+import News from "./news";
+import MyList from "./myList";
+import Awards from "./awards";
+import Discover from "./discover";
 
 export {
   Home,
@@ -27,7 +31,11 @@ export {
   Comments,
   Login,
   Signup,
-  Profile
+  Profile,
+  News,
+  MyList,
+  Awards,
+  Discover
 };
 
 export default {
@@ -41,5 +49,9 @@ export default {
   Comments,
   Login,
   Signup,
-  Profile
+  Profile,
+  News,
+  MyList,
+  Awards,
+  Discover
 };

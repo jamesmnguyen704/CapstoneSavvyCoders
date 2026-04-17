@@ -16,9 +16,13 @@ export default function navItem(item) {
 // updated and change this to Marvel(Replaced Box Office → Marvel)
 export const navItemsData = [
   { url: "/", text: "Home" },
-  { url: "/releases", text: "Upcoming Releases" },
+  { url: "/discover", text: "Discover" },
+  { url: "/releases", text: "Upcoming" },
   { url: "/marvel", text: "Marvel" },
   { url: "/movies", text: "Movies" },
+  { url: "/awards", text: "Awards" },
+  { url: "/news", text: "News" },
+  { url: "/my-list", text: "My List" },
   { url: "/about", text: "About" }
 ];
 

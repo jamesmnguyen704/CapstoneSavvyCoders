@@ -4,5 +4,7 @@
 export default {
   header: "Upcoming Movie Releases",
   view: "Releases",
-  upcoming: []
+  movies2026: [],
+  movies2027: [],
+  popular: []
 };
