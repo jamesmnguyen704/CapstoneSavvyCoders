@@ -903,3 +903,124 @@ footer {
     font-size: 2.3rem;
   }
 }
+
+/* ============================================================
+   Auth pages (Login / Signup) — matches Cinemetrics dark/gold theme
+   ============================================================ */
+.auth-page {
+  max-width: 440px;
+  margin: 3rem auto;
+  padding: 2.25rem 2rem 2rem;
+  background: rgba(15, 52, 96, 0.55);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  color: #f5f5f5;
+  backdrop-filter: blur(6px);
+}
+
+.auth-title {
+  text-align: center;
+  margin: 0 0 1.5rem;
+  color: #ffd700;
+  font-size: 1.9rem;
+  letter-spacing: 0.5px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.auth-form label {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #ffd700;
+  font-weight: 600;
+}
+
+.auth-form input {
+  padding: 0.7rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  background: rgba(0, 0, 0, 0.35);
+  color: #fff;
+  font-size: 1rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-form input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: #ffd700;
+  box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
+}
+
+.auth-btn {
+  margin-top: 1.25rem;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111;
+  background: linear-gradient(90deg, #ffd700 0%, #ffb400 50%, #ff8a00 100%);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.15s ease;
+}
+
+.auth-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.auth-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-msg {
+  min-height: 1.2em;
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.auth-msg--error {
+  color: #ff6b6b;
+}
+
+.auth-msg--success {
+  color: #6ee7b7;
+}
+
+.auth-switch {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.auth-switch a {
+  color: #ffd700;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.auth-switch a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .auth-page {
+    margin: 1.5rem 1rem;
+    padding: 1.5rem 1.25rem;
+  }
+  .auth-title {
+    font-size: 1.6rem;
+  }
+}

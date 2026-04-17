@@ -1,9 +1,6 @@
 // File: views/signup.js
-// Purpose: Signup view — renders a signup form and posts to /auth/signup.
-// Notes (James-style):
-//   - IDs MUST match the handlers in index.js (#signupForm, #username, #email, #password).
-//   - index.js attaches the submit listener AFTER render, so this file ONLY renders markup.
-//   - state.form.* is optional but nice to preserve user input if the view re-renders.
+// Purpose: Signup view — renders the signup form. Submit handler lives in index.js.
+// Notes: IDs must match the handler in index.js (#signupForm, #username, #email, #password, #authMsg).
 
 import html from "html-literal";
 
@@ -11,11 +8,12 @@ export default state => html`
   <section class="auth-page">
     <h1 class="auth-title">${state.header || "Create Account"}</h1>
 
-    <form id="signupForm" class="auth-form">
+    <form id="signupForm" class="auth-form" novalidate>
       <label for="username">Username</label>
       <input
         type="text"
         id="username"
+        autocomplete="username"
         value="${state.form?.username || ""}"
         placeholder="Choose a username"
         required
@@ -25,6 +23,7 @@ export default state => html`
       <input
         type="email"
         id="email"
+        autocomplete="email"
         value="${state.form?.email || ""}"
         placeholder="your@email.com"
         required
@@ -34,10 +33,14 @@ export default state => html`
       <input
         type="password"
         id="password"
+        autocomplete="new-password"
         value="${state.form?.password || ""}"
-        placeholder="Create a password"
+        placeholder="Create a password (min 6 characters)"
+        minlength="6"
         required
       />
+
+      <p id="authMsg" class="auth-msg" role="alert" aria-live="polite"></p>
 
       <button type="submit" class="auth-btn">Sign Up</button>
     </form>
@@ -48,5 +51,3 @@ export default state => html`
     </p>
   </section>
 `;
-
-// === END BACKUP ===
