@@ -13,15 +13,28 @@ const router = express.Router();
 
 const GUARDIAN_BASE = "https://content.guardianapis.com/search";
 
+// Narrow the Guardian Film section to blockbuster / geeky coverage.
+// Quoted phrases keep multi-word terms intact; OR gives the union.
+const BLOCKBUSTER_QUERY = [
+  "marvel", "MCU", "avengers",
+  "DC", "batman", "superman", "spider-man",
+  '"star wars"', '"box office"', "blockbuster", "franchise", "sequel",
+  '"comic-con"', '"comic con"', "cinemacon", '"cinema con"',
+  "superhero", "disney", "pixar", "james bond",
+  "james cameron", "dune", "avatar"
+].join(" OR ");
+
 router.get("/", async (req, res) => {
   const apiKey = process.env.GUARDIAN_API_KEY || "test";
-  const pageSize = Math.min(Number(req.query.pageSize) || 20, 50);
+  const pageSize = Math.min(Number(req.query.pageSize) || 30, 50);
 
   try {
     const response = await axios.get(GUARDIAN_BASE, {
       params: {
         section: "film",
+        q: BLOCKBUSTER_QUERY,
         "show-fields": "thumbnail,trailText,byline",
+        "show-tags": "keyword",
         "order-by": "newest",
         "page-size": pageSize,
         "api-key": apiKey
@@ -37,6 +50,7 @@ router.get("/", async (req, res) => {
       image: item.fields?.thumbnail || null,
       excerpt: stripHtml(item.fields?.trailText || ""),
       byline: item.fields?.byline || null,
+      tags: (item.tags || []).map(t => t.webTitle).filter(Boolean),
       source: "The Guardian",
       publishedAt: item.webPublicationDate
     }));

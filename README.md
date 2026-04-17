@@ -43,7 +43,13 @@ JWT_SECRET=dev_secret_change_me
 BACKEND_PORT=3000
 RESEND_API_KEY=<optional_resend_api_key>
 EMAIL_FROM=you@example.com
+GUARDIAN_API_KEY=<optional_guardian_api_key>
 ```
+
+> **Movie News:** the `/news` route proxies The Guardian's Film section. It
+> defaults to their public `test` key (works immediately for dev), so
+> `GUARDIAN_API_KEY` is optional. Register at
+> https://open-platform.theguardian.com/access/ for higher rate limits.
 
 Notes:
 
