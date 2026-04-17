@@ -19,6 +19,7 @@ export const navItemsData = [
   { url: "/releases", text: "Upcoming Releases" },
   { url: "/marvel", text: "Marvel" },
   { url: "/movies", text: "Movies" },
+  { url: "/news", text: "News" },
   { url: "/about", text: "About" }
 ];
 

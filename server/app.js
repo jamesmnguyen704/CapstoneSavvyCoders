@@ -5,6 +5,7 @@ import express from "express"; // Framework to create servers and routes
 import cors from "cors"; // Allows my frontend (Netlify) or Render to say whats up to my backend API
 import mongoose from "mongoose"; // MongoDB library that connects and interacts
 import authRoutes from "./routes/auth.js";
+import newsRoutes from "./routes/news.js";
 
 // my utilities to help with my .emv
 import { fileURLToPath } from "url"; // to get the current file path
@@ -57,6 +58,7 @@ app.use(logging); //loggin request for debug
 app.use("/comments", commentsRouter); // Forward /comments requests
 app.use("/movies", moviesRouter); // Forward /movies requests
 app.use("/auth", authRoutes); // user auth routes
+app.use("/news", newsRoutes); // movie news (Guardian Film proxy)
 
 // testing starts here
 // Root route to confirm backend is running

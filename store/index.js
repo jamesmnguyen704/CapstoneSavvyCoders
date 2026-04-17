@@ -15,6 +15,7 @@ import Comments from "./Comments";
 import Login from "./login";
 import Signup from "./signup";
 import Profile from "./profile";
+import News from "./news";
 
 export {
   Home,
@@ -27,7 +28,8 @@ export {
   Comments,
   Login,
   Signup,
-  Profile
+  Profile,
+  News
 };
 
 export default {
@@ -41,5 +43,6 @@ export default {
   Comments,
   Login,
   Signup,
-  Profile
+  Profile,
+  News
 };

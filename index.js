@@ -17,7 +17,8 @@ import {
   fetchMovieVideos,
   fetchComments,
   postComment,
-  deleteComment
+  deleteComment,
+  fetchMovieNews
 } from "./services/api";
 
 // API base URL works with Netlify and Render
@@ -423,6 +424,14 @@ router.hooks({
       case "signup":
       case "profile":
         break;
+
+      case "news":
+        try {
+          state.News.articles = await fetchMovieNews();
+        } catch {
+          state.News.articles = [];
+        }
+        break;
     }
 
     done();
@@ -440,7 +449,8 @@ router
     "/comments/:movieId": () => render(state.Comments),
     "/login": () => render(state.Login),
     "/signup": () => render(state.Signup),
-    "/profile": () => render(state.Profile)
+    "/profile": () => render(state.Profile),
+    "/news": () => render(state.News)
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();

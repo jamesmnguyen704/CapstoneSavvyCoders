@@ -82,6 +82,17 @@ export async function fetchMovieVideos(movieId) {
   }
 }
 
+// Movie news — proxied through our backend (Guardian Film section).
+export async function fetchMovieNews() {
+  try {
+    const response = await axios.get(`${API_BASE}/news`);
+    return Array.isArray(response.data?.results) ? response.data.results : [];
+  } catch (err) {
+    console.error("MOVIE NEWS ERROR:", err);
+    return [];
+  }
+}
+
 // Comments API helpers. Route returns an array of comment docs directly.
 export async function fetchComments(movieId) {
   try {
