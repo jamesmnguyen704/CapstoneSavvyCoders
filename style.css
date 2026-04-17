@@ -1024,3 +1024,90 @@ footer {
     font-size: 1.6rem;
   }
 }
+
+/* ============================================================
+   Profile page
+   ============================================================ */
+.profile-page {
+  max-width: 520px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+  color: #f5f5f5;
+}
+
+.profile-card {
+  background: rgba(15, 52, 96, 0.55);
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  border-radius: 14px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  padding: 2rem 1.75rem;
+  text-align: center;
+  backdrop-filter: blur(6px);
+}
+
+.profile-avatar {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ffd700 0%, #ff8a00 100%);
+  color: #111;
+  font-size: 2.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(255, 138, 0, 0.35);
+}
+
+.profile-name {
+  margin: 0 0 0.25rem;
+  color: #ffd700;
+  font-size: 1.8rem;
+  letter-spacing: 0.3px;
+}
+
+.profile-email {
+  margin: 0 0 1.5rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.95rem;
+}
+
+.profile-meta {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 1.5rem;
+  text-align: left;
+}
+
+.profile-meta > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0.85rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 8px;
+}
+
+.profile-meta dt {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+}
+
+.profile-meta dd {
+  margin: 0;
+  color: #fff;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.profile-meta code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+}
+
+.profile-logout {
+  width: 100%;
+}

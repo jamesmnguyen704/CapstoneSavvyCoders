@@ -350,6 +350,7 @@ router.hooks({
 
       case "login":
       case "signup":
+      case "profile":
         break;
     }
 
@@ -367,7 +368,8 @@ router
     "/about": () => render(state.AboutMe),
     "/comments/:movieId": () => render(state.Comments),
     "/login": () => render(state.Login),
-    "/signup": () => render(state.Signup)
+    "/signup": () => render(state.Signup),
+    "/profile": () => render(state.Profile)
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();

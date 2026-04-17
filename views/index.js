@@ -8,4 +8,5 @@ export { default as Movies } from "./movies";
 export { default as Releases } from "./releases";
 export { default as login } from "./login";
 export { default as signup } from "./signup";
+export { default as Profile } from "./profile";
 export { default as ViewNotFound } from "./viewNotFound";
