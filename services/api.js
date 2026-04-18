@@ -180,6 +180,17 @@ export async function fetchMovieNews() {
   }
 }
 
+// TV news — proxied through our backend (TV-focused RSS + Guardian TV).
+export async function fetchTvNews() {
+  try {
+    const response = await axios.get(`${API_BASE}/news/tv`);
+    return Array.isArray(response.data?.results) ? response.data.results : [];
+  } catch (err) {
+    console.error("TV NEWS ERROR:", err);
+    return [];
+  }
+}
+
 // Comments API helpers. Route returns an array of comment docs directly.
 export async function fetchComments(movieId) {
   try {

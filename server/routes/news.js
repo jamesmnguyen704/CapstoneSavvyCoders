@@ -1,12 +1,10 @@
 // File: server/routes/news.js
-// Purpose: Aggregates movie/TV news from a curated set of sources.
+// Purpose: Aggregates movie AND TV news from a curated set of sources.
 //          Kept intentionally small to avoid Valnet-network churn
 //          (MovieWeb/Collider/ScreenRant all share editorial).
-// Sources:
-//   - IGN Movies      (reviews + franchise heavyweights)
-//   - /Film           (editorial + franchise deep dives; best of Valnet group)
-//   - Deadline        (industry / box-office angle)
-//   - The Guardian    (filtered to blockbuster/geeky keywords, actual journalism)
+// Endpoints:
+//   GET /        → movie-focused feed
+//   GET /tv      → TV-focused feed (streaming shows, prestige, reality)
 // Notes:
 //   - Returned shape: { results: [{ id, title, url, image, excerpt,
 //     source, publishedAt, tags }] }, sorted by date desc.
@@ -33,21 +31,44 @@ const parser = new Parser({
   }
 });
 
-const FEEDS = [
+const GUARDIAN_BASE = "https://content.guardianapis.com/search";
+
+// Movie-focused configuration
+const MOVIE_FEEDS = [
   { source: "IGN",      url: "https://feeds.feedburner.com/ign/movies-all" },
   { source: "/Film",    url: "https://www.slashfilm.com/feed/" },
   { source: "Deadline", url: "https://deadline.com/v/film/feed/" }
 ];
+const MOVIE_GUARDIAN = {
+  section: "film",
+  query: [
+    "marvel", "MCU", "avengers",
+    "DC", "batman", "superman", "spider-man",
+    '"star wars"', '"box office"', "blockbuster", "franchise", "sequel",
+    '"comic-con"', '"comic con"', "cinemacon", '"cinema con"',
+    "superhero", "disney", "pixar", "james bond",
+    "james cameron", "dune", "avatar"
+  ].join(" OR ")
+};
 
-const GUARDIAN_BASE = "https://content.guardianapis.com/search";
-const GUARDIAN_QUERY = [
-  "marvel", "MCU", "avengers",
-  "DC", "batman", "superman", "spider-man",
-  '"star wars"', '"box office"', "blockbuster", "franchise", "sequel",
-  '"comic-con"', '"comic con"', "cinemacon", '"cinema con"',
-  "superhero", "disney", "pixar", "james bond",
-  "james cameron", "dune", "avatar"
-].join(" OR ");
+// TV-focused configuration — streaming prestige, adult superhero,
+// genre series that matter (not daytime soaps / local news).
+const TV_FEEDS = [
+  { source: "IGN",      url: "https://feeds.feedburner.com/ign/tv-all" },
+  { source: "Deadline", url: "https://deadline.com/v/tv/feed/" },
+  { source: "/Film",    url: "https://www.slashfilm.com/category/tv/feed/" }
+];
+const TV_GUARDIAN = {
+  section: "tv-and-radio",
+  query: [
+    '"the boys"', "invincible", "daredevil", '"house of the dragon"',
+    '"last of us"', "severance", "succession", "stranger things",
+    "mandalorian", "loki", '"what if"', "wednesday", "bridgerton",
+    '"squid game"', "beef", '"true detective"', '"the bear"',
+    "streaming", "netflix", '"hbo max"', '"apple tv"', "hulu",
+    '"amazon prime"', "paramount", '"disney plus"', "peacock"
+  ].join(" OR ")
+};
 
 function stripHtml(s) {
   return String(s ?? "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
@@ -111,13 +132,13 @@ async function fetchRssSource({ source, url }) {
   }
 }
 
-async function fetchGuardian() {
+async function fetchGuardian({ section, query }) {
   const apiKey = process.env.GUARDIAN_API_KEY || "test";
   try {
     const response = await axios.get(GUARDIAN_BASE, {
       params: {
-        section: "film",
-        q: GUARDIAN_QUERY,
+        section,
+        q: query,
         "show-fields": "thumbnail,trailText,byline",
         "show-tags": "keyword",
         "order-by": "newest",
@@ -137,53 +158,72 @@ async function fetchGuardian() {
       tags: (item.tags || []).map(t => t.webTitle).filter(Boolean)
     }));
   } catch (err) {
-    console.warn("NEWS Guardian failed:", err.message);
+    console.warn(`NEWS Guardian (${section}) failed:`, err.message);
     return [];
   }
 }
 
+async function aggregate({ rssFeeds, guardian }) {
+  const [guardianResults, ...rssResults] = await Promise.all([
+    fetchGuardian(guardian),
+    ...rssFeeds.map(fetchRssSource)
+  ]);
+
+  const all = [...guardianResults, ...rssResults.flat()]
+    .filter(a => a && a.title && a.url);
+
+  // Sort newest-first so the oldest near-duplicate loses.
+  all.sort((a, b) => {
+    const ta = a.publishedAt ? Date.parse(a.publishedAt) : 0;
+    const tb = b.publishedAt ? Date.parse(b.publishedAt) : 0;
+    return tb - ta;
+  });
+
+  // Dedupe in two passes: exact URL, then normalized-title similarity.
+  const seenUrls = new Set();
+  const seenTitles = new Set();
+  const results = [];
+  for (const item of all) {
+    if (seenUrls.has(item.url)) continue;
+    const key = titleKey(item.title);
+    if (key && seenTitles.has(key)) continue;
+    seenUrls.add(item.url);
+    if (key) seenTitles.add(key);
+    results.push(item);
+    if (results.length >= 40) break;
+  }
+  return results;
+}
+
 router.get("/", async (req, res) => {
   try {
-    const [guardian, ...rssResults] = await Promise.all([
-      fetchGuardian(),
-      ...FEEDS.map(fetchRssSource)
-    ]);
-
-    const all = [...guardian, ...rssResults.flat()]
-      .filter(a => a && a.title && a.url);
-
-    // Sort newest-first so the oldest near-duplicate loses.
-    all.sort((a, b) => {
-      const ta = a.publishedAt ? Date.parse(a.publishedAt) : 0;
-      const tb = b.publishedAt ? Date.parse(b.publishedAt) : 0;
-      return tb - ta;
+    const results = await aggregate({
+      rssFeeds: MOVIE_FEEDS,
+      guardian: MOVIE_GUARDIAN
     });
-
-    // Dedupe in two passes: exact URL, then normalized-title similarity.
-    const seenUrls = new Set();
-    const seenTitles = new Set();
-    const results = [];
-    for (const item of all) {
-      if (seenUrls.has(item.url)) continue;
-      const key = titleKey(item.title);
-      if (key && seenTitles.has(key)) continue;
-      seenUrls.add(item.url);
-      if (key) seenTitles.add(key);
-      results.push(item);
-      if (results.length >= 40) break;
-    }
-
     if (!results.length) {
-      return res.status(502).json({
-        message: "No news sources responded",
-        results: []
-      });
+      return res.status(502).json({ message: "No movie news sources responded", results: [] });
     }
-
     res.json({ results });
   } catch (err) {
-    console.error("NEWS AGGREGATE ERROR:", err.message);
-    res.status(500).json({ message: "Failed to load news", results: [] });
+    console.error("NEWS MOVIE ERROR:", err.message);
+    res.status(500).json({ message: "Failed to load movie news", results: [] });
+  }
+});
+
+router.get("/tv", async (req, res) => {
+  try {
+    const results = await aggregate({
+      rssFeeds: TV_FEEDS,
+      guardian: TV_GUARDIAN
+    });
+    if (!results.length) {
+      return res.status(502).json({ message: "No TV news sources responded", results: [] });
+    }
+    res.json({ results });
+  } catch (err) {
+    console.error("NEWS TV ERROR:", err.message);
+    res.status(500).json({ message: "Failed to load TV news", results: [] });
   }
 });
 

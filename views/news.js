@@ -171,7 +171,49 @@ function renderRailItem(article) {
   `;
 }
 
+const TAB_CONFIG = {
+  movies: {
+    title: "Movie News",
+    subtitle: "Blockbusters, Marvel, CinemaCon and geek culture — updated daily.",
+    gridHead: "Top Stories",
+    gridSub: "Blockbusters, superheroes &amp; sequels",
+    railLabel: "Latest movie news"
+  },
+  tv: {
+    title: "TV News",
+    subtitle: "Streaming prestige, adult animation, reality & genre series — updated daily.",
+    gridHead: "Top Stories",
+    gridSub: "Boys, Invincible, Daredevil &amp; streaming prestige",
+    railLabel: "Latest TV news"
+  }
+};
+
+function renderTabs(activeTab) {
+  const tabs = [
+    { key: "movies", label: "Movies" },
+    { key: "tv",     label: "TV" }
+  ];
+  return `
+    <div class="news-tabs" role="tablist">
+      ${tabs
+        .map(
+          t => `
+          <button
+            type="button"
+            class="news-tab${t.key === activeTab ? " is-active" : ""}"
+            role="tab"
+            aria-selected="${t.key === activeTab}"
+            data-news-tab="${t.key}"
+          >${t.label}</button>`
+        )
+        .join("")}
+    </div>
+  `;
+}
+
 export default state => {
+  const activeTab = state.activeTab === "tv" ? "tv" : "movies";
+  const cfg = TAB_CONFIG[activeTab];
   const articles = Array.isArray(state.articles) ? state.articles : [];
 
   const featured = articles[0];
@@ -189,21 +231,20 @@ export default state => {
     : `<p class="news-empty">Check back soon for more headlines.</p>`;
 
   return html`
-    <section class="news-page">
+    <section class="news-page" data-active-tab="${activeTab}">
       <header class="news-header">
         <div class="news-header-left">
           <span class="news-kicker">Cinemetrics Wire</span>
-          <h1>Movie News</h1>
-          <p class="news-subtitle">
-            Blockbusters, Marvel, CinemaCon and geek culture — updated daily.
-          </p>
+          <h1>${cfg.title}</h1>
+          <p class="news-subtitle">${cfg.subtitle}</p>
+          ${renderTabs(activeTab)}
         </div>
         <div class="news-header-right">
           <span class="news-live">
             <span class="news-live-dot"></span>
             LIVE
           </span>
-          <span class="news-source-credit">via The Guardian · Film</span>
+          <span class="news-source-credit">via The Guardian + RSS</span>
         </div>
       </header>
 
@@ -215,8 +256,8 @@ export default state => {
             grid.length
               ? `
                 <div class="news-grid-head">
-                  <h2>Top Stories</h2>
-                  <span class="news-grid-sub">Blockbusters, superheroes &amp; sequels</span>
+                  <h2>${cfg.gridHead}</h2>
+                  <span class="news-grid-sub">${cfg.gridSub}</span>
                 </div>
                 <div class="news-grid">${gridHtml}</div>
               `
@@ -224,7 +265,7 @@ export default state => {
           }
         </div>
 
-        <aside class="news-rail" aria-label="Latest movie news">
+        <aside class="news-rail" aria-label="${cfg.railLabel}">
           <h2 class="news-rail-title">Latest</h2>
           <div class="news-rail-list">${railHtml}</div>
         </aside>

@@ -3697,6 +3697,39 @@ body.no-scroll {
   font-size: 0.76rem;
 }
 
+/* News tabs — Movies / TV switcher under the page header */
+.news-tabs {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.3rem;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,215,0,0.2);
+  border-radius: 999px;
+}
+.news-tab {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #e6e8ee;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.45rem 1.1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, transform 150ms ease;
+}
+.news-tab:hover { color: #ffd700; }
+.news-tab.is-active {
+  background: linear-gradient(90deg, #ffd700 0%, #ffb400 100%);
+  color: #081018;
+  box-shadow: 0 4px 14px rgba(255,166,0,0.28);
+}
+.news-tab:focus-visible {
+  outline: 2px solid #ffd700;
+  outline-offset: 2px;
+}
+
 /* =========================================================
    GLOBAL RESPONSIVE OVERRIDES
    Consolidated breakpoints: 1200 / 1024 / 768 / 480 / 380

@@ -19,6 +19,7 @@ import {
   postComment,
   deleteComment,
   fetchMovieNews,
+  fetchTvNews,
   fetchTopRated,
   fetchMovieDetails,
   fetchAwards,
@@ -148,6 +149,36 @@ function attachModalListenersOnce() {
     if (e.target.closest(".close-modal")) {
       e.preventDefault();
       closeTrailerModal();
+      return;
+    }
+
+    // News tab switch (Movies / TV)
+    const newsTabBtn = e.target.closest("[data-news-tab]");
+    if (newsTabBtn) {
+      e.preventDefault();
+      const nextTab = newsTabBtn.dataset.newsTab === "tv" ? "tv" : "movies";
+      if (state.News.activeTab === nextTab) return;
+      state.News.activeTab = nextTab;
+      // Pull from cache if present, else fetch.
+      const cached = state.News.cache?.[nextTab];
+      if (cached && cached.length) {
+        state.News.articles = cached;
+        render(state.News);
+      } else {
+        state.News.articles = [];
+        render(state.News);
+        (async () => {
+          try {
+            const articles = nextTab === "tv" ? await fetchTvNews() : await fetchMovieNews();
+            state.News.articles = articles;
+            if (state.News.cache) state.News.cache[nextTab] = articles;
+            render(state.News);
+          } catch {
+            state.News.articles = [];
+            render(state.News);
+          }
+        })();
+      }
       return;
     }
 
@@ -1191,13 +1222,22 @@ router.hooks({
       case "profile":
         break;
 
-      case "news":
+      case "news": {
+        const tab = state.News.activeTab === "tv" ? "tv" : "movies";
+        // Use per-tab cache if we already fetched this tab.
+        if (state.News.cache?.[tab]?.length) {
+          state.News.articles = state.News.cache[tab];
+          break;
+        }
         try {
-          state.News.articles = await fetchMovieNews();
+          const articles = tab === "tv" ? await fetchTvNews() : await fetchMovieNews();
+          state.News.articles = articles;
+          if (state.News.cache) state.News.cache[tab] = articles;
         } catch {
           state.News.articles = [];
         }
         break;
+      }
 
       case "myList":
         // Pure-local data; render() reads it from localStorage on its own.
