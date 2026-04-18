@@ -3710,17 +3710,23 @@ img, video, iframe { max-width: 100%; }
 
 /* Trailer modal: give the flex container a real width so the iframe
    (width: 100% of parent) actually fills the screen instead of collapsing
-   to min-content. */
-.trailer-content {
-  width: min(1100px, 95vw);
-  aspect-ratio: 16 / 9;
-  max-height: 90vh;
+   to min-content. Use explicit width + height via vw/vh so neither
+   aspect-ratio nor flex can collapse it. */
+.trailer-modal:not(.hidden) .trailer-content {
+  width: 90vw !important;
+  max-width: 1100px !important;
+  height: calc(90vw * 9 / 16) !important;
+  max-height: 85vh !important;
+  display: block !important;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
-#trailerFrame,
-#introVideo {
-  width: 100%;
-  height: 100%;
-  max-height: none;
+.trailer-modal:not(.hidden) #trailerFrame,
+.trailer-modal:not(.hidden) #introVideo {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: none !important;
+  display: block !important;
 }
 
 /* Replace fixed 360px poster heights with aspect-ratio across ALL card posters.
