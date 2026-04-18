@@ -1,7 +1,12 @@
 // File: store/news.js
-// Purpose: State store for the Movie News view.
+// Purpose: State store for the News view (movies + TV tabs).
 export default {
-  header: "Movie News",
+  header: "News",
   view: "News",
-  articles: []
+  activeTab: "movies", // "movies" | "tv"
+  articles: [],        // articles for the active tab
+  cache: {             // per-tab article cache so switching is instant
+    movies: null,
+    tv: null
+  }
 };
