@@ -3696,3 +3696,190 @@ body.no-scroll {
   color: var(--cm-muted);
   font-size: 0.76rem;
 }
+
+/* =========================================================
+   GLOBAL RESPONSIVE OVERRIDES
+   Consolidated breakpoints: 1200 / 1024 / 768 / 480 / 380
+   Fixes poster heights, hero heights, grids, side-rails,
+   carousels, and typography across all views.
+   ========================================================= */
+
+/* Prevent horizontal scroll on any device */
+html, body { max-width: 100%; overflow-x: hidden; }
+img, video, iframe { max-width: 100%; }
+
+/* Replace fixed 360px poster heights with aspect-ratio across ALL card posters.
+   This makes posters scale naturally with card width at every breakpoint. */
+.movie-poster,
+.movie-card img,
+.marvel-poster,
+.marvel-card img,
+.release-poster img {
+  height: auto !important;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+/* --------- Large desktop tweak (≤1200px) --------- */
+@media (max-width: 1200px) {
+  main { padding: 1.5rem; }
+  .movies-grid,
+  .movie-grid,
+  .marvel-grid {
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) !important;
+  }
+  .releases-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+  }
+}
+
+/* --------- Tablet (≤1024px) --------- */
+@media (max-width: 1024px) {
+  main { padding: 1.25rem; }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.6rem; }
+
+  .hero-slider-container { height: 360px; }
+
+  .movies-grid,
+  .movie-grid,
+  .marvel-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)) !important;
+    gap: 1rem !important;
+  }
+  .releases-grid {
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
+    gap: 1.25rem !important;
+  }
+
+  /* Marvel carousel: shrink card width */
+  .marvel-card { min-width: 150px; flex: 0 0 150px; }
+  .marvel-phase-row { max-height: none !important; }
+
+  /* News: stack right-rail earlier for better reading */
+  .news-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .news-rail {
+    position: static !important;
+    border-top: 1px solid rgba(255,215,0,0.2);
+    padding-top: 1rem;
+    margin-top: 1rem;
+  }
+
+  /* Detail / info / person: stack poster + content */
+  .info-content,
+  .person-header {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* --------- Small tablet / large phone (≤768px) --------- */
+@media (max-width: 768px) {
+  main { padding: 1rem; }
+  h1 { font-size: 1.7rem; }
+  h2 { font-size: 1.3rem; }
+  h3 { font-size: 1.1rem; }
+
+  section { padding: 0.75rem; margin-bottom: 1.25rem; }
+
+  .hero-slider-container { height: 280px; border-radius: 12px; }
+  .hero-content h1 { font-size: 1.6rem; }
+  .hero-content p  { font-size: 0.95rem; }
+
+  .home-hero { padding: 2rem 1rem; }
+  .home-banner { height: 200px; }
+
+  .movies-grid,
+  .movie-grid,
+  .marvel-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+    gap: 0.85rem !important;
+  }
+  .releases-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
+    gap: 1rem !important;
+  }
+
+  .marvel-card { min-width: 140px; flex: 0 0 140px; }
+  .marvel-phase-title { font-size: 1.5rem; }
+
+  /* Profile / about / auth — tighten widths */
+  .profile, .auth-page, .about { padding: 1.25rem; }
+
+  /* Comments form */
+  .comments-form textarea { min-height: 80px; }
+
+  /* Trailer modal sizing on mobile */
+  .trailer-content { max-width: 98%; padding: 6px; }
+  .close-modal { font-size: 28px; top: 4px; right: 6px; }
+}
+
+/* --------- Phone (≤480px) --------- */
+@media (max-width: 480px) {
+  main { padding: 0.75rem; }
+  h1 { font-size: 1.4rem; }
+  h2 { font-size: 1.15rem; }
+
+  .hero-slider-container { height: 220px; border-radius: 10px; }
+  .hero-content { padding: 0.9rem; }
+  .hero-content h1 { font-size: 1.3rem; }
+  .hero-content p  { font-size: 0.85rem; -webkit-line-clamp: 3; }
+
+  .home-banner { height: 160px; }
+
+  .movies-grid,
+  .movie-grid,
+  .marvel-grid {
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
+    gap: 0.7rem !important;
+  }
+  .releases-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .movie-card { padding: 0.5rem; }
+  .marvel-card { min-width: 130px; flex: 0 0 130px; padding: 0.5rem; }
+
+  .movie-title, .marvel-card-title, .release-title {
+    font-size: 0.85rem;
+    line-height: 1.1rem;
+    min-height: 2.2rem;
+  }
+
+  .trailer-btn, .comment-btn {
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Nav compaction */
+  .logo { font-size: 1.2rem; }
+  .nav-links a { font-size: 0.9rem; }
+  .welcome { font-size: 0.8rem; }
+
+  /* About page photo */
+  .about-photo, .about-photo-fallback { width: 120px; height: 120px; }
+  .about-banner h1 { font-size: 1.8rem; }
+
+  /* Trailer / iframe */
+  #trailerFrame { aspect-ratio: 16 / 9; height: auto; }
+}
+
+/* --------- Very small phone (≤380px) --------- */
+@media (max-width: 380px) {
+  .movies-grid,
+  .movie-grid,
+  .marvel-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+  .marvel-card { min-width: 0; flex: 1 1 45%; }
+  .hero-slider-container { height: 180px; }
+}
+
+/* --------- Landscape phone: keep hero readable --------- */
+@media (max-height: 500px) and (orientation: landscape) {
+  .hero-slider-container { height: 80vh; min-height: 220px; }
+}
