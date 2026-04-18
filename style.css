@@ -3708,6 +3708,21 @@ body.no-scroll {
 html, body { max-width: 100%; overflow-x: hidden; }
 img, video, iframe { max-width: 100%; }
 
+/* Trailer modal: give the flex container a real width so the iframe
+   (width: 100% of parent) actually fills the screen instead of collapsing
+   to min-content. */
+.trailer-content {
+  width: min(1100px, 95vw);
+  aspect-ratio: 16 / 9;
+  max-height: 90vh;
+}
+#trailerFrame,
+#introVideo {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+}
+
 /* Replace fixed 360px poster heights with aspect-ratio across ALL card posters.
    This makes posters scale naturally with card width at every breakpoint. */
 .movie-poster,
