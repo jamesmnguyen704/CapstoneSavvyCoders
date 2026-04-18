@@ -1,18 +1,19 @@
 // File: server/routes/news.js
-// Purpose: Aggregates movie news from multiple sources (RSS + The Guardian)
-//          so the feed stays fresh even if one source goes dark.
+// Purpose: Aggregates movie/TV news from a curated set of sources.
+//          Kept intentionally small to avoid Valnet-network churn
+//          (MovieWeb/Collider/ScreenRant all share editorial).
 // Sources:
-//   - JoBlo           (movie news, heavily blockbuster/geeky)
-//   - MovieWeb        (news + features)
-//   - IGN Movies      (blockbusters + franchise)
-//   - Collider        (mainstream movie coverage)
-//   - /Film           (editorial + franchise deep dives)
-//   - The Guardian    (filtered to blockbuster/geeky keywords)
+//   - IGN Movies      (reviews + franchise heavyweights)
+//   - /Film           (editorial + franchise deep dives; best of Valnet group)
+//   - Deadline        (industry / box-office angle)
+//   - The Guardian    (filtered to blockbuster/geeky keywords, actual journalism)
 // Notes:
 //   - Returned shape: { results: [{ id, title, url, image, excerpt,
 //     source, publishedAt, tags }] }, sorted by date desc.
 //   - All feeds run in parallel with individual timeouts so one slow
 //     source can't drag the whole response down.
+//   - Dedupe is URL-based AND title-similarity-based to catch the same
+//     story syndicated across publishers.
 
 import express from "express";
 import axios from "axios";
@@ -33,11 +34,9 @@ const parser = new Parser({
 });
 
 const FEEDS = [
-  { source: "JoBlo",    url: "https://www.joblo.com/feed/" },
-  { source: "MovieWeb", url: "https://movieweb.com/feed/" },
   { source: "IGN",      url: "https://feeds.feedburner.com/ign/movies-all" },
-  { source: "Collider", url: "https://collider.com/feed/" },
-  { source: "/Film",    url: "https://www.slashfilm.com/feed/" }
+  { source: "/Film",    url: "https://www.slashfilm.com/feed/" },
+  { source: "Deadline", url: "https://deadline.com/v/film/feed/" }
 ];
 
 const GUARDIAN_BASE = "https://content.guardianapis.com/search";
@@ -52,6 +51,23 @@ const GUARDIAN_QUERY = [
 
 function stripHtml(s) {
   return String(s ?? "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+}
+
+// Normalize a title for similarity comparison: lowercase, strip punctuation,
+// drop common filler words, and clip to the first 8 keywords. Different
+// publishers syndicating the same story usually keep 5+ shared keywords.
+const STOP_WORDS = new Set([
+  "the","a","an","and","or","of","to","in","on","for","with","is","are",
+  "this","that","his","her","its","from","by","at","as","new","says"
+]);
+function titleKey(title) {
+  return String(title || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(w => w && !STOP_WORDS.has(w))
+    .slice(0, 8)
+    .join(" ");
 }
 
 function extractImage(item) {
@@ -133,21 +149,29 @@ router.get("/", async (req, res) => {
       ...FEEDS.map(fetchRssSource)
     ]);
 
-    const merged = [...guardian, ...rssResults.flat()]
-      .filter(a => a && a.title && a.url)
-      // Dedupe by URL (different sources sometimes syndicate the same item)
-      .reduce((map, a) => {
-        if (!map.has(a.url)) map.set(a.url, a);
-        return map;
-      }, new Map());
+    const all = [...guardian, ...rssResults.flat()]
+      .filter(a => a && a.title && a.url);
 
-    const results = Array.from(merged.values())
-      .sort((a, b) => {
-        const ta = a.publishedAt ? Date.parse(a.publishedAt) : 0;
-        const tb = b.publishedAt ? Date.parse(b.publishedAt) : 0;
-        return tb - ta;
-      })
-      .slice(0, 40);
+    // Sort newest-first so the oldest near-duplicate loses.
+    all.sort((a, b) => {
+      const ta = a.publishedAt ? Date.parse(a.publishedAt) : 0;
+      const tb = b.publishedAt ? Date.parse(b.publishedAt) : 0;
+      return tb - ta;
+    });
+
+    // Dedupe in two passes: exact URL, then normalized-title similarity.
+    const seenUrls = new Set();
+    const seenTitles = new Set();
+    const results = [];
+    for (const item of all) {
+      if (seenUrls.has(item.url)) continue;
+      const key = titleKey(item.title);
+      if (key && seenTitles.has(key)) continue;
+      seenUrls.add(item.url);
+      if (key) seenTitles.add(key);
+      results.push(item);
+      if (results.length >= 40) break;
+    }
 
     if (!results.length) {
       return res.status(502).json({
