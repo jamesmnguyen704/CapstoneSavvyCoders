@@ -8,6 +8,23 @@
 
 export const oscarsBestPicture = [
   {
+    ceremony: "98th Academy Awards",
+    year: 2026,
+    forYear: 2025,
+    nominees: [
+      { id: 1054867, winner: true,  title: "One Battle After Another" },
+      { id: 701387,  winner: false, title: "Bugonia" },
+      { id: 911430,  winner: false, title: "F1" },
+      { id: 1062722, winner: false, title: "Frankenstein" },
+      { id: 858024,  winner: false, title: "Hamnet" },
+      { id: 1317288, winner: false, title: "Marty Supreme" },
+      { id: 1220564, winner: false, title: "The Secret Agent" },
+      { id: 1124566, winner: false, title: "Sentimental Value" },
+      { id: 1233413, winner: false, title: "Sinners" },
+      { id: 1241983, winner: false, title: "Train Dreams" }
+    ]
+  },
+  {
     ceremony: "97th Academy Awards",
     year: 2025,
     forYear: 2024,
@@ -15,7 +32,13 @@ export const oscarsBestPicture = [
       { id: 1064213, winner: true,  title: "Anora" },
       { id: 402431,  winner: false, title: "Wicked" },
       { id: 693134,  winner: false, title: "Dune: Part Two" },
-      { id: 974635,  winner: false, title: "Conclave" }
+      { id: 974635,  winner: false, title: "Conclave" },
+      { id: 549509,  winner: false, title: "The Brutalist" },
+      { id: 661539,  winner: false, title: "A Complete Unknown" },
+      { id: 974950,  winner: false, title: "Emilia Pérez" },
+      { id: 1000837, winner: false, title: "I'm Still Here" },
+      { id: 1028196, winner: false, title: "Nickel Boys" },
+      { id: 933260,  winner: false, title: "The Substance" }
     ]
   },
   {
