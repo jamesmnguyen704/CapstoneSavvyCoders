@@ -55,8 +55,7 @@ const MOVIE_GUARDIAN = {
 // genre series that matter (not daytime soaps / local news).
 const TV_FEEDS = [
   { source: "IGN",      url: "https://feeds.feedburner.com/ign/tv-all" },
-  { source: "Deadline", url: "https://deadline.com/v/tv/feed/" },
-  { source: "/Film",    url: "https://www.slashfilm.com/category/tv/feed/" }
+  { source: "Deadline", url: "https://deadline.com/v/tv/feed/" }
 ];
 const TV_GUARDIAN = {
   section: "tv-and-radio",
