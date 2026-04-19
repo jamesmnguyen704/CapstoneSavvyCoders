@@ -3937,3 +3937,34 @@ img, video, iframe { max-width: 100%; }
 @media (max-height: 500px) and (orientation: landscape) {
   .hero-slider-container { height: 80vh; min-height: 220px; }
 }
+
+/* =================== HERO DISPLAY TITLE (type-collage) =================== */
+/* Oversized translucent serif title layered behind hero-content.
+   Inspired by 2026 Savee/Dribbble type-collage + editorial film trends. */
+.hero-display-title {
+  position: absolute;
+  left: clamp(0.5rem, 2vw, 2rem);
+  right: clamp(0.5rem, 2vw, 2rem);
+  top: 6%;
+  z-index: 3;
+  pointer-events: none;
+  font-family: "Playfair Display", "Times New Roman", Georgia, serif;
+  font-weight: 900;
+  font-style: italic;
+  font-size: clamp(3.5rem, 12vw, 11rem);
+  line-height: 0.88;
+  letter-spacing: -0.03em;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.22);
+  text-shadow: 0 8px 40px rgba(0, 0, 0, 0.55);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  mix-blend-mode: screen;
+  opacity: 0.85;
+}
+
+@media (max-width: 700px) {
+  .hero-display-title { top: 4%; font-size: clamp(2.5rem, 14vw, 5rem); }
+}
