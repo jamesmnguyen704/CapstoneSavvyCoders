@@ -42,8 +42,17 @@ const generateAuthLinks = () => {
 export default state => html`
   <nav class="navbar">
     <div class="nav-left">
+      <button
+        id="${mobileMenu.menuId}"
+        type="button"
+        aria-label="Toggle navigation menu"
+        aria-expanded="false"
+        aria-controls="${mobileMenu.navLinksId}"
+      >
+        <i class="${mobileMenu.iconClass}" aria-hidden="true"></i>
+      </button>
       <a href="/" data-navigo class="logo">${logo.text}</a>
-      <ul class="nav-links">
+      <ul class="nav-links" id="${mobileMenu.navLinksId}">
         ${generateNavLinks()}
       </ul>
     </div>

@@ -1,11 +1,13 @@
 // File: views/myList.js
-// Purpose: "My List" — user's local watchlist stored in localStorage.
-// Notes: Renders whatever's in the watchlist service. A delegated click handler
-//        in index.js handles the bookmark/remove toggle; re-rendering happens
-//        in response to "watchlist:change" events.
+// Purpose: "My List" page — now a tabbed surface combining the local watchlist
+//          and the About / bio content on a single route.
+// Notes:   Tab state lives in the URL (?tab=about). Clicking a tab swaps inner
+//          content without leaving the route. Bookmark toggles + watchlist
+//          change events still re-render the whole page from index.js.
 
 import html from "html-literal";
 import { listWatchlist } from "../services/watchlist.js";
+import aboutMe from "./aboutMe.js";
 
 function escapeAttr(s) {
   return String(s ?? "").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -51,40 +53,82 @@ function card(item) {
   `;
 }
 
-export default () => {
+function getActiveTab() {
+  if (typeof window === "undefined") return "list";
+  const tab = new URLSearchParams(window.location.search).get("tab");
+  return tab === "about" ? "about" : "list";
+}
+
+function tabBar(active) {
+  return `
+    <nav class="mylist-tabs" role="tablist" aria-label="My List sections">
+      <button
+        role="tab"
+        type="button"
+        class="mylist-tab ${active === "list" ? "mylist-tab--active" : ""}"
+        data-tab="list"
+        aria-selected="${active === "list"}"
+      >
+        <i class="fa-solid fa-bookmark"></i> My List
+      </button>
+      <button
+        role="tab"
+        type="button"
+        class="mylist-tab ${active === "about" ? "mylist-tab--active" : ""}"
+        data-tab="about"
+        aria-selected="${active === "about"}"
+      >
+        <i class="fa-solid fa-user"></i> About
+      </button>
+    </nav>
+  `;
+}
+
+function listPanel() {
   const items = listWatchlist();
   const count = items.length;
 
+  return `
+    <header class="mylist-header">
+      <div>
+        <span class="news-kicker">Your Collection</span>
+        <h1>My List</h1>
+        <p class="mylist-sub">
+          ${
+            count
+              ? `${count} saved ${count === 1 ? "movie" : "movies"} — stored locally on this device.`
+              : "Your watchlist is empty. Hit the bookmark on any movie to save it here."
+          }
+        </p>
+      </div>
+    </header>
+
+    ${
+      count
+        ? `<section class="movies-grid mylist-grid">${items.map(card).join("")}</section>`
+        : `
+          <div class="mylist-empty">
+            <div class="mylist-empty-icon" aria-hidden="true">
+              <i class="fa-regular fa-bookmark"></i>
+            </div>
+            <h2>Nothing saved yet</h2>
+            <p>Browse Home, Movies, or Marvel and tap the bookmark on any poster to build your list.</p>
+            <a href="/" data-navigo class="auth-btn">Browse movies</a>
+          </div>
+        `
+    }
+  `;
+}
+
+export default () => {
+  const active = getActiveTab();
+
   return html`
     <section class="mylist-page">
-      <header class="mylist-header">
-        <div>
-          <span class="news-kicker">Your Collection</span>
-          <h1>My List</h1>
-          <p class="mylist-sub">
-            ${
-              count
-                ? `${count} saved ${count === 1 ? "movie" : "movies"} — stored locally on this device.`
-                : "Your watchlist is empty. Hit the bookmark on any movie to save it here."
-            }
-          </p>
-        </div>
-      </header>
-
-      ${
-        count
-          ? `<section class="movies-grid mylist-grid">${items.map(card).join("")}</section>`
-          : `
-            <div class="mylist-empty">
-              <div class="mylist-empty-icon" aria-hidden="true">
-                <i class="fa-regular fa-bookmark"></i>
-              </div>
-              <h2>Nothing saved yet</h2>
-              <p>Browse Home, Movies, or Marvel and tap the bookmark on any poster to build your list.</p>
-              <a href="/" data-navigo class="auth-btn">Browse movies</a>
-            </div>
-          `
-      }
+      ${tabBar(active)}
+      <div class="mylist-panel" data-panel="${active}">
+        ${active === "about" ? aboutMe() : listPanel()}
+      </div>
     </section>
   `;
 };

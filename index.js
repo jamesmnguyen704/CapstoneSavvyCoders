@@ -28,7 +28,7 @@ import {
   discoverMovies,
   fetchPersonDetails
 } from "./services/api";
-import { renderDiscoverResults } from "./views/discover";
+import { renderMoviesResults } from "./views/movies";
 import {
   listWatchlist,
   toggleWatchlist,
@@ -215,13 +215,16 @@ async function render(st = state.Home) {
   // auth handlers (need to reattach after each render)
   attachAuthHandlers();
   attachLogout();
+  attachMobileMenu();
   attachCommentHandlers();
   attachScrollAwareNav();
   attachSearchHandlers();
   attachWatchlistHandler();
   attachInfoButtonHandler();
-  attachDiscoverFilterHandlers();
+  attachMoviesFilterHandlers();
   attachPersonClickHandler();
+  attachMyListTabs();
+  attachAwardsCategoryTabs();
   syncBookmarkButtons();
 }
 
@@ -348,6 +351,35 @@ function attachLogout() {
 function attachAuthHandlers() {
   attachSignupHandler();
   attachLoginHandler();
+}
+
+// Mobile nav: toggle the links drawer from the hamburger, and close it
+// when the user taps a link or anywhere outside.
+function attachMobileMenu() {
+  const btn = document.querySelector("#menu-icon");
+  const links = document.querySelector("#nav-links");
+  if (!btn || !links) return;
+
+  const close = () => {
+    links.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  };
+
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = links.classList.toggle("open");
+    btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  });
+
+  links.addEventListener("click", e => {
+    if (e.target.closest("a")) close();
+  });
+
+  document.addEventListener("click", e => {
+    if (!links.classList.contains("open")) return;
+    if (e.target.closest("#nav-links") || e.target.closest("#menu-icon")) return;
+    close();
+  });
 }
 
 // Comments: submit + delete handlers (re-attached after each render).
@@ -554,6 +586,42 @@ function attachWatchlistHandler() {
   });
 }
 
+// Awards category tabs — swap the active Oscar category without re-fetching.
+function attachAwardsCategoryTabs() {
+  if (location.pathname !== "/awards") return;
+  const tabs = document.querySelectorAll(".awards-cat-tab");
+  if (!tabs.length) return;
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      const key = btn.dataset.category;
+      if (!key || !state.Awards.categories?.[key]) return;
+      state.Awards.activeCategory = key;
+      state.Awards.sections = state.Awards.categories[key] || [];
+      render(state.Awards);
+      const el = document.querySelector(".awards-cat-tabs");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+// My List tabbed view — swap the visible panel without a route change.
+function attachMyListTabs() {
+  if (location.pathname !== "/my-list") return;
+  const tabs = document.querySelectorAll(".mylist-tab");
+  if (!tabs.length) return;
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const next = btn.dataset.tab === "about" ? "about" : "list";
+      const url = new URL(window.location.href);
+      if (next === "list") url.searchParams.delete("tab");
+      else url.searchParams.set("tab", "about");
+      window.history.replaceState({}, "", url.toString());
+      render(state.MyList);
+    });
+  });
+}
+
 // Reflect current watchlist state on any visible bookmark buttons.
 function syncBookmarkButtons() {
   document.querySelectorAll(".card-bookmark").forEach(btn => {
@@ -657,17 +725,31 @@ async function openInfoModal(movieId) {
     renderProviders(providers.buy, "Buy");
 
   const similar = (data.similar || [])
-    .map(
-      m => `
-    <div class="info-similar-card" data-movie-id="${m.id}">
-      <img src="https://image.tmdb.org/t/p/w300${m.poster_path}" alt="${escapeHtml(m.title)}" loading="lazy" />
-      <div class="info-similar-body">
+    .map(m => {
+      const sYear = (m.release_date || "").slice(0, 4);
+      const sRating =
+        typeof m.vote_average === "number" && m.vote_average > 0
+          ? m.vote_average.toFixed(1)
+          : null;
+      const art = m.backdrop_path
+        ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}`
+        : `https://image.tmdb.org/t/p/w500${m.poster_path}`;
+      return `
+    <button class="info-similar-card" data-movie-id="${m.id}" type="button" aria-label="More info on ${escapeHtml(m.title)}">
+      <span class="info-similar-art">
+        <img src="${art}" alt="${escapeHtml(m.title)}" loading="lazy" />
+        <span class="info-similar-play"><i class="fa-solid fa-play"></i></span>
+      </span>
+      <span class="info-similar-body">
         <span class="info-similar-title">${escapeHtml(m.title)}</span>
-        <button class="info-btn-inline" data-id="${m.id}" type="button">More info</button>
-      </div>
-    </div>
-  `
-    )
+        <span class="info-similar-meta">
+          ${sYear ? `<span>${sYear}</span>` : ""}
+          ${sRating ? `<span class="news-dot">·</span><span>★ ${sRating}</span>` : ""}
+        </span>
+      </span>
+    </button>
+  `;
+    })
     .join("");
 
   body.innerHTML = `
@@ -791,10 +873,27 @@ function attachInfoButtonHandler() {
   document.__infoBound = true;
   document.addEventListener("click", e => {
     const btn = e.target.closest(".info-btn");
-    if (!btn) return;
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (id) openInfoModal(id);
+      return;
+    }
+    const posterHit = e.target.closest("[data-info-id]");
+    if (posterHit && !e.target.closest(".card-bookmark, .trailer-btn, .info-btn")) {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = posterHit.dataset.infoId;
+      if (id) openInfoModal(id);
+    }
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const el = e.target.closest("[data-info-id]");
+    if (!el) return;
     e.preventDefault();
-    e.stopPropagation();
-    const id = btn.dataset.id;
+    const id = el.dataset.infoId;
     if (id) openInfoModal(id);
   });
 }
@@ -906,32 +1005,32 @@ function attachSearchHandlers() {
   });
 }
 
-// -------- Discover filters (live, debounced) --------
-let discoverDebounceId = null;
+// -------- Movies filters (live, debounced) --------
+let moviesDebounceId = null;
 
-async function refreshDiscover() {
-  state.Discover.loading = true;
-  renderDiscoverResults(state.Discover);
+async function refreshMovies() {
+  state.Movies.loading = true;
+  renderMoviesResults(state.Movies);
   const data = await discoverMovies({
-    genres: state.Discover.selectedGenres,
-    year: state.Discover.year,
-    minRating: state.Discover.minRating,
-    sort: state.Discover.sort
+    genres: state.Movies.selectedGenres,
+    year: state.Movies.year,
+    minRating: state.Movies.minRating,
+    sort: state.Movies.sort
   });
-  state.Discover.results = data.results || [];
-  state.Discover.total_results = data.total_results || 0;
-  state.Discover.loading = false;
-  renderDiscoverResults(state.Discover);
+  state.Movies.results = data.results || [];
+  state.Movies.total_results = data.total_results || 0;
+  state.Movies.loading = false;
+  renderMoviesResults(state.Movies);
   syncBookmarkButtons();
 }
 
-function debounceDiscover() {
-  clearTimeout(discoverDebounceId);
-  discoverDebounceId = setTimeout(refreshDiscover, 220);
+function debounceMovies() {
+  clearTimeout(moviesDebounceId);
+  moviesDebounceId = setTimeout(refreshMovies, 220);
 }
 
-function attachDiscoverFilterHandlers() {
-  const filters = document.querySelector("#discoverFilters");
+function attachMoviesFilterHandlers() {
+  const filters = document.querySelector("#moviesFilters");
   if (!filters || filters.__bound) return;
   filters.__bound = true;
 
@@ -940,45 +1039,45 @@ function attachDiscoverFilterHandlers() {
     const chip = e.target.closest(".discover-chip");
     if (chip) {
       const id = Number(chip.dataset.genreId);
-      const set = new Set(state.Discover.selectedGenres);
+      const set = new Set(state.Movies.selectedGenres);
       if (set.has(id)) set.delete(id);
       else set.add(id);
-      state.Discover.selectedGenres = Array.from(set);
+      state.Movies.selectedGenres = Array.from(set);
       chip.classList.toggle("discover-chip--active");
-      debounceDiscover();
+      debounceMovies();
       return;
     }
-    if (e.target.id === "discoverReset") {
-      state.Discover.selectedGenres = [];
-      state.Discover.year = "";
-      state.Discover.minRating = 0;
-      state.Discover.sort = "popularity.desc";
+    if (e.target.id === "moviesReset") {
+      state.Movies.selectedGenres = [];
+      state.Movies.year = "";
+      state.Movies.minRating = 0;
+      state.Movies.sort = "popularity.desc";
       // Re-render the whole view so chip UI resets cleanly.
-      render(state.Discover);
+      render(state.Movies);
     }
   });
 
-  const year = filters.querySelector("#discoverYear");
+  const year = filters.querySelector("#moviesYear");
   if (year) {
     year.addEventListener("change", () => {
-      state.Discover.year = year.value;
-      debounceDiscover();
+      state.Movies.year = year.value;
+      debounceMovies();
     });
   }
-  const rating = filters.querySelector("#discoverRating");
-  const ratingOut = filters.querySelector("#discoverRatingValue");
+  const rating = filters.querySelector("#moviesRating");
+  const ratingOut = filters.querySelector("#moviesRatingValue");
   if (rating) {
     rating.addEventListener("input", () => {
-      state.Discover.minRating = Number(rating.value);
+      state.Movies.minRating = Number(rating.value);
       if (ratingOut) ratingOut.textContent = rating.value;
-      debounceDiscover();
+      debounceMovies();
     });
   }
-  const sort = filters.querySelector("#discoverSort");
+  const sort = filters.querySelector("#moviesSort");
   if (sort) {
     sort.addEventListener("change", () => {
-      state.Discover.sort = sort.value;
-      debounceDiscover();
+      state.Movies.sort = sort.value;
+      debounceMovies();
     });
   }
 }
@@ -1181,10 +1280,22 @@ router.hooks({
 
       case "movies":
         try {
-          const popular = await fetchPopular();
-          state.Movies.movies = popular;
+          if (!state.Movies.genres.length) {
+            state.Movies.genres = await fetchGenres();
+          }
+          state.Movies.loading = true;
+          const data = await discoverMovies({
+            genres: state.Movies.selectedGenres,
+            year: state.Movies.year,
+            minRating: state.Movies.minRating,
+            sort: state.Movies.sort
+          });
+          state.Movies.results = data.results || [];
+          state.Movies.total_results = data.total_results || 0;
+          state.Movies.loading = false;
         } catch {
-          state.Movies.movies = [];
+          state.Movies.results = [];
+          state.Movies.loading = false;
         }
         break;
 
@@ -1245,32 +1356,23 @@ router.hooks({
 
       case "awards":
         try {
-          state.Awards.sections = await fetchAwards();
+          const data = await fetchAwards();
+          const categories = data?.categories || {};
+          state.Awards.categories = {
+            bestPicture: categories.bestPicture || [],
+            bestDirector: categories.bestDirector || [],
+            bestActor: categories.bestActor || [],
+            bestActress: categories.bestActress || [],
+            supportingActor: categories.supportingActor || [],
+            supportingActress: categories.supportingActress || []
+          };
+          const active = state.Awards.activeCategory || "bestPicture";
+          state.Awards.sections = state.Awards.categories[active] || [];
         } catch {
           state.Awards.sections = [];
         }
         break;
 
-      case "discover":
-        try {
-          if (!state.Discover.genres.length) {
-            state.Discover.genres = await fetchGenres();
-          }
-          state.Discover.loading = true;
-          const data = await discoverMovies({
-            genres: state.Discover.selectedGenres,
-            year: state.Discover.year,
-            minRating: state.Discover.minRating,
-            sort: state.Discover.sort
-          });
-          state.Discover.results = data.results || [];
-          state.Discover.total_results = data.total_results || 0;
-          state.Discover.loading = false;
-        } catch {
-          state.Discover.results = [];
-          state.Discover.loading = false;
-        }
-        break;
     }
 
     done();
@@ -1292,7 +1394,7 @@ router
     "/news": () => render(state.News),
     "/my-list": () => render(state.MyList),
     "/awards": () => render(state.Awards),
-    "/discover": () => render(state.Discover)
+    "/discover": () => router.navigate("/movies")
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();

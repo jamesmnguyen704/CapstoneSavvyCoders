@@ -104,14 +104,20 @@ export async function fetchMovieDetails(id) {
   }
 }
 
-// Oscars Best Picture — curated + enriched with TMDB data, grouped by ceremony.
+// Oscars — curated + enriched with TMDB data, grouped by ceremony, across
+// Best Picture + the major acting / directing categories.
 export async function fetchAwards() {
   try {
     const response = await axios.get(`${API_BASE}/movies/awards`);
-    return Array.isArray(response.data?.sections) ? response.data.sections : [];
+    const data = response.data || {};
+    const categories = data.categories || { bestPicture: data.sections || [] };
+    return {
+      sections: Array.isArray(data.sections) ? data.sections : categories.bestPicture || [],
+      categories
+    };
   } catch (err) {
     console.error("AWARDS ERROR:", err);
-    return [];
+    return { sections: [], categories: {} };
   }
 }
 

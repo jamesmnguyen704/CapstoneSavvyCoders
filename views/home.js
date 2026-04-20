@@ -100,7 +100,9 @@ export default st => {
               alt="${escapeAttr(movie.title)} Backdrop"
               onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
             />
+            <div class="hero-display-title" aria-hidden="true">${escapeAttr(movie.title)}</div>
             <div class="hero-content">
+              <span class="hero-kicker">Featured · Trending Now</span>
               <h1>${escapeAttr(movie.title)}</h1>
               <p>${escapeAttr(movie.overview || "")}</p>
               <div class="hero-actions">

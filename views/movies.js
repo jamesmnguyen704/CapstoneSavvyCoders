@@ -1,77 +1,72 @@
 // File: views/movies.js
-// Purpose: Movies view — a grid of popular movies with rich cards.
-// Notes: Uses the shared movie card markup (badges, bookmark, info modal).
-
+// Purpose: Merged Movies + Discover view — hero slider, community header,
+//          filter bar (genre/year/rating/sort), and a live-updating grid.
+// Notes:   `renderMoviesResults` is exported for in-place grid updates when
+//          filters change, so inputs keep focus and the hero doesn't re-render.
 import html from "html-literal";
+import { escapeAttr, movieCard, skeletonCards } from "./_cards";
 
-function escapeAttr(s) {
-  return String(s ?? "").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
+const SORT_OPTIONS = [
+  { value: "popularity.desc",           label: "Most popular" },
+  { value: "vote_average.desc",         label: "Highest rated" },
+  { value: "primary_release_date.desc", label: "Newest" },
+  { value: "primary_release_date.asc",  label: "Oldest" },
+  { value: "revenue.desc",              label: "Biggest box office" }
+];
 
-function encodeMovie(movie) {
-  return escapeAttr(
-    JSON.stringify({
-      id: movie.id,
-      title: movie.title,
-      poster_path: movie.poster_path || null,
-      release_date: movie.release_date || null,
-      vote_average: typeof movie.vote_average === "number" ? movie.vote_average : null
-    })
-  );
-}
-
-function movieCard(movie) {
-  const poster = movie.poster_path
-    ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
-    : "https://via.placeholder.com/300x450?text=No+Image";
-  const year = (movie.release_date || "").slice(0, 4);
-  const rating =
-    typeof movie.vote_average === "number" && movie.vote_average > 0
-      ? movie.vote_average.toFixed(1)
-      : null;
-
-  return html`
-    <div class="movie-card" data-movie-id="${movie.id}">
-      <div class="movie-poster-wrap">
-        <img
-          src="${poster}"
-          alt="${escapeAttr(movie.title)}"
-          class="movie-poster"
-          loading="lazy"
-        />
-        <div class="card-badges">
-          ${year ? `<span class="card-badge card-badge--year">${year}</span>` : ""}
-          ${rating ? `<span class="card-badge card-badge--rating">★ ${rating}</span>` : ""}
-        </div>
-        <button
-          class="card-bookmark"
-          type="button"
-          aria-label="Add to My List"
-          data-movie='${encodeMovie(movie)}'
-        >
-          <i class="fa-regular fa-bookmark"></i>
-        </button>
-      </div>
-
-      <h3 class="movie-title">${escapeAttr(movie.title)}</h3>
-
-      <div class="card-actions">
-        <button class="trailer-btn" data-id="${movie.id}">▶ Trailer</button>
-        <button class="info-btn" type="button" data-id="${movie.id}" aria-label="More info">
-          <i class="fa-solid fa-circle-info"></i>
-        </button>
-        <button class="comment-btn" data-movieid="${movie.id}" aria-label="Comments">
-          <i class="fa-regular fa-comment"></i>
-        </button>
-      </div>
-    </div>
-  `;
+export function renderMoviesResults(state) {
+  const { results = [], loading = false, total_results = 0 } = state;
+  const el = document.querySelector("#moviesResults");
+  if (!el) return;
+  if (loading) {
+    el.innerHTML = skeletonCards();
+    return;
+  }
+  if (!results.length) {
+    el.innerHTML = `<p class="discover-empty">No movies match those filters — loosen something up.</p>`;
+    return;
+  }
+  el.innerHTML = results.map(m => movieCard(m, { showComment: true })).join("");
+  const count = document.querySelector("#moviesCount");
+  if (count) {
+    count.textContent = total_results
+      ? `${total_results.toLocaleString()} movies`
+      : `${results.length} shown`;
+  }
 }
 
 export default function Movies(st) {
-  const movies = st.movies || [];
-  const heroMovies = movies.slice(0, 5);
-  const carouselMovies = movies.slice(5);
+  const results = Array.isArray(st.results) ? st.results : [];
+  const heroMovies = results.slice(0, 5);
+
+  const genres = Array.isArray(st.genres) ? st.genres : [];
+  const selected = Array.isArray(st.selectedGenres) ? st.selectedGenres : [];
+  const sort = st.sort || "popularity.desc";
+  const year = st.year || "";
+  const minRating = st.minRating != null ? st.minRating : 0;
+
+  const genreChips = genres
+    .map(
+      g => `
+        <button
+          class="discover-chip ${selected.includes(g.id) ? "discover-chip--active" : ""}"
+          type="button"
+          data-genre-id="${g.id}"
+        >${escapeAttr(g.name)}</button>
+      `
+    )
+    .join("");
+
+  const yearOptions = (() => {
+    const now = new Date().getFullYear();
+    const opts = ['<option value="">Any year</option>'];
+    for (let y = now + 1; y >= 1970; y--) {
+      opts.push(
+        `<option value="${y}" ${String(y) === String(year) ? "selected" : ""}>${y}</option>`
+      );
+    }
+    return opts.join("");
+  })();
 
   return html`
     <section class="hero-slider-container">
@@ -110,15 +105,55 @@ export default function Movies(st) {
 
     <div class="movies-container">
       <section class="movies-header">
-        <h1>Cinemetrics Community: Rate, Review, and Discuss</h1>
-        <p>Join the conversation on the most discussed movies right now.</p>
+        <div>
+          <h1>Cinemetrics Community: Rate, Review, and Discuss</h1>
+          <p>Join the conversation — browse, filter, and pick your next watch.</p>
+        </div>
+        <div class="discover-count" id="moviesCount" aria-live="polite"></div>
       </section>
 
-      <section class="movie-carousel">
-        ${carouselMovies.length > 0
-          ? carouselMovies.map(movieCard).join("")
-          : html`<p class="no-movies">No movies found.</p>`}
-      </section>
+      <div class="discover-filters" id="moviesFilters">
+        <div class="discover-filter-row">
+          <span class="discover-filter-label">Genres</span>
+          <div class="discover-chips">${genreChips}</div>
+        </div>
+
+        <div class="discover-filter-row discover-filter-row--inputs">
+          <label class="discover-control">
+            <span>Year</span>
+            <select id="moviesYear">${yearOptions}</select>
+          </label>
+
+          <label class="discover-control">
+            <span>Min rating: <b id="moviesRatingValue">${minRating || "0"}</b></span>
+            <input
+              type="range"
+              id="moviesRating"
+              min="0"
+              max="9"
+              step="0.5"
+              value="${minRating}"
+            />
+          </label>
+
+          <label class="discover-control">
+            <span>Sort by</span>
+            <select id="moviesSort">
+              ${SORT_OPTIONS.map(
+                o => `<option value="${o.value}" ${o.value === sort ? "selected" : ""}>${o.label}</option>`
+              ).join("")}
+            </select>
+          </label>
+
+          <button class="discover-reset" type="button" id="moviesReset">Reset</button>
+        </div>
+      </div>
+
+      <div class="discover-grid" id="moviesResults">
+        ${results.length
+          ? results.map(m => movieCard(m, { showComment: true })).join("")
+          : skeletonCards()}
+      </div>
     </div>
   `;
 }
