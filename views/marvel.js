@@ -37,21 +37,35 @@ export default state => {
   const movies = Array.isArray(state.marvel) ? state.marvel : [];
   const phases = groupMoviesByPhase(movies);
 
-  // Cinematic lead: pin Avengers: Doomsday (TMDB 1003598) because the
-  // ensemble cast is the headline for the Marvel page. Fall back to the
-  // most recently released MCU film if Doomsday isn't in the dataset yet.
-  const DOOMSDAY_ID = 1003598;
-  const doomsday = movies.find(m => m && m.id === DOOMSDAY_ID);
+  // Cinematic lead: pin Avengers: Doomsday. We try a couple of candidate
+  // TMDB IDs (the listing has wobbled as the film is still pre-release),
+  // and if none are in the dataset we synthesize a minimal record so the
+  // ensemble hero always lands.
+  const DOOMSDAY_IDS = [1003596, 1061474, 1003598];
+  const SYNTHETIC_DOOMSDAY = {
+    id: 1003596,
+    title: "Avengers: Doomsday",
+    overview:
+      "Doctor Doom rises as the Multiverse Saga's final threat — pulling every surviving hero, mutant, and First Family member into a war that will decide reality itself.",
+    backdrop_path: null,
+    poster_path: null,
+    release_date: "2026-12-18",
+    __doomsday: true
+  };
+  const foundDoomsday = movies.find(m => m && DOOMSDAY_IDS.includes(m.id));
+  const leadIsDoomsday = true;
+  const leadMovie = foundDoomsday
+    ? { ...foundDoomsday, __doomsday: true }
+    : SYNTHETIC_DOOMSDAY;
+  const isDoomsday = leadIsDoomsday;
+
   const recentlyReleased = [...movies]
     .filter(m => m.release_date && new Date(m.release_date) <= new Date())
     .sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
 
-  const leadMovie = doomsday || recentlyReleased[0];
-  const isDoomsday = leadMovie && leadMovie.id === DOOMSDAY_ID;
-
   // Side thumbs: most recent released MCU titles, excluding whatever is lead.
   const featuredThumbs = recentlyReleased
-    .filter(m => !leadMovie || m.id !== leadMovie.id)
+    .filter(m => !foundDoomsday || m.id !== foundDoomsday.id)
     .slice(0, 4);
 
   return html`
@@ -60,7 +74,11 @@ export default state => {
         ? `
           <img
             class="marvel-hero-bg"
-            src="https://image.tmdb.org/t/p/original${leadMovie.backdrop_path}"
+            src="${
+              leadMovie.backdrop_path
+                ? `https://image.tmdb.org/t/p/original${leadMovie.backdrop_path}`
+                : "images/placeholder-poster.jpg"
+            }"
             alt="${leadMovie.title} Backdrop"
             onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
           />

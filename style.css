@@ -3978,10 +3978,11 @@ img, video, iframe { max-width: 100%; }
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  height: clamp(460px, 78vh, 780px);
+  /* Shorter than a full landing hero so the Phase rows land in view. */
+  height: clamp(360px, 56vh, 560px);
   overflow: hidden;
   background: #000;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   isolation: isolate;
 }
 .marvel-hero-bg {
