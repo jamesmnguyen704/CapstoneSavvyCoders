@@ -657,17 +657,31 @@ async function openInfoModal(movieId) {
     renderProviders(providers.buy, "Buy");
 
   const similar = (data.similar || [])
-    .map(
-      m => `
-    <div class="info-similar-card" data-movie-id="${m.id}">
-      <img src="https://image.tmdb.org/t/p/w300${m.poster_path}" alt="${escapeHtml(m.title)}" loading="lazy" />
-      <div class="info-similar-body">
+    .map(m => {
+      const sYear = (m.release_date || "").slice(0, 4);
+      const sRating =
+        typeof m.vote_average === "number" && m.vote_average > 0
+          ? m.vote_average.toFixed(1)
+          : null;
+      const art = m.backdrop_path
+        ? `https://image.tmdb.org/t/p/w500${m.backdrop_path}`
+        : `https://image.tmdb.org/t/p/w500${m.poster_path}`;
+      return `
+    <button class="info-similar-card" data-movie-id="${m.id}" type="button" aria-label="More info on ${escapeHtml(m.title)}">
+      <span class="info-similar-art">
+        <img src="${art}" alt="${escapeHtml(m.title)}" loading="lazy" />
+        <span class="info-similar-play"><i class="fa-solid fa-play"></i></span>
+      </span>
+      <span class="info-similar-body">
         <span class="info-similar-title">${escapeHtml(m.title)}</span>
-        <button class="info-btn-inline" data-id="${m.id}" type="button">More info</button>
-      </div>
-    </div>
-  `
-    )
+        <span class="info-similar-meta">
+          ${sYear ? `<span>${sYear}</span>` : ""}
+          ${sRating ? `<span class="news-dot">·</span><span>★ ${sRating}</span>` : ""}
+        </span>
+      </span>
+    </button>
+  `;
+    })
     .join("");
 
   body.innerHTML = `

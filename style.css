@@ -4113,3 +4113,148 @@ img, video, iframe { max-width: 100%; }
   .marvel-hero-featured { display: none; }
   .marvel-hero-body { max-width: 85%; }
 }
+
+/* =================== DETAIL MODAL — CINEMATIC UPGRADE =================== */
+/* Inspired by https://dribbble.com/shots/16619277-Movie-Video-Website-Design
+   Taller backdrop, bolder title, and a horizontal "More Like This" rail. */
+.info-backdrop {
+  height: clamp(280px, 52vh, 520px) !important;
+}
+.info-backdrop::after {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.15) 0%,
+    rgba(15, 15, 15, 0.55) 55%,
+    rgba(15, 15, 15, 0.95) 85%,
+    #0f0f0f 100%
+  ) !important;
+}
+.info-content {
+  margin-top: -160px !important;
+}
+.info-title {
+  font-family: "Bebas Neue", "Oswald", Impact, sans-serif !important;
+  font-size: clamp(2rem, 3.6vw, 3.6rem) !important;
+  letter-spacing: 0.01em !important;
+  text-transform: uppercase !important;
+  line-height: 1 !important;
+  margin: 0.25rem 0 0.5rem !important;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.7);
+}
+
+/* Horizontal "More Like This" rail with landscape tiles + play overlays */
+.info-section:has(.info-similar) > h3 {
+  font-size: 1rem !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+  letter-spacing: 0.22em !important;
+}
+.info-similar {
+  display: flex !important;
+  grid-template-columns: none !important;
+  gap: 0.85rem !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.5rem;
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 2%,
+    #000 98%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 2%,
+    #000 98%,
+    transparent 100%
+  );
+}
+.info-similar::-webkit-scrollbar { height: 6px; }
+.info-similar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+}
+.info-similar-card {
+  flex: 0 0 clamp(220px, 24vw, 300px);
+  display: flex !important;
+  flex-direction: column;
+  gap: 0.5rem !important;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  scroll-snap-align: start;
+  color: inherit;
+}
+.info-similar-art {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #111;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+.info-similar-card:hover .info-similar-art,
+.info-similar-card:focus-visible .info-similar-art {
+  transform: translateY(-3px) scale(1.015);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.65);
+}
+.info-similar-card:focus-visible {
+  outline: none;
+}
+.info-similar-art img {
+  width: 100% !important;
+  height: 100% !important;
+  aspect-ratio: auto !important;
+  object-fit: cover;
+  border-radius: 10px !important;
+  filter: brightness(0.82);
+  transition: filter 220ms ease;
+}
+.info-similar-card:hover .info-similar-art img {
+  filter: brightness(1);
+}
+.info-similar-play {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.3rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+}
+.info-similar-card:hover .info-similar-play,
+.info-similar-card:focus-visible .info-similar-play {
+  opacity: 1;
+}
+.info-similar-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.info-similar-title {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.info-similar-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--cm-muted);
+  font-size: 0.78rem;
+}
