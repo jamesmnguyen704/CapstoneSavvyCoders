@@ -37,38 +37,62 @@ export default state => {
   const movies = Array.isArray(state.marvel) ? state.marvel : [];
   const phases = groupMoviesByPhase(movies);
 
-  // Take the 5 most recently released MCU movies for the Hero Banner
+  // Take the 5 most recently released MCU movies for the Hero Banner.
+  // First one is the cinematic lead; the rest become side thumbnails.
   const heroMovies = [...movies]
     .filter(m => m.release_date && new Date(m.release_date) <= new Date())
     .sort((a, b) => new Date(b.release_date) - new Date(a.release_date))
     .slice(0, 5);
 
+  const leadMovie = heroMovies[0];
+  const featuredThumbs = heroMovies.slice(1, 5);
+
   return html`
-    <section class="hero-slider-container">
-      ${heroMovies.length > 0
-        ? heroMovies
-            .map(
-              movie => `
-          <div class="hero-slide">
-            <img 
-              class="hero-backdrop" 
-              src="https://image.tmdb.org/t/p/original${movie.backdrop_path}" 
-              alt="${movie.title} Backdrop" 
-              onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
-            />
-            <div class="hero-content">
-              <h1>${movie.title}</h1>
-              <p>${movie.overview}</p>
-              <button class="trailer-btn hero-btn" data-id="${movie.id}">▶ Watch Trailer</button>
+    <section class="marvel-hero-cinematic">
+      ${leadMovie
+        ? `
+          <img
+            class="marvel-hero-bg"
+            src="https://image.tmdb.org/t/p/original${leadMovie.backdrop_path}"
+            alt="${leadMovie.title} Backdrop"
+            onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+          />
+          <div class="marvel-hero-scrim"></div>
+          <div class="marvel-hero-body">
+            <span class="marvel-hero-kicker">Marvel Cinematic Universe</span>
+            <h1 class="marvel-hero-title">${leadMovie.title}</h1>
+            <p class="marvel-hero-overview">${leadMovie.overview || ""}</p>
+            <div class="marvel-hero-actions">
+              <button class="trailer-btn hero-btn" data-id="${leadMovie.id}">▶ Watch Trailer</button>
+              <button class="info-btn hero-info-btn" type="button" data-id="${leadMovie.id}">
+                <i class="fa-solid fa-circle-info"></i> More Info
+              </button>
             </div>
           </div>
+          ${
+            featuredThumbs.length
+              ? `
+            <aside class="marvel-hero-featured" aria-label="Featured MCU titles">
+              ${featuredThumbs
+                .map(
+                  m => `
+                <button class="marvel-hero-thumb trailer-btn" data-id="${m.id}" aria-label="Play ${m.title} trailer">
+                  <img src="https://image.tmdb.org/t/p/w300${m.backdrop_path || m.poster_path}" alt="${m.title}" loading="lazy" />
+                  <span class="marvel-hero-thumb-play"><i class="fa-solid fa-play"></i></span>
+                  <span class="marvel-hero-thumb-caption">${m.title}</span>
+                </button>
+              `
+                )
+                .join("")}
+            </aside>`
+              : ""
+          }
         `
-            )
-            .join("")
         : `
-          <div class="hero-content">
-            <h1>Marvel Cinematic Universe</h1>
-            <p>Complete MCU Timeline from Iron Man → Secret Wars</p>
+          <div class="marvel-hero-body">
+            <span class="marvel-hero-kicker">Marvel Cinematic Universe</span>
+            <h1 class="marvel-hero-title">Complete MCU Timeline</h1>
+            <p class="marvel-hero-overview">From Iron Man → Secret Wars.</p>
           </div>
         `}
     </section>
