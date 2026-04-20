@@ -13,43 +13,142 @@ const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 
 // ⭐ my marvel movies yayyyyy — MUST BE AT TOP ⭐
 import getMCUMovies from "../controllers/curated/marvel.js";
-import { oscarsBestPicture } from "../controllers/curated/awards.js";
+import {
+  oscarsBestPicture,
+  oscarsBestDirector,
+  oscarsBestActor,
+  oscarsBestActress,
+  oscarsSupportingActor,
+  oscarsSupportingActress
+} from "../controllers/curated/awards.js";
 router.get("/marvel", getMCUMovies);
 
-// Awards — enriches our curated Oscars Best Picture list with full TMDB data
-// per nominee, grouped by ceremony.
+// Awards — enriches our curated Oscars lists with full TMDB data per nominee.
+// Best Picture returns film metadata; person-based categories return both
+// headshot/bio (from /person/{id}) and the nominated film details.
 router.get("/awards", async (req, res) => {
   const key = process.env.TMDB_API_KEY;
-  const fetchMovie = async nominee => {
-    try {
-      const r = await axios.get(
-        `https://api.themoviedb.org/3/movie/${nominee.id}`,
-        {
-          params: { api_key: key, language: "en-US" },
-          timeout: 6000
+
+  const movieCache = new Map();
+  const personCache = new Map();
+
+  const fetchMovie = async id => {
+    if (movieCache.has(id)) return movieCache.get(id);
+    const p = axios
+      .get(`https://api.themoviedb.org/3/movie/${id}`, {
+        params: { api_key: key, language: "en-US" },
+        timeout: 6000
+      })
+      .then(r => r.data)
+      .catch(err => {
+        if (err.response?.status !== 404) {
+          console.warn(`AWARDS movie ${id}:`, err.message);
         }
-      );
-      return { ...r.data, winner: !!nominee.winner };
-    } catch (err) {
-      if (err.response?.status !== 404) {
-        console.warn(`AWARDS: failed for ${nominee.id}:`, err.message);
-      }
-      return null;
-    }
+        return null;
+      });
+    movieCache.set(id, p);
+    return p;
+  };
+
+  const fetchPerson = async id => {
+    if (personCache.has(id)) return personCache.get(id);
+    const p = axios
+      .get(`https://api.themoviedb.org/3/person/${id}`, {
+        params: { api_key: key, language: "en-US" },
+        timeout: 6000
+      })
+      .then(r => r.data)
+      .catch(err => {
+        if (err.response?.status !== 404) {
+          console.warn(`AWARDS person ${id}:`, err.message);
+        }
+        return null;
+      });
+    personCache.set(id, p);
+    return p;
+  };
+
+  const enrichFilmSection = async section => {
+    const nominees = await Promise.all(
+      section.nominees.map(async n => {
+        const m = await fetchMovie(n.id);
+        return m ? { ...m, winner: !!n.winner } : null;
+      })
+    );
+    return {
+      ceremony: section.ceremony,
+      year: section.year,
+      forYear: section.forYear,
+      nominees: nominees
+        .filter(Boolean)
+        .sort((a, b) => (b.winner === true) - (a.winner === true))
+    };
+  };
+
+  const enrichPersonSection = async section => {
+    const nominees = await Promise.all(
+      section.nominees.map(async n => {
+        const [person, film] = await Promise.all([
+          fetchPerson(n.personId),
+          fetchMovie(n.filmId)
+        ]);
+        return {
+          personId: n.personId,
+          name: person?.name || n.personName,
+          profile_path: person?.profile_path || null,
+          role: n.role || null,
+          winner: !!n.winner,
+          film: film
+            ? {
+                id: film.id,
+                title: film.title,
+                poster_path: film.poster_path,
+                backdrop_path: film.backdrop_path,
+                release_date: film.release_date,
+                vote_average: film.vote_average
+              }
+            : { id: n.filmId, title: n.filmTitle }
+        };
+      })
+    );
+    return {
+      ceremony: section.ceremony,
+      year: section.year,
+      forYear: section.forYear,
+      nominees: nominees
+        .filter(Boolean)
+        .sort((a, b) => (b.winner === true) - (a.winner === true))
+    };
   };
 
   try {
-    const sections = await Promise.all(
-      oscarsBestPicture.map(async section => ({
-        ceremony: section.ceremony,
-        year: section.year,
-        forYear: section.forYear,
-        nominees: (await Promise.all(section.nominees.map(fetchMovie)))
-          .filter(Boolean)
-          .sort((a, b) => (b.winner === true) - (a.winner === true))
-      }))
-    );
-    res.json({ sections });
+    const [
+      bestPicture,
+      bestDirector,
+      bestActor,
+      bestActress,
+      supportingActor,
+      supportingActress
+    ] = await Promise.all([
+      Promise.all(oscarsBestPicture.map(enrichFilmSection)),
+      Promise.all(oscarsBestDirector.map(enrichPersonSection)),
+      Promise.all(oscarsBestActor.map(enrichPersonSection)),
+      Promise.all(oscarsBestActress.map(enrichPersonSection)),
+      Promise.all(oscarsSupportingActor.map(enrichPersonSection)),
+      Promise.all(oscarsSupportingActress.map(enrichPersonSection))
+    ]);
+
+    res.json({
+      sections: bestPicture, // legacy alias — Best Picture
+      categories: {
+        bestPicture,
+        bestDirector,
+        bestActor,
+        bestActress,
+        supportingActor,
+        supportingActress
+      }
+    });
   } catch (err) {
     console.error("AWARDS ERROR:", err.message);
     res.status(500).json({ message: "Failed to load awards", sections: [] });

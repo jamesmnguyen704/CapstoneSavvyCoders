@@ -223,6 +223,8 @@ async function render(st = state.Home) {
   attachInfoButtonHandler();
   attachDiscoverFilterHandlers();
   attachPersonClickHandler();
+  attachMyListTabs();
+  attachAwardsCategoryTabs();
   syncBookmarkButtons();
 }
 
@@ -581,6 +583,42 @@ function attachWatchlistHandler() {
     if (location.pathname === "/my-list") {
       render(state.MyList);
     }
+  });
+}
+
+// Awards category tabs — swap the active Oscar category without re-fetching.
+function attachAwardsCategoryTabs() {
+  if (location.pathname !== "/awards") return;
+  const tabs = document.querySelectorAll(".awards-cat-tab");
+  if (!tabs.length) return;
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      if (btn.disabled) return;
+      const key = btn.dataset.category;
+      if (!key || !state.Awards.categories?.[key]) return;
+      state.Awards.activeCategory = key;
+      state.Awards.sections = state.Awards.categories[key] || [];
+      render(state.Awards);
+      const el = document.querySelector(".awards-cat-tabs");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+}
+
+// My List tabbed view — swap the visible panel without a route change.
+function attachMyListTabs() {
+  if (location.pathname !== "/my-list") return;
+  const tabs = document.querySelectorAll(".mylist-tab");
+  if (!tabs.length) return;
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      const next = btn.dataset.tab === "about" ? "about" : "list";
+      const url = new URL(window.location.href);
+      if (next === "list") url.searchParams.delete("tab");
+      else url.searchParams.set("tab", "about");
+      window.history.replaceState({}, "", url.toString());
+      render(state.MyList);
+    });
   });
 }
 
@@ -1289,7 +1327,18 @@ router.hooks({
 
       case "awards":
         try {
-          state.Awards.sections = await fetchAwards();
+          const data = await fetchAwards();
+          const categories = data?.categories || {};
+          state.Awards.categories = {
+            bestPicture: categories.bestPicture || [],
+            bestDirector: categories.bestDirector || [],
+            bestActor: categories.bestActor || [],
+            bestActress: categories.bestActress || [],
+            supportingActor: categories.supportingActor || [],
+            supportingActress: categories.supportingActress || []
+          };
+          const active = state.Awards.activeCategory || "bestPicture";
+          state.Awards.sections = state.Awards.categories[active] || [];
         } catch {
           state.Awards.sections = [];
         }
