@@ -58,10 +58,64 @@ function nomineeCard(movie) {
   `;
 }
 
+function ceremonyAnchor(group) {
+  return `ceremony-${group.year}`;
+}
+
+function winnersHall(sections) {
+  const winners = sections
+    .map(s => ({ ...s.nominees.find(n => n.winner), ceremony: s.ceremony, forYear: s.forYear }))
+    .filter(w => w && w.id);
+  if (!winners.length) return "";
+  return `
+    <section class="awards-winners-hall">
+      <header class="awards-winners-hall-head">
+        <span class="awards-kicker">Winners' Hall</span>
+        <h2>Best Picture, year by year</h2>
+      </header>
+      <div class="awards-winners-row">
+        ${winners
+          .map(
+            w => `
+          <a class="awards-winner-tile" href="#${ceremonyAnchor({ year: w.forYear + 1 })}">
+            <span class="awards-winner-tile-art">
+              ${
+                w.poster_path
+                  ? `<img src="https://image.tmdb.org/t/p/w500${w.poster_path}" alt="${escapeAttr(w.title)}" loading="lazy" />`
+                  : `<span class="movie-poster-placeholder" aria-hidden="true">🏆</span>`
+              }
+              <span class="awards-winner-tile-badge">
+                <i class="fa-solid fa-trophy"></i> ${w.forYear}
+              </span>
+            </span>
+            <span class="awards-winner-tile-title">${escapeAttr(w.title)}</span>
+            <span class="awards-winner-tile-cer">${escapeAttr(w.ceremony)}</span>
+          </a>
+        `
+          )
+          .join("")}
+      </div>
+    </section>
+  `;
+}
+
+function ceremonyJumps(sections) {
+  if (!sections.length) return "";
+  return `
+    <nav class="awards-jumps" aria-label="Jump to ceremony">
+      ${sections
+        .map(
+          s => `<a class="awards-jump" href="#${ceremonyAnchor(s)}">${escapeAttr(s.forYear)}</a>`
+        )
+        .join("")}
+    </nav>
+  `;
+}
+
 function section(group) {
   const winner = group.nominees.find(n => n.winner);
   return `
-    <section class="awards-section">
+    <section class="awards-section" id="${ceremonyAnchor(group)}">
       <header class="awards-section-head">
         <div>
           <span class="awards-kicker">${escapeAttr(group.ceremony)}</span>
@@ -98,6 +152,9 @@ export default state => {
     `;
   }
 
+  const totalNominees = sections.reduce((n, s) => n + s.nominees.length, 0);
+  const ceremonies = sections.length;
+
   return html`
     <section class="awards-page">
       <header class="awards-header">
@@ -106,8 +163,15 @@ export default state => {
         <p class="awards-subtitle">
           Recent Academy Award Best Picture nominees — winner first, then the rest of the field.
         </p>
+        <ul class="awards-stats" aria-label="Awards stats">
+          <li><b>${ceremonies}</b><span>Ceremonies tracked</span></li>
+          <li><b>${totalNominees}</b><span>Total nominees</span></li>
+          <li><b>${sections.filter(s => s.nominees.some(n => n.winner)).length}</b><span>Best Picture winners</span></li>
+        </ul>
       </header>
 
+      ${ceremonyJumps(sections)}
+      ${winnersHall(sections)}
       ${sections.map(section).join("")}
     </section>
   `;

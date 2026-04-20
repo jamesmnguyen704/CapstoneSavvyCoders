@@ -215,6 +215,7 @@ async function render(st = state.Home) {
   // auth handlers (need to reattach after each render)
   attachAuthHandlers();
   attachLogout();
+  attachMobileMenu();
   attachCommentHandlers();
   attachScrollAwareNav();
   attachSearchHandlers();
@@ -348,6 +349,35 @@ function attachLogout() {
 function attachAuthHandlers() {
   attachSignupHandler();
   attachLoginHandler();
+}
+
+// Mobile nav: toggle the links drawer from the hamburger, and close it
+// when the user taps a link or anywhere outside.
+function attachMobileMenu() {
+  const btn = document.querySelector("#menu-icon");
+  const links = document.querySelector("#nav-links");
+  if (!btn || !links) return;
+
+  const close = () => {
+    links.classList.remove("open");
+    btn.setAttribute("aria-expanded", "false");
+  };
+
+  btn.addEventListener("click", e => {
+    e.stopPropagation();
+    const isOpen = links.classList.toggle("open");
+    btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  });
+
+  links.addEventListener("click", e => {
+    if (e.target.closest("a")) close();
+  });
+
+  document.addEventListener("click", e => {
+    if (!links.classList.contains("open")) return;
+    if (e.target.closest("#nav-links") || e.target.closest("#menu-icon")) return;
+    close();
+  });
 }
 
 // Comments: submit + delete handlers (re-attached after each render).

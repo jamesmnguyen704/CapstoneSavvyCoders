@@ -37,15 +37,22 @@ export default state => {
   const movies = Array.isArray(state.marvel) ? state.marvel : [];
   const phases = groupMoviesByPhase(movies);
 
-  // Take the 5 most recently released MCU movies for the Hero Banner.
-  // First one is the cinematic lead; the rest become side thumbnails.
-  const heroMovies = [...movies]
+  // Cinematic lead: pin Avengers: Doomsday (TMDB 1003598) because the
+  // ensemble cast is the headline for the Marvel page. Fall back to the
+  // most recently released MCU film if Doomsday isn't in the dataset yet.
+  const DOOMSDAY_ID = 1003598;
+  const doomsday = movies.find(m => m && m.id === DOOMSDAY_ID);
+  const recentlyReleased = [...movies]
     .filter(m => m.release_date && new Date(m.release_date) <= new Date())
-    .sort((a, b) => new Date(b.release_date) - new Date(a.release_date))
-    .slice(0, 5);
+    .sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
 
-  const leadMovie = heroMovies[0];
-  const featuredThumbs = heroMovies.slice(1, 5);
+  const leadMovie = doomsday || recentlyReleased[0];
+  const isDoomsday = leadMovie && leadMovie.id === DOOMSDAY_ID;
+
+  // Side thumbs: most recent released MCU titles, excluding whatever is lead.
+  const featuredThumbs = recentlyReleased
+    .filter(m => !leadMovie || m.id !== leadMovie.id)
+    .slice(0, 4);
 
   return html`
     <section class="marvel-hero-cinematic">
@@ -59,9 +66,24 @@ export default state => {
           />
           <div class="marvel-hero-scrim"></div>
           <div class="marvel-hero-body">
-            <span class="marvel-hero-kicker">Marvel Cinematic Universe</span>
+            <span class="marvel-hero-kicker">
+              ${isDoomsday ? "Phase 6 · The Multiverse Saga Finale" : "Marvel Cinematic Universe"}
+            </span>
             <h1 class="marvel-hero-title">${leadMovie.title}</h1>
-            <p class="marvel-hero-overview">${leadMovie.overview || ""}</p>
+            ${
+              isDoomsday
+                ? `<p class="marvel-hero-tagline">
+                     The largest ensemble in MCU history — Avengers, X-Men, Fantastic Four and
+                     Doctor Doom collide. Over <b>60 returning and new stars</b> assemble for
+                     the Multiverse Saga's blackout event.
+                   </p>
+                   <div class="marvel-hero-stats">
+                     <span class="marvel-hero-stat"><b>60+</b><span>Cast members</span></span>
+                     <span class="marvel-hero-stat"><b>30+</b><span>Returning MCU heroes</span></span>
+                     <span class="marvel-hero-stat"><b>Dec 2026</b><span>In theaters</span></span>
+                   </div>`
+                : `<p class="marvel-hero-overview">${leadMovie.overview || ""}</p>`
+            }
             <div class="marvel-hero-actions">
               <button class="trailer-btn hero-btn" data-id="${leadMovie.id}">▶ Watch Trailer</button>
               <button class="info-btn hero-info-btn" type="button" data-id="${leadMovie.id}">
