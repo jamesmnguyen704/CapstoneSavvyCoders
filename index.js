@@ -28,7 +28,7 @@ import {
   discoverMovies,
   fetchPersonDetails
 } from "./services/api";
-import { renderDiscoverResults } from "./views/discover";
+import { renderMoviesResults } from "./views/movies";
 import {
   listWatchlist,
   toggleWatchlist,
@@ -221,7 +221,7 @@ async function render(st = state.Home) {
   attachSearchHandlers();
   attachWatchlistHandler();
   attachInfoButtonHandler();
-  attachDiscoverFilterHandlers();
+  attachMoviesFilterHandlers();
   attachPersonClickHandler();
   attachMyListTabs();
   attachAwardsCategoryTabs();
@@ -873,10 +873,27 @@ function attachInfoButtonHandler() {
   document.__infoBound = true;
   document.addEventListener("click", e => {
     const btn = e.target.closest(".info-btn");
-    if (!btn) return;
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      if (id) openInfoModal(id);
+      return;
+    }
+    const posterHit = e.target.closest("[data-info-id]");
+    if (posterHit && !e.target.closest(".card-bookmark, .trailer-btn, .info-btn")) {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = posterHit.dataset.infoId;
+      if (id) openInfoModal(id);
+    }
+  });
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const el = e.target.closest("[data-info-id]");
+    if (!el) return;
     e.preventDefault();
-    e.stopPropagation();
-    const id = btn.dataset.id;
+    const id = el.dataset.infoId;
     if (id) openInfoModal(id);
   });
 }
@@ -988,32 +1005,32 @@ function attachSearchHandlers() {
   });
 }
 
-// -------- Discover filters (live, debounced) --------
-let discoverDebounceId = null;
+// -------- Movies filters (live, debounced) --------
+let moviesDebounceId = null;
 
-async function refreshDiscover() {
-  state.Discover.loading = true;
-  renderDiscoverResults(state.Discover);
+async function refreshMovies() {
+  state.Movies.loading = true;
+  renderMoviesResults(state.Movies);
   const data = await discoverMovies({
-    genres: state.Discover.selectedGenres,
-    year: state.Discover.year,
-    minRating: state.Discover.minRating,
-    sort: state.Discover.sort
+    genres: state.Movies.selectedGenres,
+    year: state.Movies.year,
+    minRating: state.Movies.minRating,
+    sort: state.Movies.sort
   });
-  state.Discover.results = data.results || [];
-  state.Discover.total_results = data.total_results || 0;
-  state.Discover.loading = false;
-  renderDiscoverResults(state.Discover);
+  state.Movies.results = data.results || [];
+  state.Movies.total_results = data.total_results || 0;
+  state.Movies.loading = false;
+  renderMoviesResults(state.Movies);
   syncBookmarkButtons();
 }
 
-function debounceDiscover() {
-  clearTimeout(discoverDebounceId);
-  discoverDebounceId = setTimeout(refreshDiscover, 220);
+function debounceMovies() {
+  clearTimeout(moviesDebounceId);
+  moviesDebounceId = setTimeout(refreshMovies, 220);
 }
 
-function attachDiscoverFilterHandlers() {
-  const filters = document.querySelector("#discoverFilters");
+function attachMoviesFilterHandlers() {
+  const filters = document.querySelector("#moviesFilters");
   if (!filters || filters.__bound) return;
   filters.__bound = true;
 
@@ -1022,45 +1039,45 @@ function attachDiscoverFilterHandlers() {
     const chip = e.target.closest(".discover-chip");
     if (chip) {
       const id = Number(chip.dataset.genreId);
-      const set = new Set(state.Discover.selectedGenres);
+      const set = new Set(state.Movies.selectedGenres);
       if (set.has(id)) set.delete(id);
       else set.add(id);
-      state.Discover.selectedGenres = Array.from(set);
+      state.Movies.selectedGenres = Array.from(set);
       chip.classList.toggle("discover-chip--active");
-      debounceDiscover();
+      debounceMovies();
       return;
     }
-    if (e.target.id === "discoverReset") {
-      state.Discover.selectedGenres = [];
-      state.Discover.year = "";
-      state.Discover.minRating = 0;
-      state.Discover.sort = "popularity.desc";
+    if (e.target.id === "moviesReset") {
+      state.Movies.selectedGenres = [];
+      state.Movies.year = "";
+      state.Movies.minRating = 0;
+      state.Movies.sort = "popularity.desc";
       // Re-render the whole view so chip UI resets cleanly.
-      render(state.Discover);
+      render(state.Movies);
     }
   });
 
-  const year = filters.querySelector("#discoverYear");
+  const year = filters.querySelector("#moviesYear");
   if (year) {
     year.addEventListener("change", () => {
-      state.Discover.year = year.value;
-      debounceDiscover();
+      state.Movies.year = year.value;
+      debounceMovies();
     });
   }
-  const rating = filters.querySelector("#discoverRating");
-  const ratingOut = filters.querySelector("#discoverRatingValue");
+  const rating = filters.querySelector("#moviesRating");
+  const ratingOut = filters.querySelector("#moviesRatingValue");
   if (rating) {
     rating.addEventListener("input", () => {
-      state.Discover.minRating = Number(rating.value);
+      state.Movies.minRating = Number(rating.value);
       if (ratingOut) ratingOut.textContent = rating.value;
-      debounceDiscover();
+      debounceMovies();
     });
   }
-  const sort = filters.querySelector("#discoverSort");
+  const sort = filters.querySelector("#moviesSort");
   if (sort) {
     sort.addEventListener("change", () => {
-      state.Discover.sort = sort.value;
-      debounceDiscover();
+      state.Movies.sort = sort.value;
+      debounceMovies();
     });
   }
 }
@@ -1263,10 +1280,22 @@ router.hooks({
 
       case "movies":
         try {
-          const popular = await fetchPopular();
-          state.Movies.movies = popular;
+          if (!state.Movies.genres.length) {
+            state.Movies.genres = await fetchGenres();
+          }
+          state.Movies.loading = true;
+          const data = await discoverMovies({
+            genres: state.Movies.selectedGenres,
+            year: state.Movies.year,
+            minRating: state.Movies.minRating,
+            sort: state.Movies.sort
+          });
+          state.Movies.results = data.results || [];
+          state.Movies.total_results = data.total_results || 0;
+          state.Movies.loading = false;
         } catch {
-          state.Movies.movies = [];
+          state.Movies.results = [];
+          state.Movies.loading = false;
         }
         break;
 
@@ -1344,26 +1373,6 @@ router.hooks({
         }
         break;
 
-      case "discover":
-        try {
-          if (!state.Discover.genres.length) {
-            state.Discover.genres = await fetchGenres();
-          }
-          state.Discover.loading = true;
-          const data = await discoverMovies({
-            genres: state.Discover.selectedGenres,
-            year: state.Discover.year,
-            minRating: state.Discover.minRating,
-            sort: state.Discover.sort
-          });
-          state.Discover.results = data.results || [];
-          state.Discover.total_results = data.total_results || 0;
-          state.Discover.loading = false;
-        } catch {
-          state.Discover.results = [];
-          state.Discover.loading = false;
-        }
-        break;
     }
 
     done();
@@ -1385,7 +1394,7 @@ router
     "/news": () => render(state.News),
     "/my-list": () => render(state.MyList),
     "/awards": () => render(state.Awards),
-    "/discover": () => render(state.Discover)
+    "/discover": () => router.navigate("/movies")
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();

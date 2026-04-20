@@ -24,6 +24,72 @@ const phaseIDs = {
   "Phase 6": [986056, 617126, 969681, 1003596, 1003598]
 };
 
+// Cinematic lead + tagline per phase — drives the per-phase hero blocks.
+const phaseMeta = {
+  "Phase 1": {
+    leadId: 24428,
+    kicker: "Phase 1 · The Original Saga",
+    tagline:
+      "It all starts here — Iron Man, Cap, Thor, and Hulk assemble for the first time to repel Loki's invasion of New York."
+  },
+  "Phase 2": {
+    leadId: 99861,
+    kicker: "Phase 2 · Dark World & Winter Soldier",
+    tagline:
+      "The universe expands — Guardians of the Galaxy arrive, Winter Soldier cracks SHIELD, and Ultron rises."
+  },
+  "Phase 3": {
+    leadId: 299534,
+    kicker: "Phase 3 · The Infinity Saga Finale",
+    tagline:
+      "Civil War splinters the Avengers, Infinity War snaps half of them away, and Endgame brings them home."
+  },
+  "Phase 4": {
+    leadId: 634649,
+    kicker: "Phase 4 · The Multiverse Awakens",
+    tagline:
+      "Wanda unravels, Strange fractures reality, and three Spider-Men share a screen for the first time."
+  },
+  "Phase 5": {
+    leadId: 533535,
+    kicker: "Phase 5 · Variants & Vows",
+    tagline:
+      "Deadpool crashes the MCU, Thunderbolts* assembles, and the Multiverse war heats up ahead of Doomsday."
+  }
+};
+
+function renderPhaseHero(phase, phaseMovies) {
+  const meta = phaseMeta[phase];
+  if (!meta) return "";
+  const lead = phaseMovies.find(m => m && m.id === meta.leadId);
+  if (!lead) return "";
+  const backdrop = lead.backdrop_path
+    ? `https://image.tmdb.org/t/p/original${lead.backdrop_path}`
+    : "images/placeholder-poster.jpg";
+  return `
+    <section class="marvel-hero-cinematic marvel-phase-hero">
+      <img
+        class="marvel-hero-bg"
+        src="${backdrop}"
+        alt="${lead.title} Backdrop"
+        onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+      />
+      <div class="marvel-hero-scrim"></div>
+      <div class="marvel-hero-body">
+        <span class="marvel-hero-kicker">${meta.kicker}</span>
+        <h2 class="marvel-hero-title">${lead.title}</h2>
+        <p class="marvel-hero-tagline">${meta.tagline}</p>
+        <div class="marvel-hero-actions">
+          <button class="trailer-btn hero-btn" data-id="${lead.id}">▶ Watch Trailer</button>
+          <button class="info-btn hero-info-btn" type="button" data-id="${lead.id}">
+            <i class="fa-solid fa-circle-info"></i> More Info
+          </button>
+        </div>
+      </div>
+    </section>
+  `;
+}
+
 function groupMoviesByPhase(movies) {
   const byID = Object.fromEntries(movies.map(m => [m.id, m]));
   const result = {};
@@ -114,15 +180,19 @@ export default state => {
               ? `
             <aside class="marvel-hero-featured" aria-label="Featured MCU titles">
               ${featuredThumbs
-                .map(
-                  m => `
-                <button class="marvel-hero-thumb trailer-btn" data-id="${m.id}" aria-label="Play ${m.title} trailer">
-                  <img src="https://image.tmdb.org/t/p/w300${m.backdrop_path || m.poster_path}" alt="${m.title}" loading="lazy" />
-                  <span class="marvel-hero-thumb-play"><i class="fa-solid fa-play"></i></span>
+                .map(m => {
+                  const year = (m.release_date || "").slice(0, 4);
+                  return `
+                <button class="marvel-hero-thumb trailer-btn" data-id="${m.id}" data-info-id="${m.id}" aria-label="Play ${m.title} trailer">
+                  <img src="https://image.tmdb.org/t/p/w500${m.backdrop_path || m.poster_path}" alt="${m.title}" loading="lazy" />
+                  <div class="marvel-phase-thumb-badges">
+                    ${year ? `<span class="card-badge card-badge--year">${year}</span>` : ""}
+                  </div>
                   <span class="marvel-hero-thumb-caption">${m.title}</span>
+                  <span class="marvel-hero-thumb-play"><i class="fa-solid fa-play"></i></span>
                 </button>
-              `
-                )
+              `;
+                })
                 .join("")}
             </aside>`
               : ""
@@ -145,28 +215,22 @@ export default state => {
         .map(
           ([phase, phaseMovies]) =>
             html`
-              <h2 class="marvel-phase-title" style="margin-left: 1rem;">
-                ${phase}
-              </h2>
-              <div
-                class="movie-carousel"
-                style="align-items: flex-start; margin-left: 1rem;"
-              >
+              ${phase === "Phase 6" ? "" : renderPhaseHero(phase, phaseMovies)}
+              ${phase === "Phase 6"
+                ? html`<h2 class="marvel-phase-title" style="margin-left: 1rem;">${phase}</h2>`
+                : ""}
+              <div class="marvel-phase-grid">
                 ${phaseMovies.length
                   ? phaseMovies
                       .map(movie => {
                         if (!movie) {
                           return html`
-                            <div class="marvel-card missing">
-                              <div class="marvel-card-title">Missing Movie Data</div>
+                            <div class="marvel-phase-thumb missing">
+                              <span class="marvel-phase-thumb-caption">Missing Movie Data</span>
                             </div>
                           `;
                         }
                         const year = (movie.release_date || "").slice(0, 4);
-                        const rating =
-                          typeof movie.vote_average === "number" && movie.vote_average > 0
-                            ? movie.vote_average.toFixed(1)
-                            : null;
                         const movieJson = JSON.stringify({
                           id: movie.id,
                           title: movie.title,
@@ -175,46 +239,35 @@ export default state => {
                           vote_average: movie.vote_average || null
                         })
                           .replace(/"/g, "&quot;");
+                        const artPath = movie.backdrop_path || movie.poster_path;
                         return html`
-                          <div class="marvel-card" data-movie-id="${movie.id}">
-                            <div class="movie-poster-wrap">
+                          <div class="marvel-phase-thumb" data-movie-id="${movie.id}">
+                            <button
+                              class="marvel-phase-thumb-btn trailer-btn"
+                              type="button"
+                              data-id="${movie.id}"
+                              data-info-id="${movie.id}"
+                              aria-label="Play ${movie.title} trailer"
+                            >
                               <img
-                                class="marvel-poster"
-                                src="https://image.tmdb.org/t/p/w500${movie.poster_path}"
+                                src="https://image.tmdb.org/t/p/w500${artPath}"
                                 alt="${movie.title}"
                                 loading="lazy"
                               />
-                              <div class="card-badges">
+                              <div class="marvel-phase-thumb-badges">
                                 ${year ? `<span class="card-badge card-badge--year">${year}</span>` : ""}
-                                ${rating ? `<span class="card-badge card-badge--rating">★ ${rating}</span>` : ""}
                               </div>
-                              <button
-                                class="card-bookmark"
-                                type="button"
-                                aria-label="Add to My List"
-                                data-movie='${movieJson}'
-                              >
-                                <i class="fa-regular fa-bookmark"></i>
-                              </button>
-                            </div>
-                            <div class="marvel-info">
-                              <div class="marvel-card-title">${movie.title}</div>
-                              <div class="card-actions">
-                                <button class="trailer-btn" data-id="${movie.id}">▶ Trailer</button>
-                                <button class="info-btn" type="button" data-id="${movie.id}" aria-label="More info">
-                                  <i class="fa-solid fa-circle-info"></i>
-                                </button>
-                              </div>
-                              <div class="marvel-release">
-                                ${movie.release_date
-                                  ? new Date(movie.release_date).toLocaleDateString("en-US", {
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric"
-                                    })
-                                  : "TBA"}
-                              </div>
-                            </div>
+                              <span class="marvel-phase-thumb-caption">${movie.title}</span>
+                              <span class="marvel-phase-thumb-play"><i class="fa-solid fa-play"></i></span>
+                            </button>
+                            <button
+                              class="card-bookmark marvel-phase-thumb-bookmark"
+                              type="button"
+                              aria-label="Add to My List"
+                              data-movie='${movieJson}'
+                            >
+                              <i class="fa-regular fa-bookmark"></i>
+                            </button>
                           </div>
                         `;
                       })
