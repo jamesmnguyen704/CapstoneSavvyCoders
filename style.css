@@ -1187,6 +1187,7 @@ section {
 #trending,
 #now-playing,
 #popular,
+#top-rated,
 .marvel-container,
 .releases-grid {
   padding: 0 clamp(1rem, 4vw, 3.5rem) !important;
@@ -1196,6 +1197,7 @@ section {
 #trending h2,
 #now-playing h2,
 #popular h2,
+#top-rated h2,
 .marvel-phase-title,
 .releases-title {
   font-size: clamp(1.15rem, 1.4vw, 1.45rem) !important;
@@ -1212,6 +1214,7 @@ section {
 #trending h2::before,
 #now-playing h2::before,
 #popular h2::before,
+#top-rated h2::before,
 .marvel-phase-title::before {
   content: "";
   position: absolute;
@@ -3955,6 +3958,212 @@ img, video, iframe { max-width: 100%; }
   .hero-slider-container { height: 80vh; min-height: 220px; }
 }
 
+/* --------- Mobile de-blocking pass ---------
+   Remove visual "chunky blocks" feel on phones: strip the carousel mask
+   (cuts cards in half on narrow widths), drop reserved title space below
+   short cards, flatten the discover filter card, tighten news card chrome,
+   and soften header alignment so content reads as a feed, not a stack
+   of bordered boxes. */
+@media (max-width: 640px) {
+  /* Carousel edge-fade looks like cropping on narrow viewports — drop it */
+  .movie-carousel,
+  .marvel-phase-row {
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+    padding-bottom: 0.75rem !important;
+  }
+
+  /* Stop reserving 2 lines below short titles; let cards hug content */
+  .movie-card h3,
+  .movie-title,
+  .marvel-card-title,
+  .marvel-title,
+  .release-title {
+    min-height: 0 !important;
+    -webkit-line-clamp: 2;
+    font-size: 0.82rem !important;
+    margin-top: 0.4rem !important;
+  }
+
+  /* Carousel cards: a touch narrower so 2.5 fit in view, signalling scroll */
+  .movie-carousel .movie-card,
+  .marvel-phase-row .marvel-card {
+    flex: 0 0 38vw !important;
+    min-width: 0 !important;
+  }
+
+  /* Discover/Movies filter card: flatten — no border/bg, just spacing */
+  .discover-filters {
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0.25rem 0 0.5rem !important;
+    margin-bottom: 1rem !important;
+    gap: 0.75rem !important;
+  }
+  .discover-filter-row--inputs {
+    border-top: 1px solid var(--cm-border);
+    padding-top: 0.75rem !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem !important;
+  }
+  .discover-control { min-width: 0; width: 100%; }
+  .discover-reset { margin-left: 0; align-self: flex-start; }
+  .discover-page { padding: 1rem 1rem 3rem !important; }
+  .discover-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+  }
+  .discover-header h1 { font-size: 1.5rem !important; }
+
+  /* News cards: lighter chrome, tighter padding */
+  .news-card {
+    border-radius: 8px;
+  }
+  .news-card-body {
+    padding: 0.75rem 0.85rem 0.9rem;
+    gap: 0.4rem;
+  }
+  .news-card--large .news-card-body {
+    padding: 1rem 1.1rem;
+  }
+  .news-card-title { font-size: 0.95rem; }
+  .news-card--large .news-card-media { min-height: 0; aspect-ratio: 16 / 9; }
+
+  /* Movies/Releases page headers: align with row gutter, smaller display type */
+  .movies-header,
+  .releases-header {
+    padding: 0 1rem;
+  }
+  .movies-header h1,
+  .movies-header p,
+  .releases-header h1 {
+    padding-left: 0 !important;
+  }
+  .movies-header h1,
+  .releases-header h1 {
+    font-size: 1.5rem !important;
+    margin-top: 0.5rem !important;
+  }
+  .movies-header p,
+  .releases-header p {
+    font-size: 0.9rem;
+  }
+
+  /* My List / Profile / Awards page wrappers: pull in from edges, kill big paddings */
+  .mylist-page,
+  .profile-page,
+  .auth-page {
+    margin: 1rem auto !important;
+    padding: 1rem !important;
+  }
+}
+
+/* --------- Tighter still on the smallest phones --------- */
+@media (max-width: 380px) {
+  /* Two-up grid is set above; here just tighten card text */
+  .movie-card h3,
+  .marvel-title,
+  .release-title { font-size: 0.78rem !important; }
+  .trailer-btn { padding: 0.45rem 0.6rem !important; font-size: 0.78rem !important; }
+}
+
+/* =========================================================
+   PHONE FIXES — issues caught from real device screenshots
+   Nav overflow (Sign Up clipped), hero buttons spilling left,
+   awards section head crowding, award badge collision.
+   ========================================================= */
+@media (max-width: 640px) {
+  /* Drop nav search on phones — discoverable inside the hamburger menu
+     instead of competing with auth links for limited bar space */
+  .nav-search { display: none !important; }
+
+  /* Auth links: compact pills that always fit the right side */
+  .nav-right > a[href="/login"],
+  .nav-right > a[href="/signup"] {
+    padding: 0.4rem 0.65rem !important;
+    font-size: 0.8rem !important;
+    white-space: nowrap;
+  }
+
+  /* Welcome / Logout when authed: keep on one line, never wrap */
+  .nav-right > a.welcome {
+    max-width: 40vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.85rem !important;
+  }
+  #logoutBtn {
+    padding: 0.35rem 0.65rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Hero actions: stack as two full-width buttons. Wrap-and-collide
+     was leaving "More Info" hanging off the left edge on slide changes. */
+  .hero-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100%;
+    gap: 0.5rem !important;
+  }
+  .hero-content .hero-btn,
+  .hero-content .trailer-btn.hero-btn,
+  .hero-content .hero-info-btn {
+    width: 100% !important;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Awards section head: stack so the "took home the Oscar" chip drops
+     below the kicker/title instead of crowding it into 3-line wraps */
+  .awards-section-head {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+  .awards-winner-chip {
+    align-self: flex-start;
+    max-width: 100%;
+    font-size: 0.85rem !important;
+  }
+
+  /* Award cards: hide the year/rating badge stack — the section heading
+     already says the year, and the WINNER/NOMINEE pill is the real signal.
+     This kills the visual collision between WINNER and "2025 ★7.4" */
+  .award-card .card-badges { display: none !important; }
+  .award-badge {
+    top: 0.4rem;
+    font-size: 0.6rem;
+    padding: 0.18rem 0.5rem;
+  }
+
+  /* Awards display titles: the italic Playfair was rendering oversized */
+  .awards-header h1 {
+    font-size: 2rem !important;
+    line-height: 1.05 !important;
+  }
+  .awards-winners-hall-head h2 {
+    font-size: 1.3rem !important;
+  }
+  .awards-section h2 {
+    font-size: 1.15rem !important;
+  }
+  .awards-subtitle { font-size: 0.9rem !important; }
+
+  /* Winners hall tiles: smaller so 2.5 fit in view */
+  .awards-winner-tile {
+    flex: 0 0 42vw !important;
+  }
+  .awards-winners-row {
+    -webkit-mask-image: none !important;
+    mask-image: none !important;
+  }
+}
+
 /* =================== HERO DISPLAY TITLE (type-collage) =================== */
 /* Oversized translucent serif title layered behind hero-content.
    Inspired by 2026 Savee/Dribbble type-collage + editorial film trends. */
@@ -4795,29 +5004,38 @@ img, video, iframe { max-width: 100%; }
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     align-items: center !important;
-    padding: 0.6rem 1rem !important;
-    gap: 0.5rem;
+    padding: 0.6rem 0.75rem !important;
+    gap: 0.4rem;
     position: relative;
   }
   .nav-left {
     width: auto !important;
-    flex: 0 0 auto;
+    flex: 0 1 auto;
+    min-width: 0;
     gap: 0.5rem !important;
+  }
+  .logo {
+    font-size: 1.15rem !important;
+    white-space: nowrap;
   }
   #menu-icon {
     display: inline-flex;
     order: -1;
+    flex: 0 0 auto;
   }
   .nav-right {
     width: auto !important;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
+    min-width: 0;
     justify-content: flex-end !important;
-    gap: 0.5rem;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
   }
   .nav-search {
-    max-width: 40vw;
+    max-width: 30vw;
   }
   .play-intro-btn .play-text { display: none; }
+  .play-intro-btn { padding: 0.35rem 0.55rem !important; }
 
   /* Collapsed links: hidden drawer that drops from under the navbar */
   .nav-links {
