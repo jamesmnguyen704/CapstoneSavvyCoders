@@ -18,7 +18,16 @@ export const curated2026 = [
   { id: 1170608, date: "2026-12-18" }, // Dune: Part Three
   { id: 454639, date: "2026-06-05" }, // Masters of the Universe
   { id: 1024604, date: "2026-11-25" }, // Frozen III
-  { id: 1159559, date: "2026-10-31" }  // Scream 7 (TBA → placeholder Halloween)
+  { id: 1204680, date: "2026-08-20" }, // Coyote vs. Acme
+  { id: 1384216, date: "2026-08-26" }, // The Dog Stars — Ridley Scott
+  { id: 1375441, date: "2026-09-11" }, // Primetime — A24, Robert Pattinson
+  { id: 1263337, date: "2026-09-23" }, // Heart of the Beast — David Ayer, Brad Pitt
+  { id: 1248832, date: "2026-09-30" }, // Digger — Iñárritu, Tom Cruise
+  { id: 1117898, date: "2026-11-05" }, // The Cat in the Hat
+  { id: 1281331, date: "2026-10-07" }, // The Social Reckoning — Aaron Sorkin
+  { id: 1255833, date: "2026-10-14" }, // Whalefall
+  { id: 1400940, date: "2026-10-21" }, // Clayface — real date now confirmed on TMDB
+  { id: 1400336, date: "2026-11-25" }  // Focker-in-Law (Meet the Parents 4)
 ];
 export const curated2027 = [
   { id: 1003598, date: "2027-12-17" }, // Avengers: Secret Wars
@@ -30,6 +39,6 @@ export const curated2027 = [
   { id: 1523140, date: "2027-07-09" }, // Man of Tomorrow
   { id: 1384758, date: "2027-02-05" }, // Ice Age: Boiling Point
   { id: 421892,  date: "2027-06-30" }, // Shrek 5
-  { id: 1400940, date: "2027-10-31" }, // Clayface (TBA → placeholder)
-  { id: 1288438, date: "2027-03-26" }  // Godzilla x Kong: Supernova (2027)
+  { id: 1288438, date: "2027-03-26" }, // Godzilla x Kong: Supernova (2027)
+  { id: 1147572, date: "2027-02-11" }  // Narnia: The Magician's Nephew — Greta Gerwig
 ];

@@ -7,3 +7,8 @@ node_modules
 .env
 .env.*
 *.log
+
+# Local leftovers: duplicates of the poster art that used to live at the repo
+# root. Nothing references them since placeholder-poster.jpg moved into
+# Assets/images/ (where Parcel can fingerprint and bundle it).
+images/

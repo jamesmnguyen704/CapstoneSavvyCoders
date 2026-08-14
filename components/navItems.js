@@ -17,10 +17,13 @@ export default function navItem(item) {
 // lives in the footer (freeing space up top).
 export const navItemsData = [
   { url: "/movies", text: "Movies" },
+  { url: "/tv", text: "TV" },
+  { url: "/theaters", text: "In Theaters" },
   { url: "/releases", text: "Upcoming" },
   { url: "/marvel", text: "Marvel" },
   { url: "/awards", text: "Awards" },
   { url: "/news", text: "News" },
+  { url: "/games", text: "Games" },
   { url: "/my-list", text: "My List" }
 ];
 

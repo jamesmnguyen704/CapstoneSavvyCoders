@@ -8,6 +8,18 @@ import axios from "axios";
 // Fallback to localhost for local development.
 const API_BASE = process.env.VITE_BACKEND_URL || "http://localhost:3000";
 
+// Game cover art lives in Assets/game-covers and is served by the API's
+// express.static of the repo root, so it works locally and on Render without
+// needing the bundler to fingerprint 50 images.
+export function gameCoverUrl(file) {
+  return file ? `${API_BASE}/Assets/game-covers/${file}` : null;
+}
+
+// Any other static asset served out of the repo root (console logos, etc).
+export function assetUrl(path) {
+  return path ? `${API_BASE}/Assets/${path}` : null;
+}
+
 export async function fetchHomeData() {
   try {
     const [trending, nowPlaying, popular] = await Promise.all([
@@ -90,6 +102,52 @@ export async function fetchTopRated() {
   } catch (err) {
     console.error("TOP RATED ERROR:", err);
     return [];
+  }
+}
+
+// What's playing in theaters near a US ZIP, with pre-filled ticket links.
+export async function fetchInTheaters(zip) {
+  try {
+    const response = await axios.get(`${API_BASE}/movies/in-theaters`, { params: { zip } });
+    return response.data;
+  } catch (err) {
+    const message = err.response?.data?.message || "Could not load showtimes";
+    console.error("IN THEATERS ERROR:", err);
+    return { location: null, results: [], error: message };
+  }
+}
+
+// TV shows — popular / top rated / on the air, plus the provider list.
+export async function fetchTvShows() {
+  try {
+    const response = await axios.get(`${API_BASE}/tv`);
+    return response.data;
+  } catch (err) {
+    console.error("TV ERROR:", err);
+    return { popular: [], topRated: [], onTheAir: [], providers: [] };
+  }
+}
+
+// Shows available on one streaming service (TMDB provider id).
+export async function fetchTvByProvider(provider) {
+  try {
+    const response = await axios.get(`${API_BASE}/tv/providers`, { params: { provider } });
+    return response.data;
+  } catch (err) {
+    console.error("TV PROVIDER ERROR:", err);
+    return { results: [], total_results: 0 };
+  }
+}
+
+// Nearest cinemas — separate call because the OpenStreetMap lookup behind it
+// can take ~20s cold, and the movie grid shouldn't wait on it.
+export async function fetchTheatersNear(zip) {
+  try {
+    const response = await axios.get(`${API_BASE}/movies/theaters-near`, { params: { zip } });
+    return response.data;
+  } catch (err) {
+    console.error("THEATERS NEAR ERROR:", err);
+    return { theaters: [], radius: 25 };
   }
 }
 
@@ -188,11 +246,26 @@ export async function fetchMovieNews() {
 
 // TV news — proxied through our backend (TV-focused RSS + Guardian TV).
 export async function fetchTvNews() {
+  return fetchNewsTab("tv");
+}
+
+// Streaming and gaming wires — same aggregator, different source lists.
+export async function fetchStreamingNews() {
+  return fetchNewsTab("streaming");
+}
+
+export async function fetchGamingNews() {
+  return fetchNewsTab("gaming");
+}
+
+// Shared fetcher for every non-movie news tab. `movies` lives at /news.
+export async function fetchNewsTab(tab) {
+  const path = tab === "movies" ? "/news" : `/news/${tab}`;
   try {
-    const response = await axios.get(`${API_BASE}/news/tv`);
+    const response = await axios.get(`${API_BASE}${path}`);
     return Array.isArray(response.data?.results) ? response.data.results : [];
   } catch (err) {
-    console.error("TV NEWS ERROR:", err);
+    console.error(`${String(tab).toUpperCase()} NEWS ERROR:`, err);
     return [];
   }
 }

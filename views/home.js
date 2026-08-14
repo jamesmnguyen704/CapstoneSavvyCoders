@@ -1,8 +1,11 @@
 // File: views/home.js
-// Purpose: Home page — hero slider + Trending / Now Playing / Popular / Top Rated rows.
+// Purpose: Home page — hero slider + Trending / Popular / Top Rated rows.
+//          "Now Playing in U.S. Theaters" moved to its own /theaters page,
+//          where it pairs with the ZIP lookup and nearby-cinema list.
 // Notes: Uses state populated by the router (fetchHomeData + fetchTopRated).
 
 import html from "html-literal";
+import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
 
 function escapeAttr(s) {
   return String(s ?? "").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -34,7 +37,7 @@ function movieCard(movie) {
           src="https://image.tmdb.org/t/p/w300${movie.poster_path}"
           alt="${escapeAttr(movie.title)}"
           loading="lazy"
-          onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+          onerror="this.onerror=null; this.src='${placeholderPoster}'"
         />
         <div class="card-badges">
           ${year ? `<span class="card-badge card-badge--year">${year}</span>` : ""}
@@ -84,6 +87,22 @@ function row(label, items) {
   `;
 }
 
+// "Playing in theaters" vs "Now streaming on Netflix" — the backend tags each
+// trending title by checking TMDB's now_playing list and watch providers.
+function availabilityBadge(movie) {
+  const a = movie.availability;
+  if (!a || !a.type) return "";
+  const logo = a.logo
+    ? `<img class="hero-avail-logo" src="${a.logo}" alt="" aria-hidden="true" />`
+    : "";
+  return `
+    <span class="hero-avail" data-type="${escapeAttr(a.type)}">
+      ${a.type === "theaters" ? `<i class="fa-solid fa-film" aria-hidden="true"></i>` : logo}
+      ${escapeAttr(a.label)}
+    </span>
+  `;
+}
+
 export default st => {
   const heroMovies = st.trending ? st.trending.slice(0, 5) : [];
 
@@ -98,12 +117,12 @@ export default st => {
               class="hero-backdrop"
               src="https://image.tmdb.org/t/p/original${movie.backdrop_path}"
               alt="${escapeAttr(movie.title)} Backdrop"
-              onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+              onerror="this.onerror=null; this.src='${placeholderPoster}'"
             />
-            <div class="hero-display-title" aria-hidden="true">${escapeAttr(movie.title)}</div>
             <div class="hero-content">
               <span class="hero-kicker">Featured · Trending Now</span>
               <h1>${escapeAttr(movie.title)}</h1>
+              ${availabilityBadge(movie)}
               <p>${escapeAttr(movie.overview || "")}</p>
               <div class="hero-actions">
                 <button class="trailer-btn hero-btn" data-id="${movie.id}">▶ Watch Trailer</button>
@@ -132,9 +151,6 @@ export default st => {
           : skeletonRow()}
       </div>
     </section>
-
-    ${row("Now Playing in U.S. Theaters", st.nowPlaying)
-      .replace("<section>", `<section id="now-playing">`)}
 
     ${row("Popular in the U.S.", st.popular)
       .replace("<section>", `<section id="popular">`)}

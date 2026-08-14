@@ -4,6 +4,7 @@
 // Notes:   `renderMoviesResults` is exported for in-place grid updates when
 //          filters change, so inputs keep focus and the hero doesn't re-render.
 import html from "html-literal";
+import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
 import { escapeAttr, movieCard, skeletonCards } from "./_cards";
 
 const SORT_OPTIONS = [
@@ -79,7 +80,7 @@ export default function Movies(st) {
               class="hero-backdrop"
               src="https://image.tmdb.org/t/p/original${movie.backdrop_path || movie.poster_path}"
               alt="${escapeAttr(movie.title)} Backdrop"
-              onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+              onerror="this.onerror=null; this.src='${placeholderPoster}'"
             />
             <div class="hero-content">
               <h1>${escapeAttr(movie.title)}</h1>

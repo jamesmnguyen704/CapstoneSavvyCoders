@@ -2072,16 +2072,50 @@ footer {
 }
 
 /* ---------- Right rail ---------- */
+/* The rail used to be a sticky, viewport-height box with its own scrollbar.
+   That left ~1400px of empty column beside the story grid on a desktop window
+   (the divider stopped dead partway down and nothing lined up), and buried
+   most of the list in a nested scroller nobody finds. It now flows the full
+   height of the column so the two columns end together. */
 .news-rail {
-  position: sticky;
-  top: 90px;
-  max-height: calc(100vh - 120px);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   padding: 1rem 0.25rem 1rem 1.25rem;
-  border-left: 1px solid var(--cm-border);
   min-width: 0;
+  /* Divider is drawn by .news-layout::before so it spans the whole row. */
+}
+
+/* Full-height divider between the story grid and the rail. */
+.news-layout {
+  position: relative;
+}
+
+.news-layout::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  /* Sits on the gap between the two grid columns. */
+  right: clamp(300px, 24vw, 380px);
+  width: 1px;
+  background: var(--cm-border);
+  pointer-events: none;
+}
+
+@media (max-width: 960px) {
+  .news-layout::before {
+    display: none;
+  }
+}
+
+/* Keep the rail heading visible while the long list scrolls past it. */
+.news-rail-title {
+  position: sticky;
+  top: 84px;
+  z-index: 1;
+  background: var(--cm-bg, #0b0b0b);
+  padding-block: 0.5rem !important;
 }
 
 @media (max-width: 960px) {
@@ -2109,7 +2143,6 @@ footer {
   display: flex;
   flex-direction: column;
   gap: 0.6rem;
-  overflow-y: auto;
   padding-right: 0.4rem;
   min-height: 0;
 }
@@ -2231,6 +2264,20 @@ footer {
 .news-pill[data-cat="blockbuster"] { background: var(--cm-accent-grad); border-color: transparent; color: #111; }
 .news-pill[data-cat="scifi"]       { background: #06b6d4; border-color: #06b6d4; color: #002027; }
 .news-pill[data-cat="superhero"]   { background: #f59e0b; border-color: #f59e0b; color: #1a1400; }
+
+/* Streaming services and gaming platforms — brand colours, same treatment. */
+.news-pill[data-cat="netflix"]     { background: #e50914; border-color: #e50914; color: #fff; }
+.news-pill[data-cat="hbomax"]      { background: #7b2ff7; border-color: #7b2ff7; color: #fff; }
+.news-pill[data-cat="prime"]       { background: #00a8e1; border-color: #00a8e1; color: #00202b; }
+.news-pill[data-cat="appletv"]     { background: #f5f5f7; border-color: #f5f5f7; color: #111; }
+.news-pill[data-cat="streaming"]   { background: #14b8a6; border-color: #14b8a6; color: #00201d; }
+.news-pill[data-cat="playstation"] { background: #0070d1; border-color: #0070d1; color: #fff; }
+.news-pill[data-cat="xbox"]        { background: #107c10; border-color: #107c10; color: #fff; }
+.news-pill[data-cat="nintendo"]    { background: #e60012; border-color: #e60012; color: #fff; }
+.news-pill[data-cat="pc"]          { background: #1b2838; border-color: #66c0f4; color: #66c0f4; }
+.news-pill[data-cat="esports"]     { background: #a855f7; border-color: #a855f7; color: #fff; }
+.news-pill[data-cat="gaming"]      { background: #6366f1; border-color: #6366f1; color: #fff; }
+.news-pill[data-cat="tv"]          { background: #475569; border-color: #475569; color: #fff; }
 
 .news-tag {
   /* Legacy "Featured" pill — retained for the top-story strip look. */
@@ -2378,7 +2425,15 @@ footer {
   flex-wrap: wrap;
 }
 
+/* Hero variant of .info-btn: it carries a label, so it has to undo the
+   36px icon-only box it inherits — otherwise "More Info" wraps to two lines
+   and flex collapses the whitespace between the icon and the text. */
 .hero-info-btn {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  height: auto !important;
+  gap: 0.5rem !important;
+  white-space: nowrap;
   padding: 0.7rem 1.2rem !important;
   background: rgba(30, 30, 30, 0.72) !important;
   color: #fff !important;
@@ -2431,6 +2486,46 @@ footer {
 
 .skeleton-line--short {
   width: 60%;
+}
+
+/* Route-change placeholder — stands in for a whole page while its data loads.
+   Needs !important to win against the global `main { padding: 0 !important }`
+   reset further down this file. */
+.route-skeleton {
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  padding: 2.5rem clamp(1rem, 4vw, 3.5rem) 4rem !important;
+}
+
+.route-skeleton__head {
+  margin-bottom: 2rem;
+}
+
+.route-skeleton__kicker {
+  width: 140px;
+  height: 14px;
+}
+
+.route-skeleton__title {
+  width: min(420px, 70%);
+  height: 44px;
+  margin-top: 0.75rem;
+}
+
+@media (max-width: 600px) {
+  .route-skeleton {
+    padding: 1.5rem 1rem 3rem !important;
+  }
+  .route-skeleton__title {
+    height: 32px;
+  }
+}
+
+/* Respect reduced-motion: keep the placeholder, drop the shimmer. */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
 }
 
 /* ============================================================
@@ -3053,6 +3148,1224 @@ body.no-scroll {
 
 .info-btn-inline:hover {
   text-decoration: underline;
+}
+
+/* ============================================================
+   TV & STREAMING PAGE
+   ============================================================ */
+.tv-page {
+  padding: 2rem clamp(1rem, 4vw, 3.5rem) 4rem !important;
+  max-width: 1800px;
+  margin: 0 auto !important;
+}
+
+.tv-header {
+  margin-bottom: 2rem;
+}
+
+.tv-kicker {
+  display: block;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-weight: 800;
+  color: var(--cm-accent);
+  margin-bottom: 0.6rem;
+}
+
+.tv-header h1 {
+  margin: 0 0 0.6rem !important;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  line-height: 1.02;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.tv-subtitle {
+  color: var(--cm-muted);
+  margin: 0 0 1.4rem;
+  line-height: 1.55;
+  max-width: 720px;
+}
+
+.tv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tv-chip {
+  min-height: 38px;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--cm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cm-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.tv-chip:hover {
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.tv-chip--active {
+  background: var(--cm-accent-grad);
+  border-color: transparent;
+  color: #111;
+}
+
+.tv-row {
+  margin-bottom: 2.25rem;
+}
+
+.tv-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  font-size: 1.05rem !important;
+  font-weight: 700;
+  border: none !important;
+  padding: 0 0 0 0.7rem !important;
+  margin: 0 0 1rem !important;
+  position: relative;
+}
+
+.tv-row-head::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 12%;
+  bottom: 12%;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--cm-accent-grad);
+}
+
+.tv-row-count {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--cm-muted);
+}
+
+/* 50 / 50 — the news rail carries full headlines here, so it gets equal
+   width rather than the 65/35 the Games library uses. */
+.tv-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(1.25rem, 2.5vw, 2.5rem);
+  align-items: start;
+}
+
+@media (max-width: 1000px) {
+  .tv-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Narrower column than the movie grids, since it only gets half the page. */
+.show-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 0.9rem;
+}
+
+/* Roomier news cards now that the rail is half the page. */
+.tv-layout .gnews-item {
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 0.85rem;
+  padding: 0.65rem;
+}
+
+.tv-layout .gnews-thumb {
+  width: 104px;
+  height: 68px;
+}
+
+.tv-layout .gnews-title {
+  font-size: 0.92rem;
+  line-height: 1.38;
+}
+
+.tv-layout .gnews-meta {
+  font-size: 0.74rem;
+}
+
+.show-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.show-poster-wrap {
+  position: relative;
+  border-radius: 9px;
+  overflow: hidden;
+  border: 1px solid var(--cm-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.show-poster {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  transition: transform 220ms ease;
+}
+
+.show-card:hover .show-poster {
+  transform: scale(1.04);
+}
+
+.show-poster--placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  color: var(--cm-muted);
+}
+
+.show-badges {
+  position: absolute;
+  top: 0.45rem;
+  left: 0.45rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.show-badge {
+  padding: 0.12rem 0.42rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.75);
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #eee;
+}
+
+.show-badge--rating {
+  color: var(--cm-accent);
+}
+
+.show-title {
+  margin: 0 !important;
+  font-size: 0.86rem;
+  line-height: 1.28;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.show-skeleton {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border-radius: 9px;
+}
+
+.tv-empty {
+  color: var(--cm-muted);
+  padding: 2rem 0;
+}
+
+@media (max-width: 600px) {
+  .show-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.7rem;
+  }
+}
+
+/* ============================================================
+   IN THEATERS / SHOWTIMES PAGE
+   ============================================================ */
+.theaters-page {
+  padding: 2rem clamp(1rem, 4vw, 3.5rem) 4rem !important;
+  max-width: 1800px;
+  /* Global `section` rules zero this out without !important, which pinned the
+     page left and left ~480px of dead space at 1920px. */
+  margin: 0 auto !important;
+}
+
+.theaters-header {
+  max-width: 760px;
+  margin-bottom: 2rem;
+}
+
+.theaters-kicker {
+  display: block;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-weight: 800;
+  color: var(--cm-accent);
+  margin-bottom: 0.6rem;
+}
+
+.theaters-header h1 {
+  margin: 0 0 0.6rem !important;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  line-height: 1.02;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.theaters-subtitle {
+  color: var(--cm-muted);
+  margin: 0 0 1.4rem;
+  line-height: 1.55;
+}
+
+.theater-zip-form {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.theater-zip-input {
+  min-height: 46px;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  border: 1px solid var(--cm-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--cm-text);
+  font-size: 1rem;
+  letter-spacing: 0.12em;
+  width: 160px;
+}
+
+.theater-zip-input:focus {
+  outline: none;
+  border-color: var(--cm-accent);
+}
+
+.theater-zip-btn {
+  min-height: 46px;
+  padding: 0.55rem 1.4rem;
+  border-radius: 8px;
+  border: none;
+  background: var(--cm-accent-grad);
+  color: #111;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.theater-status {
+  margin: 1rem 0 0;
+  color: var(--cm-muted);
+  font-size: 0.9rem;
+  min-height: 1.2em;
+}
+
+.theater-status b {
+  color: var(--cm-text);
+}
+
+/* Hero availability badge — "Playing in theaters" / "Now streaming on X". */
+.hero-avail {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.15rem 0 0.75rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  width: fit-content;
+}
+
+.hero-avail[data-type="theaters"] {
+  background: rgba(255, 215, 0, 0.14);
+  border-color: rgba(255, 215, 0, 0.45);
+  color: var(--cm-accent);
+}
+
+.hero-avail[data-type="streaming"] {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+.hero-avail-logo {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+/* Movie grid left, nearest-theaters rail right. */
+.theaters-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  gap: clamp(1.25rem, 2.5vw, 2.5rem);
+  align-items: start;
+}
+
+.theater-venues {
+  border-left: 1px solid var(--cm-border);
+  padding-left: 1.25rem;
+  min-width: 0;
+}
+
+.venue-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.82rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--cm-accent);
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 0 0.9rem !important;
+}
+
+.venue-sub {
+  text-transform: none;
+  letter-spacing: 0.03em;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--cm-muted);
+}
+
+.venue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.venue {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: center;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--cm-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.venue:hover {
+  border-color: rgba(255, 215, 0, 0.45);
+  background: rgba(255, 215, 0, 0.06);
+}
+
+.venue-dist {
+  display: grid;
+  place-items: center;
+  height: 44px;
+  border-radius: 6px;
+  background: rgba(255, 215, 0, 0.1);
+  color: var(--cm-accent);
+  font-weight: 800;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.venue-dist small {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.venue-name {
+  display: block;
+  font-weight: 700;
+  font-size: 0.86rem;
+  line-height: 1.25;
+}
+
+.venue-address {
+  display: block;
+  color: var(--cm-muted);
+  font-size: 0.74rem;
+  margin-top: 0.15rem;
+}
+
+.venue-empty {
+  color: var(--cm-muted);
+  font-size: 0.85rem;
+}
+
+.venue--skeleton {
+  grid-template-columns: 1fr;
+  min-height: 62px;
+  align-items: center;
+}
+
+.venue-skeleton-line {
+  display: block;
+  height: 14px;
+  width: 85%;
+}
+
+@media (max-width: 960px) {
+  .theaters-layout {
+    grid-template-columns: 1fr;
+  }
+  .theater-venues {
+    border-left: none;
+    border-top: 1px solid var(--cm-border);
+    padding-left: 0;
+    padding-top: 1.5rem;
+  }
+}
+
+.theater-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 1.5rem;
+}
+
+.theater-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.theater-poster-wrap {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--cm-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.theater-poster {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+}
+
+.theater-poster--placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 2.2rem;
+  color: var(--cm-muted);
+}
+
+.theater-rating {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.75);
+  color: var(--cm-accent);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.theater-info {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--cm-accent);
+  cursor: pointer;
+}
+
+.theater-info:hover {
+  background: var(--cm-accent);
+  color: #111;
+}
+
+.theater-title {
+  margin: 0 !important;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.theater-tickets-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--cm-muted);
+  font-weight: 700;
+}
+
+.theater-tickets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.theater-ticket {
+  padding: 0.22rem 0.5rem;
+  border-radius: 5px;
+  border: 1px solid var(--cm-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--cm-text);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.theater-ticket:hover {
+  border-color: transparent;
+  color: #fff;
+}
+
+.theater-ticket--fandango:hover { background: #ff7300; color: #1a0a00; }
+.theater-ticket--amc:hover      { background: #c8102e; }
+.theater-ticket--regal:hover    { background: #4b2e83; }
+.theater-ticket--cinemark:hover { background: #0072ce; }
+.theater-ticket--google:hover   { background: #4285f4; }
+
+.theater-empty {
+  color: var(--cm-muted);
+  padding: 2rem 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 600px) {
+  .theater-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+  }
+  .theater-zip-input {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
+}
+
+/* Crew cards reuse the cast card, with the job line in accent instead. */
+.info-crew-job {
+  color: var(--cm-accent) !important;
+  font-weight: 600;
+}
+
+/* ---------- Info modal: certification, keywords, reviews ---------- */
+.info-cert {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.4rem;
+  border: 1px solid var(--cm-muted);
+  border-radius: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--cm-muted);
+}
+
+.info-votes {
+  color: var(--cm-muted);
+  font-size: 0.85em;
+}
+
+.info-keywords {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.info-keyword {
+  padding: 0.16rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--cm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cm-muted);
+  font-size: 0.72rem;
+  text-transform: capitalize;
+}
+
+.info-reviews {
+  margin-top: 1.75rem;
+}
+
+.info-reviews h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 0.82rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--cm-accent);
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 0 0.85rem !important;
+}
+
+.info-reviews-count {
+  color: var(--cm-muted);
+  letter-spacing: 0.04em;
+  text-transform: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.info-reviews-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.info-review {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--cm-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.info-review-head {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 0.55rem;
+}
+
+/* Metacritic-style score chip: green favourable, yellow mixed, red negative. */
+.info-review-score {
+  display: grid;
+  place-items: center;
+  min-width: 38px;
+  height: 38px;
+  border-radius: 5px;
+  font-weight: 800;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+  color: #06231a;
+}
+
+.info-review-score[data-band="good"]  { background: #00ce7a; }
+.info-review-score[data-band="mixed"] { background: #ffbd3f; }
+.info-review-score[data-band="bad"]   { background: #ff6874; color: #2b0007; }
+.info-review-score[data-band="none"]  { background: rgba(255,255,255,0.1); color: var(--cm-muted); }
+
+.info-review-author {
+  display: block;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.info-review-date {
+  display: block;
+  color: var(--cm-muted);
+  font-size: 0.75rem;
+}
+
+.info-review-text {
+  margin: 0;
+  color: var(--cm-text);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  opacity: 0.9;
+}
+
+.info-review-link {
+  display: inline-block;
+  margin-top: 0.5rem;
+  color: var(--cm-accent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.info-review-link:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================
+   GAMES LIBRARY PAGE
+   ============================================================ */
+.games-page {
+  padding: 2rem clamp(1rem, 4vw, 3.5rem) 4rem !important;
+  max-width: 1800px;
+  /* !important because the global `section` rules otherwise zero the margin,
+     which left the whole page pinned left with dead space on wide screens. */
+  margin: 0 auto !important;
+}
+
+/* 65 / 35 — library left, gaming news right. */
+.games-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 65fr) minmax(280px, 35fr);
+  gap: clamp(1.25rem, 2.5vw, 2.5rem);
+  align-items: start;
+}
+
+.games-main {
+  min-width: 0;
+}
+
+/* ---------- Rigs ---------- */
+.rigs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.rig {
+  border: 1px solid var(--cm-border);
+  border-top: 3px solid var(--rig-accent, var(--cm-accent));
+  border-radius: 10px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.rig-head {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.rig-logo {
+  width: 54px;
+  height: 34px;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+.rig-name {
+  margin: 0 !important;
+  font-size: 0.98rem;
+  border: none !important;
+  padding: 0 !important;
+  line-height: 1.2;
+}
+
+.rig-count {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--cm-muted);
+  margin-top: 0.15rem;
+}
+
+.rig-services {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.rig-service {
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  border: 1px solid var(--cm-border);
+  font-size: 0.66rem;
+  color: var(--cm-muted);
+}
+
+.rig-covers {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.35rem;
+}
+
+.rig-cover {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 4px;
+  border: 1px solid var(--cm-border);
+}
+
+.rig-filter {
+  align-self: flex-start;
+  margin-top: auto;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--rig-accent, var(--cm-accent));
+  background: transparent;
+  color: var(--rig-accent, var(--cm-accent));
+  font-size: 0.75rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rig-filter:hover {
+  background: var(--rig-accent, var(--cm-accent));
+  color: #0b0b0b;
+}
+
+/* ---------- Gaming news rail ---------- */
+.games-news {
+  border-left: 1px solid var(--cm-border);
+  padding-left: 1.25rem;
+  min-width: 0;
+}
+
+.gnews-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.82rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--cm-accent);
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 0 1rem !important;
+}
+
+.gnews-sub {
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--cm-muted);
+}
+
+.gnews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.gnews-item {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  gap: 0.7rem;
+  padding: 0.55rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.gnews-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--cm-border);
+}
+
+.gnews-thumb {
+  width: 76px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.gnews-thumb--placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+}
+
+.gnews-title {
+  display: block;
+  font-size: 0.83rem;
+  font-weight: 700;
+  line-height: 1.32;
+}
+
+.gnews-meta {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--cm-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gnews-item--skeleton {
+  grid-template-columns: 1fr;
+  min-height: 52px;
+  align-items: center;
+}
+
+.gnews-skel {
+  display: block;
+  height: 14px;
+  width: 88%;
+}
+
+.gnews-empty {
+  color: var(--cm-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 1000px) {
+  .games-layout {
+    grid-template-columns: 1fr;
+  }
+  .games-news {
+    border-left: none;
+    border-top: 1px solid var(--cm-border);
+    padding-left: 0;
+    padding-top: 1.5rem;
+  }
+}
+
+.games-header {
+  max-width: 760px;
+  margin-bottom: 2rem;
+}
+
+.games-kicker {
+  display: block;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-weight: 800;
+  color: var(--cm-accent);
+  margin-bottom: 0.6rem;
+}
+
+.games-header h1 {
+  margin: 0 0 0.6rem !important;
+  font-size: clamp(2.2rem, 5vw, 3.6rem);
+  line-height: 1.02;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.games-subtitle {
+  color: var(--cm-muted);
+  margin: 0;
+  line-height: 1.55;
+}
+
+.games-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0 1.25rem;
+  border-bottom: 1px solid var(--cm-border);
+  margin-bottom: 1.75rem;
+}
+
+.game-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.game-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 38px;
+  padding: 0.4rem 0.85rem;
+  border-radius: 999px;
+  border: 1px solid var(--cm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cm-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.game-chip:hover {
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.game-chip--active {
+  background: var(--cm-accent-grad);
+  border-color: transparent;
+  color: #111;
+}
+
+.game-chip-count {
+  font-size: 0.72rem;
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+
+.games-controls-right {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.games-search {
+  min-height: 38px;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--cm-border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--cm-text);
+  font-size: 0.9rem;
+  min-width: 220px;
+}
+
+.games-search:focus {
+  outline: none;
+  border-color: var(--cm-accent);
+}
+
+.games-count {
+  color: var(--cm-muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1.1rem;
+}
+
+.game-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.game-cover-wrap {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--cm-border);
+}
+
+.game-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  transition: transform 220ms ease;
+}
+
+.game-card:hover .game-cover {
+  transform: scale(1.04);
+}
+
+.game-cover--placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 2.4rem;
+  color: var(--cm-muted);
+}
+
+.game-flag {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ddd;
+}
+
+.game-card--recalled .game-cover-wrap {
+  opacity: 0.72;
+}
+
+.game-title {
+  margin: 0 !important;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.game-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.game-badge {
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border: 1px solid transparent;
+}
+
+.game-badge[data-platform="switch"] { background: #e60012; color: #fff; }
+.game-badge[data-platform="psn"]    { background: #0070d1; color: #fff; }
+.game-badge[data-platform="steam"]  { background: #1b2838; color: #66c0f4; border-color: #66c0f4; }
+.game-badge[data-platform="xbox"]   { background: #107c10; color: #fff; }
+.game-badge[data-platform="discord"]{ background: #5865f2; color: #fff; }
+
+.game-note {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--cm-muted);
+  line-height: 1.4;
+}
+
+.game-adapt {
+  align-self: flex-start;
+  margin-top: 0.15rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  background: rgba(255, 215, 0, 0.08);
+  color: var(--cm-accent);
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.game-adapt:hover:not(:disabled) {
+  background: var(--cm-accent);
+  color: #111;
+}
+
+.game-adapt:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.game-empty {
+  grid-column: 1 / -1;
+  color: var(--cm-muted);
+  padding: 2rem 0;
+}
+
+@media (max-width: 600px) {
+  .games-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem;
+  }
+  .games-controls-right {
+    width: 100%;
+  }
+  .games-search {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 /* ============================================================
@@ -3774,8 +5087,12 @@ img, video, iframe { max-width: 100%; }
   padding: 0 !important;
   overflow: hidden !important;
 }
-.trailer-modal:not(.hidden) #trailerFrame,
-.trailer-modal:not(.hidden) #introVideo {
+/* Only size the player that is actually in use. Without the `:not(.hidden)`
+   guards these selectors out-specify `.hidden { display: none !important }`,
+   so the empty intro <video> stayed painted on top of the YouTube iframe and
+   every trailer opened to a dead player. */
+.trailer-modal:not(.hidden) #trailerFrame:not(.hidden),
+.trailer-modal:not(.hidden) #introVideo:not(.hidden) {
   width: 100% !important;
   height: 100% !important;
   max-height: none !important;
@@ -5282,4 +6599,115 @@ img, video, iframe { max-width: 100%; }
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+/* ============================================================
+   TOUCH DEVICES — tap targets & legibility
+   Audited on iPhone 15/16/17, Pixel 8/9/10, Galaxy S24 and the
+   Z Flip 7 / Z Fold 7. Apple HIG asks for 44px minimum targets and
+   Material for 48dp; several controls were landing at 30-36px, and
+   a set of badges were rendering at 10-11px.
+   `pointer: coarse` scopes this to real touch input rather than a
+   width guess, so a narrow desktop window keeps the tighter design.
+   ============================================================ */
+@media (pointer: coarse) {
+  .info-btn,
+  .comment-btn,
+  .card-bookmark,
+  .theater-info,
+  .nav__btn,
+  .close-modal {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .discover-chip,
+  .tv-chip,
+  .game-chip,
+  .news-tab,
+  .mylist-tab,
+  .awards-cat-tab,
+  .rig-filter,
+  .theater-ticket,
+  .awards-jump,
+  .trailer-btn,
+  .game-adapt {
+    min-height: 44px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Padding, not just height, or the target is only tall and not wide. */
+  .theater-ticket,
+  .rig-filter,
+  .game-adapt {
+    padding-inline: 0.85rem !important;
+  }
+
+  .logo,
+  .nav-right a,
+  .site-footer-nav a,
+  .nav-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  /* Short labels ("TV") were only 20px wide. Padding gives them a 44px-square
+     target without changing the visual text size. */
+  .nav-links a,
+  .nav-right a,
+  .site-footer-nav a {
+    min-width: 44px;
+    justify-content: center;
+    padding-inline: 0.5rem;
+  }
+
+  /* Form controls: selects and text inputs were 34-38px tall. */
+  .discover-control select,
+  .discover-control input,
+  .games-search,
+  .theater-zip-input,
+  .discover-reset,
+  #navSearch {
+    min-height: 44px !important;
+  }
+
+  /* Range sliders get a taller thumb and a padded track so the whole strip
+     is grabbable rather than an 18px hairline. */
+  .discover-control input[type="range"] {
+    height: 44px !important;
+    padding-block: 12px;
+    background: transparent;
+  }
+
+  .discover-control input[type="range"]::-webkit-slider-thumb {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Nothing below 12px on a phone. */
+  .card-badge,
+  .show-badge,
+  .award-badge,
+  .news-pill,
+  .rig-service,
+  .game-badge,
+  .game-flag,
+  .theater-ticket,
+  .theater-tickets-label,
+  .gnews-meta,
+  .venue-address,
+  .info-keyword,
+  .search-item-meta {
+    font-size: 0.75rem !important; /* 12px */
+  }
+
+  .movie-title,
+  .game-title,
+  .show-title,
+  .theater-title {
+    font-size: 0.9rem !important;
+  }
 }

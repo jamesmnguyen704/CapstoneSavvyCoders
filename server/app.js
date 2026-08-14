@@ -2,11 +2,14 @@
 import dotenv from "dotenv"; // loads environment variables from .env file (API keys, MongoDB URL)
 // Load environment variables immediately so other modules see them at import time
 import express from "express"; // Framework to create servers and routes
+import axios from "axios"; // used to prime the response cache at boot
 import cors from "cors"; // Allows my frontend (Netlify) or Render to say whats up to my backend API
 import mongoose from "mongoose"; // MongoDB library that connects and interacts
+import { cacheStats } from "./utils/cache.js";
 import authRoutes from "./routes/auth.js";
 import newsRoutes from "./routes/news.js";
 import personRoutes from "./routes/person.js";
+import tvRoutes from "./routes/tv.js";
 
 // my utilities to help with my .emv
 import { fileURLToPath } from "url"; // to get the current file path
@@ -61,6 +64,7 @@ app.use("/movies", moviesRouter); // Forward /movies requests
 app.use("/auth", authRoutes); // user auth routes
 app.use("/news", newsRoutes); // movie news (Guardian Film proxy)
 app.use("/person", personRoutes); // person/actor detail + filmography
+app.use("/tv", tvRoutes); // TV shows + streaming-service browse
 
 // testing starts here
 // Root route to confirm backend is running
@@ -73,6 +77,7 @@ app.get("/status", (req, res) => {
   res.json({
     service: "Cinemetrics API",
     message: "Service healthy",
+    cache: cacheStats(),
     timestamp: new Date().toISOString()
   });
 });
@@ -89,4 +94,23 @@ app.get("*", (req, res) => {
 // Start the server, listen to 0.0.0.0 so render can reach server
 const server = app.listen(PORT, "0.0.0.0", () => {
   console.log(`Cinemetrics API running on port ${PORT}`);
+  warmCache();
 });
+
+// Prime the expensive curated routes at boot so the first visitor hits a warm
+// cache instead of paying the ~10s TMDB fan-out. Failures are non-fatal — the
+// route just stays cold and fills on first request.
+async function warmCache() {
+  const routes = ["/movies/marvel", "/movies/awards", "/movies/upcoming-curated"];
+  await Promise.all(
+    routes.map(async route => {
+      const started = Date.now();
+      try {
+        await axios.get(`http://127.0.0.1:${PORT}${route}`, { timeout: 60000 });
+        console.log(`Warmed ${route} in ${Date.now() - started}ms`);
+      } catch (err) {
+        console.warn(`Warm-up skipped for ${route}:`, err.message);
+      }
+    })
+  );
+}
