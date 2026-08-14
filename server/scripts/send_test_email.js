@@ -6,17 +6,25 @@ dotenv.config({ path: path.join(process.cwd(), ".env") });
 
 import { sendEmail } from "../utils/sendEmail.js";
 
-// Default recipients (match your Resend audience screenshot)
-const defaultRecipients = [
-  "jamesmnguyen704@yahoo.com",
-  "jamesmnguyen704@gmail.com",
-  "nguyenjames704@yahoo.com",
-  "jamesmnguyen704@outlook.com"
-];
-
-// Allow passing recipients as command-line args: `node send_test_email.js addr1 addr2`
+// Recipients come from the command line, or TEST_EMAIL_RECIPIENTS in .env as a
+// comma-separated list. Addresses are deliberately not hardcoded here — this
+// repo is public and committed inboxes get scraped.
+//
+//   node server/scripts/send_test_email.js you@example.com
 const cliRecipients = process.argv.slice(2).filter(Boolean);
-const recipients = cliRecipients.length ? cliRecipients : defaultRecipients;
+const envRecipients = (process.env.TEST_EMAIL_RECIPIENTS || "")
+  .split(",")
+  .map(s => s.trim())
+  .filter(Boolean);
+const recipients = cliRecipients.length ? cliRecipients : envRecipients;
+
+if (!recipients.length) {
+  console.error(
+    "No recipients. Pass them as arguments or set TEST_EMAIL_RECIPIENTS in .env:\n" +
+      "  node server/scripts/send_test_email.js you@example.com"
+  );
+  process.exit(1);
+}
 
 (async () => {
   for (const to of recipients) {
