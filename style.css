@@ -5530,12 +5530,23 @@ img, video, iframe { max-width: 100%; }
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  /* Shorter than a full landing hero so the Phase rows land in view. */
-  height: clamp(360px, 56vh, 560px);
+  /* Shorter than a full landing hero so the Phase rows land in view.
+     min-height rather than height: the copy block and the thumbnail strip are
+     laid out in flow below, so the hero grows if they need the room instead of
+     letting them overlap. */
+  min-height: clamp(360px, 56vh, 560px);
   overflow: hidden;
   background: #000;
   margin-bottom: 1.5rem;
   isolation: isolate;
+
+  /* Copy at the top, thumbnails at the bottom, gap between them that can
+     never collapse to an overlap. */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: clamp(1rem, 3vh, 1.75rem) 0 clamp(1rem, 3vh, 1.5rem);
 }
 .marvel-hero-bg {
   position: absolute;
@@ -5554,9 +5565,9 @@ img, video, iframe { max-width: 100%; }
   z-index: 1;
 }
 .marvel-hero-body {
-  position: absolute;
-  left: clamp(1.25rem, 5vw, 4rem);
-  top: clamp(1rem, 3vh, 1.75rem);
+  /* In flow now (was absolute) so it can't sit on top of the thumbnails. */
+  position: relative;
+  margin-left: clamp(1.25rem, 5vw, 4rem);
   z-index: 2;
   max-width: min(620px, 55%);
   color: #fff;
@@ -5600,13 +5611,12 @@ img, video, iframe { max-width: 100%; }
 
 /* Thumbnail strip — bottom-left horizontal row, keeps the ensemble backdrop visible */
 .marvel-hero-featured {
-  position: absolute;
-  left: clamp(1.25rem, 5vw, 4rem);
-  bottom: clamp(1rem, 3vh, 1.5rem);
+  position: relative;
+  margin-left: clamp(1.25rem, 5vw, 4rem);
   z-index: 2;
   display: flex;
   flex-direction: row;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;   /* one row — wrapping is what pushed it into the copy */
   gap: 0.5rem;
   max-width: min(640px, 60%);
 }
