@@ -30,15 +30,26 @@ const CATEGORY_RULES = [
   { label: "Disney",     key: "disney",     test: /\b(disney|pixar)\b/i },
   { label: "Blockbuster",key: "blockbuster",test: /\b(blockbuster|franchise|sequel|reboot)\b/i },
   { label: "Sci-Fi",     key: "scifi",      test: /\b(sci[- ]?fi|dune|avatar|alien|predator|blade runner)\b/i },
-  { label: "Superhero",  key: "superhero",  test: /\bsuperhero\b/i }
+  { label: "Superhero",  key: "superhero",  test: /\bsuperhero\b/i },
+  // Platform / service rules — mostly hit on the Streaming and Gaming tabs,
+  // but they are useful anywhere a story names a service or console.
+  { label: "Netflix",    key: "netflix",    test: /\bnetflix\b/i },
+  { label: "HBO Max",    key: "hbomax",     test: /\bhbo( max)?\b/i },
+  { label: "Prime Video",key: "prime",      test: /\b(prime video|amazon prime)\b/i },
+  { label: "Apple TV+",  key: "appletv",    test: /\bapple tv\+?\b/i },
+  { label: "PlayStation",key: "playstation",test: /\b(playstation|ps5|ps4|psn)\b/i },
+  { label: "Xbox",       key: "xbox",       test: /\b(xbox|game ?pass)\b/i },
+  { label: "Nintendo",   key: "nintendo",   test: /\b(nintendo|switch 2|zelda|mario|pokemon)\b/i },
+  { label: "PC",         key: "pc",         test: /\b(steam|pc gaming|epic games)\b/i },
+  { label: "Esports",    key: "esports",    test: /\besports\b/i }
 ];
 
-function inferCategory(article) {
+function inferCategory(article, fallback = { label: "Film", key: "film" }) {
   const hay = `${article.title || ""} ${(article.tags || []).join(" ")} ${article.excerpt || ""}`;
   for (const rule of CATEGORY_RULES) {
     if (rule.test.test(hay)) return { label: rule.label, key: rule.key };
   }
-  return { label: "Film", key: "film" };
+  return fallback;
 }
 
 function relativeTime(iso) {
@@ -64,7 +75,7 @@ function categoryPill(cat) {
   return `<span class="news-pill" data-cat="${escapeHtml(cat.key)}">${escapeHtml(cat.label)}</span>`;
 }
 
-function renderFeatured(article) {
+function renderFeatured(article, fallbackCat) {
   if (!article) {
     return `
       <div class="news-hero news-hero--empty">
@@ -83,7 +94,7 @@ function renderFeatured(article) {
   const source = escapeHtml(article.source);
   const when = escapeHtml(relativeTime(article.publishedAt));
   const byline = escapeHtml(article.byline || "");
-  const cat = inferCategory(article);
+  const cat = inferCategory(article, fallbackCat);
 
   return `
     <a class="news-hero" href="${url}" target="_blank" rel="noopener noreferrer">
@@ -111,14 +122,14 @@ function renderFeatured(article) {
   `;
 }
 
-function renderGridCard(article, { large = false } = {}) {
+function renderGridCard(article, { large = false, fallbackCat } = {}) {
   const title = escapeHtml(article.title);
   const url = escapeHtml(article.url);
   const image = article.image ? escapeHtml(article.image) : "";
   const excerpt = escapeHtml(article.excerpt);
   const when = escapeHtml(relativeTime(article.publishedAt));
   const source = escapeHtml(article.source);
-  const cat = inferCategory(article);
+  const cat = inferCategory(article, fallbackCat);
 
   return `
     <a class="news-card${large ? " news-card--large" : ""}" href="${url}" target="_blank" rel="noopener noreferrer">
@@ -143,13 +154,13 @@ function renderGridCard(article, { large = false } = {}) {
   `;
 }
 
-function renderRailItem(article) {
+function renderRailItem(article, fallbackCat) {
   const title = escapeHtml(article.title);
   const url = escapeHtml(article.url);
   const image = article.image ? escapeHtml(article.image) : "";
   const when = escapeHtml(relativeTime(article.publishedAt));
   const source = escapeHtml(article.source);
-  const cat = inferCategory(article);
+  const cat = inferCategory(article, fallbackCat);
 
   return `
     <a class="news-item" href="${url}" target="_blank" rel="noopener noreferrer">
@@ -185,14 +196,36 @@ const TAB_CONFIG = {
     gridHead: "Top Stories",
     gridSub: "Boys, Invincible, Daredevil &amp; streaming prestige",
     railLabel: "Latest TV news"
+  },
+  streaming: {
+    title: "Streaming",
+    subtitle: "What just dropped on Netflix, HBO Max, Prime, Disney+ and Apple TV.",
+    gridHead: "Now Streaming",
+    gridSub: "New arrivals, schedules &amp; platform news",
+    railLabel: "Latest streaming news"
+  },
+  gaming: {
+    title: "Gaming",
+    subtitle: "PlayStation, Xbox, Switch and PC — reviews, reveals and release dates.",
+    gridHead: "Top Stories",
+    gridSub: "Consoles, PC &amp; the games worth your time",
+    railLabel: "Latest gaming news"
   }
 };
 
+// Fallback pill label per tab, used when no CATEGORY_RULES entry matches.
+const TAB_FALLBACK_CATEGORY = {
+  movies:    { label: "Film",      key: "film" },
+  tv:        { label: "TV",        key: "tv" },
+  streaming: { label: "Streaming", key: "streaming" },
+  gaming:    { label: "Gaming",    key: "gaming" }
+};
+
 function renderTabs(activeTab) {
-  const tabs = [
-    { key: "movies", label: "Movies" },
-    { key: "tv",     label: "TV" }
-  ];
+  // Gaming lives on /games and TV + streaming on /tv, each with their own
+  // rail, so this page is the movie wire only and needs no tab bar.
+  const tabs = [{ key: "movies", label: "Movies" }];
+  if (tabs.length < 2) return "";
   return `
     <div class="news-tabs" role="tablist">
       ${tabs
@@ -212,22 +245,26 @@ function renderTabs(activeTab) {
 }
 
 export default state => {
-  const activeTab = state.activeTab === "tv" ? "tv" : "movies";
+  const activeTab = TAB_CONFIG[state.activeTab] ? state.activeTab : "movies";
   const cfg = TAB_CONFIG[activeTab];
+  const fallbackCat = TAB_FALLBACK_CATEGORY[activeTab];
   const articles = Array.isArray(state.articles) ? state.articles : [];
 
+  // Split so the two columns finish at roughly the same depth: a rail item is
+  // about a third the height of a grid card, and the rail now flows full
+  // height rather than scrolling inside a fixed box.
   const featured = articles[0];
-  const grid = articles.slice(1, 7); // 6 cards (1 large + 5 regular)
-  const rail = articles.slice(7);
+  const grid = articles.slice(1, 13); // 12 cards (1 large + 11 regular)
+  const rail = articles.slice(13);
 
   const gridHtml = grid.length
     ? grid
-        .map((article, i) => renderGridCard(article, { large: i === 0 }))
+        .map((article, i) => renderGridCard(article, { large: i === 0, fallbackCat }))
         .join("")
     : "";
 
   const railHtml = rail.length
-    ? rail.map(renderRailItem).join("")
+    ? rail.map(article => renderRailItem(article, fallbackCat)).join("")
     : `<p class="news-empty">Check back soon for more headlines.</p>`;
 
   return html`
@@ -250,7 +287,7 @@ export default state => {
 
       <div class="news-layout">
         <div class="news-main">
-          ${renderFeatured(featured)}
+          ${renderFeatured(featured, fallbackCat)}
 
           ${
             grid.length

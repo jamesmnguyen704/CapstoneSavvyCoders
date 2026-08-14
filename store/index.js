@@ -18,6 +18,9 @@ import Profile from "./profile";
 import News from "./news";
 import MyList from "./myList";
 import Awards from "./awards";
+import Games from "./games";
+import Theaters from "./theaters";
+import Tv from "./tv";
 
 export {
   Home,
@@ -33,7 +36,10 @@ export {
   Profile,
   News,
   MyList,
-  Awards
+  Awards,
+  Games,
+  Theaters,
+  Tv
 };
 
 export default {
@@ -50,5 +56,8 @@ export default {
   Profile,
   News,
   MyList,
-  Awards
+  Awards,
+  Games,
+  Theaters,
+  Tv
 };
