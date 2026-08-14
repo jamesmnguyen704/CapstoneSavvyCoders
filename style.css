@@ -112,9 +112,18 @@ h3 {
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  /* Nine items since TV and In Theaters were added, so the gap flexes with
+     the viewport instead of forcing two-word labels onto two lines. */
+  gap: clamp(0.7rem, 1.4vw, 1.5rem);
   list-style: none;
   flex-wrap: nowrap;            /* default: keep in one row on desktop */
+}
+
+/* "In Theaters" and "My List" were breaking mid-label when the bar got
+   tight. Keep each label on one line and let the gap absorb the pressure. */
+.nav-links li,
+.nav-links a {
+  white-space: nowrap;
 }
 
 .nav-links a {

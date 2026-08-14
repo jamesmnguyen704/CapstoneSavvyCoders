@@ -1,198 +1,252 @@
-# Cinemetrics — Project README
+<div align="center">
 
-**Project summary:**
+# 🎬 Cinemetrics
 
-- Cinemetrics is a small movie SPA (single page app) built with native ES modules, Parcel bundler on the frontend, and an Express + MongoDB backend. It consumes TMDB and provides movie lists, trailers, and a simple JWT-based auth system (signup/login).
+**A cinematic movie, TV, and gaming discovery app — built from scratch with vanilla JavaScript.**
 
-**This README covers:**
+No React. No framework. Native ES modules, a hand-rolled component layer, and an Express API.
 
-- System & software requirements
-- Install steps
-- Environment variables (.env) and required keys
-- How to run the project locally (frontend + backend)
-- Quick tests (signup/login + health checks)
-- Files changed / features added during recent work
-- Troubleshooting tips
+[![Live Site](https://img.shields.io/badge/Live-capstonesavvycoders.netlify.app-ffd700?style=for-the-badge)](https://capstonesavvycoders.netlify.app/)
+[![Netlify](https://img.shields.io/badge/Frontend-Netlify-00C7B7?style=for-the-badge&logo=netlify&logoColor=white)](https://capstonesavvycoders.netlify.app/)
+[![Render](https://img.shields.io/badge/API-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://capstonesavvycoders.onrender.com/status)
+
+![JavaScript](https://img.shields.io/badge/JavaScript-ES2022-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
+![Parcel](https://img.shields.io/badge/Parcel-2.16-E7A03C?style=flat-square&logo=parcel&logoColor=white)
+![Express](https://img.shields.io/badge/Express-4.22-000000?style=flat-square&logo=express&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=flat-square&logo=mongodb&logoColor=white)
+![TMDB](https://img.shields.io/badge/Data-TMDB-01B4E4?style=flat-square&logo=themoviedatabase&logoColor=white)
+
+<br />
+
+<img src="docs/screenshots/home.jpg" alt="Cinemetrics home page" width="100%" />
+
+</div>
 
 ---
 
-**1) Requirements (local dev machine)**
+## What it does
 
-- Node.js (v16+ recommended)
-- npm (comes with Node)
-- Internet access for TMDB images & API during dev
-- MongoDB Atlas account (or local MongoDB) with a connection string
-- Optional: Resend API key (for sending welcome emails) — not required to run server
+Cinemetrics pulls live data from **TMDB**, **12 news outlets**, and **OpenStreetMap** into one place — what's trending, what's in theaters near you, what's on Netflix, and what's worth playing.
 
-**2) Quick repo setup**
+|  | |
+|---|---|
+| 🎞️ **Movies** | Trending, popular and top-rated, with genre / year / rating / sort filters |
+| 📺 **TV & Streaming** | Browse by service — Netflix, HBO Max, Prime, Disney+, Apple TV+, Hulu, Peacock |
+| 🎟️ **In Theaters** | Enter a ZIP → what's playing + the closest cinemas within 25 miles |
+| 🦸 **Marvel** | The full MCU, grouped by phase with cinematic per-phase heroes |
+| 🏆 **Awards** | Oscars across six categories, enriched with TMDB data |
+| 📰 **News** | 12 outlets, deduped and balanced so no single wire dominates |
+| 🎮 **Games** | A personal library with cover art — and links to each title's screen adaptation |
+| 🔖 **My List** | Watchlist saved to `localStorage`, no account required |
 
-1. Clone the repo.
-2. Install dependencies:
+---
+
+## Screenshots
+
+<table>
+<tr>
+<td width="50%"><img src="docs/screenshots/tv.jpg" alt="TV and Streaming" /><br /><sub><b>TV & Streaming</b> — browse by service, news rail alongside</sub></td>
+<td width="50%"><img src="docs/screenshots/theaters.jpg" alt="In Theaters" /><br /><sub><b>In Theaters</b> — ZIP lookup, ticket links, nearest cinemas</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/screenshots/games.jpg" alt="Games library" /><br /><sub><b>The Library</b> — game collection with per-console rigs</sub></td>
+<td width="50%"><img src="docs/screenshots/news.jpg" alt="News" /><br /><sub><b>News</b> — magazine layout across 12 sources</sub></td>
+</tr>
+<tr>
+<td colspan="2"><img src="docs/screenshots/detail-modal.jpg" alt="Movie detail modal" /><br /><sub><b>Detail modal</b> — certification, cast, crew, where to watch, and scored reviews</sub></td>
+</tr>
+</table>
+
+<div align="center">
+<img src="docs/screenshots/mobile-home.jpg" alt="Mobile home" width="32%" />
+<img src="docs/screenshots/mobile-games.jpg" alt="Mobile games" width="32%" />
+<br />
+<sub>Verified on 11 devices — iPhone 15/16/17, Pixel 8/9/10, Galaxy S24, Z Flip 7, Z Fold 7</sub>
+</div>
+
+---
+
+## Things I'm proud of
+
+**⚡ 9.9 seconds → 5 milliseconds.** The Marvel and Awards pages each fanned out to dozens of TMDB calls on *every* request. A response-cache middleware that taps `res.json` — so no route handler changed — plus a boot-time warm-up:
+
+| Route | Before | After |
+|---|---|---|
+| `/movies/marvel` | 9866 ms | **5 ms** |
+| `/movies/awards` | 8143 ms | **2 ms** |
+| `/movies/upcoming-curated` | 2358 ms | **1 ms** |
+
+**🖼️ No more blank screens.** The router used to `await` every fetch before rendering, so slow routes showed an empty white page. Now the chrome and a shimmer skeleton paint first — Awards went from a 5.2 s blank screen to **first paint at 191 ms**.
+
+**🔍 Every news feed verified before shipping.** 30 candidate RSS feeds were tested against the live parser. The ones that 404'd, paywalled, timed out, or had gone stale are recorded in `REJECTED_FEEDS` with the reason, so nobody re-adds a dead source. A per-outlet cap keeps high-volume wires from crowding out slower ones.
+
+**🎟️ Showtimes without a paid API.** No free showtimes API exists — Fandango has none, Gracenote wants a paid account. So Cinemetrics resolves the ZIP through Zippopotam, finds real cinemas via OpenStreetMap's Overpass API, and deep-links into Fandango/AMC/Regal/Cinemark with the movie and location pre-filled. On mobile those are universal links, so they open the chain's native app.
+
+---
+
+## Tech stack
+
+**Frontend** — Vanilla JS (ES modules) · [Navigo](https://github.com/krasimir/navigo) routing · `html-literal` templating · Parcel · hand-written CSS (no framework)
+
+**Backend** — Node + Express · Mongoose/MongoDB Atlas · JWT auth · `rss-parser` · in-memory TTL cache
+
+**Data** — [TMDB](https://www.themoviedb.org/) · [The Guardian](https://open-platform.theguardian.com/) · 11 RSS feeds · [Zippopotam](https://zippopotam.us/) · [OpenStreetMap Overpass](https://overpass-api.de/)
+
+```
+├── index.js          # router, state wiring, modals, event delegation
+├── views/            # one module per page, returns an HTML string
+├── store/            # per-view state objects
+├── components/       # header, nav, main, footer
+├── services/api.js   # every backend call in one place
+└── server/
+    ├── app.js        # express app + middleware
+    ├── routes/       # movies, tv, news, person, comments, auth
+    ├── controllers/  # curated Marvel / Oscars / upcoming data
+    └── utils/cache.js
+```
+
+---
+
+## Run it locally
+
+**Requires** Node 16+ and a [TMDB API key](https://www.themoviedb.org/settings/api) (free).
 
 ```bash
+git clone https://github.com/jamesmnguyen704/CapstoneSavvyCoders.git
+cd CapstoneSavvyCoders
 npm install
 ```
 
-3. Create a `.env` file in the project root (do not commit it). Example keys used by this app:
+Create `.env` in the project root:
 
-```
-TMDB_API_KEY=<your_tmdb_api_key>
-TMDB_ACCESS_TOKEN=<optional_tmdb_bearer_token>
-MONGODB=<your_mongodb_connection_string>
+```bash
+TMDB_API_KEY=your_tmdb_key          # required
+TMDB_ACCESS_TOKEN=your_tmdb_token   # required for some routes
+MONGODB=your_mongodb_uri            # required for auth + comments
 JWT_SECRET=dev_secret_change_me
 BACKEND_PORT=3000
-RESEND_API_KEY=<optional_resend_api_key>
+GUARDIAN_API_KEY=                   # optional, falls back to a rate-limited test key
+RESEND_API_KEY=                     # optional, welcome emails
 EMAIL_FROM=you@example.com
-GUARDIAN_API_KEY=<optional_guardian_api_key>
 ```
 
-> **Movie News:** the `/news` route proxies The Guardian's Film section. It
-> defaults to their public `test` key (works immediately for dev), so
-> `GUARDIAN_API_KEY` is optional. Register at
-> https://open-platform.theguardian.com/access/ for higher rate limits.
-
-Notes:
-
-- The app now prefers `BACKEND_PORT` for the backend port (so `PORT` won't accidentally affect Parcel/frontend). Parcel is started with `--port 1234` in `package.json`.
-- Make sure `.env` is listed in `.gitignore` and **do not** push secrets.
-
-**3) Available npm scripts** (see `package.json`)
-
-- `npm run app:watch` — start backend with `nodemon` (watches `server/`)
-- `npm run server` — run server directly (`node server/app.js`)
-- `npm run dev` or `npm start` — start Parcel dev server for the frontend (explicitly set to port 1234)
-- `npm run build` — build the frontend for production
-
-Example to run both locally (open two terminals):
+Two terminals:
 
 ```bash
-# terminal 1 — backend
-npm run app:watch
-
-# terminal 2 — frontend
-npm run dev
+npm run app:watch   # API on :3000 (nodemon)
+npm start           # frontend on :1234
 ```
 
-**4) Quick API checks**
+Open **http://localhost:1234**.
 
-- Backend health: `curl -i http://localhost:3000/status`
-- Frontend root: `curl -I http://localhost:1234`
+> ⚠️ Don't run `npm run build` while the dev server is running — they share
+> `.parcel-cache`, and the dev server will silently serve a stale bundle.
 
-**5) Auth endpoints (examples)**
-
-Signup (creates a user):
-
-```bash
-curl -i -X POST http://localhost:3000/auth/signup \
-	-H "Content-Type: application/json" \
-	-d '{"username":"testuser","email":"test@example.com","password":"secret"}'
-```
-
-Login (returns JWT token):
-
-```bash
-curl -i -X POST http://localhost:3000/auth/login \
-	-H "Content-Type: application/json" \
-	-d '{"loginId":"testuser","password":"secret"}'
-```
-
-Client-side (quick JS snippet) — paste into browser console to log in and save token:
-
-```javascript
-(async () => {
-  const res = await fetch("http://localhost:3000/auth/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ loginId: "you@example.com", password: "yourpass" }),
-  });
-  const data = await res.json();
-  if (res.ok) localStorage.setItem("token", data.token);
-  else console.error(data);
-})();
-```
-
-**6) Changes implemented during this session**
-
-- Backend: - `server/models/user.js` — Mongoose user schema with `username`, `email`, `password`, bcrypt hashing, and `comparePassword` helper. Usernames/emails are saved lowercased. - `server/controllers/auth.js` — `signup` and `login` handlers implemented. Login now lowercases the `loginId` before lookup to avoid case-sensitive misses. - `server/routes/auth.js` — mounted `/auth/signup` and `/auth/login` routes. - `server/app.js` — now prefers `process.env.BACKEND_PORT || process.env.PORT || 3000` for port selection.
-
-- Frontend: - `views/login.js` and `views/signup.js` created to render auth forms. - `store/login.js` and `store/signup.js` created (minimal state) to avoid import breakages. - `components/nav.js` updated to show login/signup or welcome/logout based on `localStorage.token`. - `views/index.js` exports updated to include `login` and `signup` so the router resolves `/login` and `/signup`.
-
-- CSS/layout fixes: - Fixed malformed CSS block that broke cascade (closed `.marvel-title` properly). - Added defensive/grid overrides so `.marvel-grid`, `.movies-grid`, `.movie-grid`, and `.releases-grid` render as CSS Grid and not horizontal flex when not desired. - Added `.navbar` and `.nav-links` base styles to enforce horizontal nav layout on desktop. - Increased `.logo a` size/weight (makes "Cinemetrics" prominent in nav bar). - Adjusted poster heights and `.movie-card` layout to make movie cards more proportional on Home / Movies pages. - Tightened `.marvel-card` min-height and `.marvel-phase-row` spacing to reduce vertical gaps on the Marvel page. - `.marvel-overview` now wraps (overrides `white-space: nowrap`) so descriptions don't run in a single line.
-
-**7) Important tips / troubleshooting**
-
-- Port conflict: If `3000` or `1234` is already in use, free the ports or change ports. Example to free ports on Windows Git Bash:
-  `bash npx kill-port 3000 1234`
-  Or identify processes with `netstat -ano | findstr ":3000"` and kill with `taskkill /PID <PID> /F`.
-
-- If the frontend shows a NotFound or blank page for `/login`, confirm `views/index.js` exports `login` and `signup` and that the router resolves the path.
-
-- If signup returns success but login says `User not found`, the cause was case mismatches — the login lookup was updated to perform a lowercase comparison. If problems persist, check server logs; they show meaningful errors (e.g., DB connection issues).
-
-- `RESEND_API_KEY` warning is informational — it only disables sending emails (welcome emails) and does not block signup/login.
-
-- Database confirmations: use MongoDB Compass or shell to inspect the `users` collection:
-
-```js
-use cinemetrics
-db.users.find({}, { username:1, email:1, createdAt:1 }).pretty()
-```
-
-**8) Next suggestions / improvements**
-
-- Add client-side inline error messages for signup/login instead of alerts.
-- Add form validation and stronger password policy.
-- Add a simple profile view that decodes the JWT and shows the username.
-- Implement logout server-side invalidation if needed (currently purely client-side clearing of `localStorage`).
+| Script | Does |
+|---|---|
+| `npm start` / `npm run dev` | Parcel dev server on `:1234` |
+| `npm run server` | API once (`node server/start.js`) |
+| `npm run app:watch` | API with nodemon |
+| `npm run build` | Production build to `dist/` |
+| `npm run seed` | Seed test data |
 
 ---
 
-Possible additions:
+## API
 
-- Add a small script to seed test users into the DB.
-- Add a README section with screenshots and a small checklist for deployment (Netlify + Render) including environment variable mapping.
+Base: `https://capstonesavvycoders.onrender.com`
 
-This README can be expanded with screenshots and exact file-by-file diffs as needed.
+| Endpoint | Returns |
+|---|---|
+| `GET /status` | Health + cache stats |
+| `GET /movies/trending` · `/popular` · `/top_rated` · `/now_playing` | Movie lists |
+| `GET /movies/discover` | Filter by genre, year, rating, sort |
+| `GET /movies/:id/details` | Full detail — cast, crew, keywords, certification, reviews, providers |
+| `GET /movies/marvel` · `/awards` · `/upcoming-curated` | Curated, cached |
+| `GET /movies/in-theaters?zip=` | Now playing + ticket links |
+| `GET /movies/theaters-near?zip=` | Cinemas within 25 miles |
+| `GET /tv` · `/tv/providers?provider=` · `/tv/:id/details` | TV shows |
+| `GET /news` · `/news/tv` · `/news/streaming` · `/news/gaming` | Aggregated wires |
+| `POST /auth/signup` · `/auth/login` | JWT auth |
 
-**Troubleshooting & Lessons Learned**
+---
 
-- **Initial problems encountered:**
+## Deployment
 
-  - **Layout breaks:** movie cards rendered horizontally and the nav stacked vertically due to malformed and cascading CSS rules.
-  - **Malformed CSS:** missing/extra braces and a `white-space: nowrap` somewhere caused descriptions not to wrap.
-  - **Port conflicts / dev server confusion:** Parcel occasionally bound to the wrong port; `PORT` env collisions caused the frontend/backend to compete for `3000`.
-  - **Route NotFound for auth pages:** client views like `login` and `signup` weren't exported, causing the router to show NotFound.
-  - **Case-sensitive login lookup:** DB saved `username`/`email` lowercased but login lookup was case-sensitive, causing "User not found" errors.
-  - **Missing local assets & MIME/CSP hiccups:** attempts to self-host Font Awesome and other assets created transient build and MIME issues during experiments.
+Frontend on **Netlify**, API on **Render**, both from `master`.
 
-- **Workarounds and additions made to get things working:**
+`VITE_BACKEND_URL` must be set in Netlify's environment — Parcel inlines it at
+**build time**, so a build without it bakes in `localhost:3000` and every page
+comes up empty.
 
-  - **Defensive CSS fixes:** corrected malformed blocks, added explicit grid rules for `.movies-grid`, `.marvel-grid`, `.movie-grid`, and `.releases-grid` to stop unwanted horizontal flow.
-  - **Exported views:** updated `views/index.js` to export `login` and `signup` so routes resolve properly.
-  - **Normalized login:** lowercased `loginId` in `server/controllers/auth.js` so lookups match stored lowercase emails/usernames.
-  - **Explicit backend port:** added `BACKEND_PORT` environment variable and made `server/app.js` prefer it (`process.env.BACKEND_PORT || process.env.PORT || 3000`) so Parcel on `1234` and backend on `3000` don't collide.
-  - **Poster & card sizing:** set poster heights and `object-fit: cover` so cards remain proportional and consistent across breakpoints.
-  - **Port management tips:** documented `npx kill-port 3000 1234` and `taskkill` commands to free blocked ports quickly.
+---
 
-- **Lessons learned (project-level):**
+<details>
+<summary><b>📚 Build log — week by week</b></summary>
 
-  - **Make the happy path explicit:** prefer explicit ports and environment variable names so different tools don't accidentally steal the same port.
-  - **Normalize data early:** store and compare canonical forms (e.g., lowercase emails/usernames) to avoid case-sensitivity bugs.
-  - **Protect CSS cascade:** small syntax mistakes in CSS can break large parts of the UI; validate with the browser devtools and keep styles modular.
-  - **Iterate & test incrementally:** make small changes and verify locally before broad refactors — commit checkpoints frequently so you can revert experimental steps.
-  - **Log everything:** both frontend and backend logs helped track where requests were failing (e.g., which endpoint, what payload reached server).
+<br />
 
-- **Week-by-week incremental learning & applied changes**
+- **Week 1 — Scaffold.** Parcel + native ES modules, `index.html`, entry `index.js`, basic nav. Initial routing and skeleton pages.
+- **Week 2 — Backend & database.** Mongoose schema design, `server/app.js`, `server/models/user.js`, MongoDB connection. User schema with bcrypt hashing and an auth controller prototype.
+- **Week 3 — TMDB integration.** API basics and image paths; poster fetching and movie-list rendering in `services/api.js`.
+- **Week 4 — Layout & styling.** CSS Grid/Flex quirks and responsive technique; fixed poster sizing, added defensive grid rules, `.marvel-overview` wrapping.
+- **Week 5 — Auth UI + router.** Client-side form handling and state flow; exported login/signup views, attached handlers, saved token to `localStorage`.
+- **Week 6 — Dev ergonomics.** Port management and env vars; added `BACKEND_PORT` so Parcel (`1234`) and the API (`3000`) stop competing.
+- **Week 7 — Polish & docs.** This README, plus CSS and auth fixes.
+- **Week 8 — Performance & scale.** Response caching, route skeletons, expanded news aggregation, and three new sections (TV, In Theaters, Games).
 
-  - **Week 1 — Project scaffold & frontend:** learned Parcel + native ES modules and basic app structure; scaffolded `index.html`, entry `index.js`, and a basic nav. Applied: initial routing and skeleton pages.
-  - **Week 2 — Backend & database:** learned Mongoose basics and schema design; created `server/app.js`, `server/models/user.js`, and connected to MongoDB. Applied: user schema with bcrypt hashing and a simple auth controller prototype.
-  - **Week 3 — TMDB integration:** learned TMDB API basics and image paths; integrated poster fetching and basic movie list rendering. Applied: TMDB API calls in `services/api.js` and movie-list views.
-  - **Week 4 — Layout & styling polish:** learned CSS Grid/Flex quirks and responsive techniques; fixed poster sizing and added defensive grid rules. Applied: `style.css` corrections, `.marvel-overview` wrapping, and reduced card heights.
-  - **Week 5 — Auth UI + router fixes:** learned client-side form handling and state flows; exported `login`/`signup` views and attached handlers to POST to backend. Applied: view exports, client auth handlers, and `localStorage` token save.
-  - **Week 6 — Dev ergonomics & reliability:** learned to manage dev ports, environment variables, and server restart workflows. Applied: `BACKEND_PORT` env var, updated `package.json` scripts for explicit ports, and documented port-kill tips.
-  - **Week 7 — Polishing & documentation:** learned that documentation accelerates onboarding and debugging; started this README and captured lessons and troubleshooting steps. Applied: this `README.md` (expanded), and CSS + auth bug fixes recorded above.
+</details>
 
-- **Practical next steps (based on lessons):**
-  - Add a `CONTRIBUTING.md` with coding guidelines and a checklist for making safe CSS changes.
-  - Add small unit/integration tests around `auth` handlers (signup/login) so regressions are caught early.
-  - Consider adding a small `seed` script to populate test users and example data for local dev.
+<details>
+<summary><b>🔧 Troubleshooting & lessons learned</b></summary>
+
+<br />
+
+**Problems hit along the way**
+
+- **Layout breaks** — cards rendered horizontally and the nav stacked vertically from malformed, cascading CSS.
+- **Malformed CSS** — missing braces and a stray `white-space: nowrap` stopped descriptions wrapping.
+- **Port conflicts** — `PORT` collisions made frontend and backend compete for `3000`.
+- **Route NotFound** — `login`/`signup` weren't exported from `views/index.js`, so the router fell through.
+- **Case-sensitive login** — emails were stored lowercased but looked up case-sensitively, so valid logins returned "User not found".
+- **CSS specificity beating JavaScript** — `display: block !important` on the intro `<video>` out-specified `.hidden`, leaving an empty player painted over every trailer. The JS was correct the whole time.
+- **Silent cache corruption** — running a production build while the dev server ran served a stale bundle with no error, which looked exactly like a real bug.
+
+**Lessons**
+
+- **Make the happy path explicit.** Name ports and env vars so tools can't steal each other's.
+- **Normalize data early.** Store and compare canonical forms to avoid case-sensitivity bugs.
+- **Specificity is a real bug class.** When behaviour contradicts the code, check computed styles before rewriting logic.
+- **Measure before optimizing.** "Marvel feels slow" became actionable only once it was 9866 ms on the clock.
+- **Verify external dependencies before shipping them.** Half the RSS feeds people recommend are dead.
+- **Iterate in small commits** so experiments can be reverted cleanly.
+
+**Handy commands**
+
+```bash
+npx kill-port 3000 1234                  # free stuck ports
+netstat -ano | findstr ":3000"           # find the process (Windows)
+curl -i http://localhost:3000/status     # API health
+```
+
+</details>
+
+---
+
+## Roadmap
+
+- [ ] TV show detail modal (`/tv/:id/details` is built and waiting on a UI)
+- [ ] Metascore + Rotten Tomatoes scores via OMDb
+- [ ] Personal ratings and reviews — a real "Cinemetrics Score"
+- [ ] Browse-by-provider for movies, not just TV
+- [ ] Live Steam playtime on the Games page
+
+---
+
+<div align="center">
+
+**Built by [James Nguyen](https://github.com/jamesmnguyen704)** · Savvy Coders capstone
+
+<sub>Movie data courtesy of <a href="https://www.themoviedb.org/">TMDB</a>. This product uses the TMDB API but is not endorsed or certified by TMDB.</sub>
+
+</div>
