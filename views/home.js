@@ -5,6 +5,7 @@
 // Notes: Uses state populated by the router (fetchHomeData + fetchTopRated).
 
 import html from "html-literal";
+import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
 
 function escapeAttr(s) {
   return String(s ?? "").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -36,7 +37,7 @@ function movieCard(movie) {
           src="https://image.tmdb.org/t/p/w300${movie.poster_path}"
           alt="${escapeAttr(movie.title)}"
           loading="lazy"
-          onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+          onerror="this.onerror=null; this.src='${placeholderPoster}'"
         />
         <div class="card-badges">
           ${year ? `<span class="card-badge card-badge--year">${year}</span>` : ""}
@@ -116,7 +117,7 @@ export default st => {
               class="hero-backdrop"
               src="https://image.tmdb.org/t/p/original${movie.backdrop_path}"
               alt="${escapeAttr(movie.title)} Backdrop"
-              onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+              onerror="this.onerror=null; this.src='${placeholderPoster}'"
             />
             <div class="hero-content">
               <span class="hero-kicker">Featured · Trending Now</span>

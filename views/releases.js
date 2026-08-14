@@ -5,6 +5,7 @@
 // Notes: Past-dated movies are filtered server-side before they reach here.
 
 import html from "html-literal";
+import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
 
 function formatDate(iso) {
   if (!iso) return "TBA";
@@ -106,7 +107,7 @@ export default st => {
               class="hero-backdrop"
               src="https://image.tmdb.org/t/p/original${movie.backdrop_path || movie.poster_path}"
               alt="${escapeAttr(movie.title)} Backdrop"
-              onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+              onerror="this.onerror=null; this.src='${placeholderPoster}'"
             />
             <div class="hero-content">
               <h1>${escapeAttr(movie.title)}</h1>

@@ -2,6 +2,7 @@
 // Purpose: Render the Marvel Cinematic Universe pages grouped by phase.
 // Notes: Groups fetched MCU movies by hard-coded phase IDs and renders horizontal rows.
 import html from "html-literal";
+import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
 
 const phaseIDs = {
   "Phase 1": [1726, 1724, 10138, 10195, 1771, 24428],
@@ -65,14 +66,14 @@ function renderPhaseHero(phase, phaseMovies) {
   if (!lead) return "";
   const backdrop = lead.backdrop_path
     ? `https://image.tmdb.org/t/p/original${lead.backdrop_path}`
-    : "images/placeholder-poster.jpg";
+    : placeholderPoster;
   return `
     <section class="marvel-hero-cinematic marvel-phase-hero">
       <img
         class="marvel-hero-bg"
         src="${backdrop}"
         alt="${lead.title} Backdrop"
-        onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+        onerror="this.onerror=null; this.src='${placeholderPoster}'"
       />
       <div class="marvel-hero-scrim"></div>
       <div class="marvel-hero-body">
@@ -143,10 +144,10 @@ export default state => {
             src="${
               leadMovie.backdrop_path
                 ? `https://image.tmdb.org/t/p/original${leadMovie.backdrop_path}`
-                : "images/placeholder-poster.jpg"
+                : placeholderPoster
             }"
             alt="${leadMovie.title} Backdrop"
-            onerror="this.onerror=null; this.src='images/placeholder-poster.jpg'"
+            onerror="this.onerror=null; this.src='${placeholderPoster}'"
           />
           <div class="marvel-hero-scrim"></div>
           <div class="marvel-hero-body">
