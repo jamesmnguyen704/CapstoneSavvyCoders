@@ -16,8 +16,12 @@
 import express from "express";
 import axios from "axios";
 import Parser from "rss-parser";
+import { cacheJson } from "../utils/cache.js";
 
 const router = express.Router();
+
+// RSS aggregation is slow and the wires only move every few minutes.
+router.use(cacheJson(5 * 60 * 1000));
 
 const parser = new Parser({
   timeout: 7000,
@@ -33,11 +37,34 @@ const parser = new Parser({
 
 const GUARDIAN_BASE = "https://content.guardianapis.com/search";
 
-// Movie-focused configuration
+// How many stories the feed returns, and how many any one outlet may supply.
+const MAX_RESULTS = 40;
+const MAX_PER_SOURCE = 6;
+
+// Movie-focused configuration.
+// Every URL here was verified live before being added — parses, returns items,
+// and carries usable images. Feeds that 404'd (Empire, Vulture), paywalled
+// (EW, 402), timed out (AV Club), or had gone stale (IndieWire's newest item
+// was over two years old) are listed in REJECTED_FEEDS below so nobody
+// re-adds them. Valnet properties (Collider / ScreenRant / CBR) are still
+// excluded on purpose: they parse fine but publish near-identical headlines
+// across all three, so they'd eat slots the dedupe pass can't fully reclaim.
 const MOVIE_FEEDS = [
-  { source: "IGN",      url: "https://feeds.feedburner.com/ign/movies-all" },
-  { source: "/Film",    url: "https://www.slashfilm.com/feed/" },
-  { source: "Deadline", url: "https://deadline.com/v/film/feed/" }
+  { source: "IGN",          url: "https://feeds.feedburner.com/ign/movies-all" },
+  { source: "/Film",        url: "https://www.slashfilm.com/feed/" },
+  { source: "Deadline",     url: "https://deadline.com/v/film/feed/" },
+  { source: "Variety",      url: "https://variety.com/v/film/feed/" },
+  { source: "FirstShowing", url: "https://www.firstshowing.net/feed/" },
+  { source: "Polygon",      url: "https://www.polygon.com/rss/index.xml" },
+  { source: "BBC",          url: "https://feeds.bbci.co.uk/news/entertainment_and_arts/rss.xml" },
+  { source: "JoBlo",        url: "https://www.joblo.com/feed/" },
+  { source: "MovieWeb",     url: "https://movieweb.com/feed/movie-news/" },
+  { source: "ComingSoon",   url: "https://www.comingsoon.net/movies/news/feed" },
+  { source: "Rotten Tomatoes", url: "https://editorial.rottentomatoes.com/feed/" },
+  // THR's feed carries no image data at all — no enclosure, no media:* tags,
+  // and a ~180-char description with no inline <img>. Its cards fall back to
+  // the placeholder tile. Kept anyway because the reporting is worth it.
+  { source: "The Hollywood Reporter", url: "https://www.hollywoodreporter.com/c/movies/feed/" }
 ];
 const MOVIE_GUARDIAN = {
   section: "film",
@@ -54,9 +81,70 @@ const MOVIE_GUARDIAN = {
 // TV-focused configuration — streaming prestige, adult superhero,
 // genre series that matter (not daytime soaps / local news).
 const TV_FEEDS = [
-  { source: "IGN",      url: "https://feeds.feedburner.com/ign/tv-all" },
-  { source: "Deadline", url: "https://deadline.com/v/tv/feed/" }
+  { source: "IGN",        url: "https://feeds.feedburner.com/ign/tv-all" },
+  { source: "Deadline",   url: "https://deadline.com/v/tv/feed/" },
+  { source: "Variety",    url: "https://variety.com/v/tv/feed/" },
+  { source: "TVLine",     url: "https://tvline.com/feed/" },
+  { source: "Decider",    url: "https://decider.com/feed/" },
+  { source: "MovieWeb",   url: "https://movieweb.com/feed/tv-news/" },
+  { source: "ComingSoon", url: "https://www.comingsoon.net/tv/news/feed" },
+  { source: "Rotten Tomatoes", url: "https://editorial.rottentomatoes.com/feed/" },
+  { source: "The Hollywood Reporter", url: "https://www.hollywoodreporter.com/c/tv/feed/" }
 ];
+
+// Streaming-focused configuration — what just landed on which service,
+// release schedules, and platform business news.
+const STREAMING_FEEDS = [
+  { source: "ComingSoon",      url: "https://www.comingsoon.net/streaming/news/feed" },
+  { source: "Decider",         url: "https://decider.com/feed/" },
+  { source: "What's on Netflix", url: "https://www.whats-on-netflix.com/feed/" },
+  { source: "TVLine",          url: "https://tvline.com/feed/" },
+  { source: "Variety",         url: "https://variety.com/v/digital/feed/" }
+];
+const STREAMING_GUARDIAN = {
+  section: "tv-and-radio",
+  query: [
+    "netflix", '"hbo max"', '"apple tv"', "hulu", '"amazon prime"',
+    '"prime video"', '"disney plus"', '"disney+"', "peacock", "paramount",
+    "streaming", '"box set"', "binge"
+  ].join(" OR ")
+};
+
+// Gaming — platform-balanced (Nintendo Life / Push Square / Pure Xbox cover
+// Switch / PlayStation / Xbox respectively) plus the general trades.
+const GAMING_FEEDS = [
+  { source: "IGN",           url: "https://feeds.feedburner.com/ign/games-all" },
+  { source: "GameSpot",      url: "https://www.gamespot.com/feeds/news/" },
+  { source: "Eurogamer",     url: "https://www.eurogamer.net/feed" },
+  { source: "PC Gamer",      url: "https://www.pcgamer.com/rss/" },
+  { source: "Kotaku",        url: "https://kotaku.com/rss" },
+  { source: "Nintendo Life", url: "https://www.nintendolife.com/feeds/latest" },
+  { source: "Push Square",   url: "https://www.pushsquare.com/feeds/latest" },
+  { source: "Pure Xbox",     url: "https://www.purexbox.com/feeds/latest" },
+  { source: "ComingSoon",    url: "https://www.comingsoon.net/games/news/feed" }
+];
+const GAMING_GUARDIAN = {
+  section: "games",
+  query: [
+    "playstation", "xbox", "nintendo", "switch", "steam", '"game pass"',
+    '"grand theft auto"', "zelda", "mario", "pokemon", '"call of duty"',
+    "esports", '"video game"', "indie"
+  ].join(" OR ")
+};
+
+// Checked and deliberately not used — keep this list so a dead feed doesn't
+// get re-added later. (Same reason /Film's TV URL was dropped previously.)
+export const REJECTED_FEEDS = {
+  "https://www.empireonline.com/movies/news/feed/": "404",
+  "https://www.vulture.com/rss/index.xml": "404",
+  "https://ew.com/feed/": "402 paywall",
+  "https://www.avclub.com/rss": "times out (>12s)",
+  "https://www.indiewire.com/c/film/feed/": "stale — newest item 2+ years old",
+  "https://www.screendaily.com/1.rss": "parses but returns 0 items",
+  "https://collider.com/feed/": "Valnet — duplicates ScreenRant/CBR",
+  "https://screenrant.com/feed/": "Valnet — duplicates Collider/CBR",
+  "https://www.cbr.com/feed/": "Valnet — duplicates Collider/ScreenRant"
+};
 const TV_GUARDIAN = {
   section: "tv-and-radio",
   query: [
@@ -179,51 +267,63 @@ async function aggregate({ rssFeeds, guardian }) {
   });
 
   // Dedupe in two passes: exact URL, then normalized-title similarity.
+  // Also cap each outlet, because the list is sorted newest-first and a
+  // high-volume wire (JoBlo and Deadline both publish several times an hour)
+  // would otherwise crowd out every slower, better source.
   const seenUrls = new Set();
   const seenTitles = new Set();
+  const perSource = new Map();
   const results = [];
   for (const item of all) {
     if (seenUrls.has(item.url)) continue;
     const key = titleKey(item.title);
     if (key && seenTitles.has(key)) continue;
+
+    const used = perSource.get(item.source) || 0;
+    if (used >= MAX_PER_SOURCE) continue;
+
     seenUrls.add(item.url);
     if (key) seenTitles.add(key);
+    perSource.set(item.source, used + 1);
     results.push(item);
-    if (results.length >= 40) break;
+    if (results.length >= MAX_RESULTS) break;
   }
   return results;
 }
 
-router.get("/", async (req, res) => {
-  try {
-    const results = await aggregate({
-      rssFeeds: MOVIE_FEEDS,
-      guardian: MOVIE_GUARDIAN
-    });
-    if (!results.length) {
-      return res.status(502).json({ message: "No movie news sources responded", results: [] });
-    }
-    res.json({ results });
-  } catch (err) {
-    console.error("NEWS MOVIE ERROR:", err.message);
-    res.status(500).json({ message: "Failed to load movie news", results: [] });
-  }
-});
+// One entry per tab. Adding a tab is adding a row here plus a button in
+// views/news.js — the handler below is shared.
+// TV and streaming are the same beat in practice — the /tv page shows them as
+// one wire, so dedupe across both source lists rather than running two feeds
+// that repeat each other.
+const TV_STREAMING_FEEDS = [
+  ...TV_FEEDS,
+  ...STREAMING_FEEDS.filter(f => !TV_FEEDS.some(t => t.url === f.url))
+];
 
-router.get("/tv", async (req, res) => {
-  try {
-    const results = await aggregate({
-      rssFeeds: TV_FEEDS,
-      guardian: TV_GUARDIAN
-    });
-    if (!results.length) {
-      return res.status(502).json({ message: "No TV news sources responded", results: [] });
+const TABS = {
+  movies:      { path: "/",             label: "movie",     rssFeeds: MOVIE_FEEDS,         guardian: MOVIE_GUARDIAN },
+  tv:          { path: "/tv",           label: "TV",        rssFeeds: TV_FEEDS,            guardian: TV_GUARDIAN },
+  streaming:   { path: "/streaming",    label: "streaming", rssFeeds: STREAMING_FEEDS,     guardian: STREAMING_GUARDIAN },
+  gaming:      { path: "/gaming",       label: "gaming",    rssFeeds: GAMING_FEEDS,        guardian: GAMING_GUARDIAN },
+  tvStreaming: { path: "/tv-streaming", label: "TV",        rssFeeds: TV_STREAMING_FEEDS,  guardian: TV_GUARDIAN }
+};
+
+for (const [key, tab] of Object.entries(TABS)) {
+  router.get(tab.path, async (req, res) => {
+    try {
+      const results = await aggregate({ rssFeeds: tab.rssFeeds, guardian: tab.guardian });
+      if (!results.length) {
+        return res
+          .status(502)
+          .json({ message: `No ${tab.label} news sources responded`, results: [] });
+      }
+      res.json({ results });
+    } catch (err) {
+      console.error(`NEWS ${key.toUpperCase()} ERROR:`, err.message);
+      res.status(500).json({ message: `Failed to load ${tab.label} news`, results: [] });
     }
-    res.json({ results });
-  } catch (err) {
-    console.error("NEWS TV ERROR:", err.message);
-    res.status(500).json({ message: "Failed to load TV news", results: [] });
-  }
-});
+  });
+}
 
 export default router;
