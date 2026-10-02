@@ -1774,9 +1774,13 @@ router.hooks({
         try {
           const articles = await fetchNewsTab(tab);
           state.News.articles = articles;
+          state.News.failed = false;
           if (state.News.cache) state.News.cache[tab] = articles;
         } catch {
+          // An empty list on its own is indistinguishable from "still loading",
+          // so the view would sit on a loading message forever. Flag it.
           state.News.articles = [];
+          state.News.failed = true;
         }
         break;
       }

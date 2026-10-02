@@ -7,8 +7,16 @@
 import html from "html-literal";
 import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
 
+// Escapes for both attribute and text contexts — TMDB titles and overviews are
+// community-edited, so they reach us as untrusted HTML and land in innerHTML.
+// `&` must go first or it would double-escape the entities added after it.
 function escapeAttr(s) {
-  return String(s ?? "").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function encodeMovie(movie) {
@@ -111,12 +119,13 @@ export default st => {
       ${heroMovies.length > 0
         ? heroMovies
             .map(
-              movie => `
+              (movie, i) => `
           <div class="hero-slide">
             <img
               class="hero-backdrop"
-              src="https://image.tmdb.org/t/p/original${movie.backdrop_path}"
+              src="https://image.tmdb.org/t/p/w1280${movie.backdrop_path}"
               alt="${escapeAttr(movie.title)} Backdrop"
+              ${i === 0 ? "" : 'loading="lazy"'}
               onerror="this.onerror=null; this.src='${placeholderPoster}'"
             />
             <div class="hero-content">

@@ -75,9 +75,21 @@ function categoryPill(cat) {
   return `<span class="news-pill" data-cat="${escapeHtml(cat.key)}">${escapeHtml(cat.label)}</span>`;
 }
 
-function renderFeatured(article, fallbackCat) {
+function renderFeatured(article, fallbackCat, failed = false) {
   if (!article) {
-    return `
+    // A failed fetch and a pending one both leave `articles` empty, so without
+    // the flag this sat on "Loading…" forever when the wire was actually down.
+    return failed
+      ? `
+      <div class="news-hero news-hero--empty news-hero--failed">
+        <div class="news-hero-body">
+          <h2>The wire is down</h2>
+          <p>Couldn't reach the news sources just now. Refresh in a minute, or
+             browse <a href="/movies" data-navigo>Movies</a> in the meantime.</p>
+        </div>
+      </div>
+    `
+      : `
       <div class="news-hero news-hero--empty">
         <div class="news-hero-body">
           <h2>Loading the wire…</h2>
@@ -249,6 +261,7 @@ export default state => {
   const cfg = TAB_CONFIG[activeTab];
   const fallbackCat = TAB_FALLBACK_CATEGORY[activeTab];
   const articles = Array.isArray(state.articles) ? state.articles : [];
+  const failed = Boolean(state.failed) && articles.length === 0;
 
   // Split so the two columns finish at roughly the same depth: a rail item is
   // about a third the height of a grid card, and the rail now flows full
@@ -287,7 +300,7 @@ export default state => {
 
       <div class="news-layout">
         <div class="news-main">
-          ${renderFeatured(featured, fallbackCat)}
+          ${renderFeatured(featured, fallbackCat, failed)}
 
           ${
             grid.length

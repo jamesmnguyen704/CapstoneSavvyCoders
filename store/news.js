@@ -5,6 +5,8 @@ export default {
   view: "News",
   activeTab: "movies", // "movies" | "tv" | "streaming" | "gaming"
   articles: [],        // articles for the active tab
+  failed: false,       // true when the last fetch threw, so an empty list can
+                       // render as an error rather than as "still loading"
   cache: {             // per-tab article cache so switching is instant
     movies: null,
     tv: null,

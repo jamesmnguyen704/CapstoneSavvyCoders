@@ -9,8 +9,16 @@ import html from "html-literal";
 import { listWatchlist } from "../services/watchlist.js";
 import aboutMe from "./aboutMe.js";
 
+// Escapes for both attribute and text contexts — saved titles originate from
+// TMDB's community-edited data and land in innerHTML. `&` must go first or it
+// would double-escape the entities added after it.
 function escapeAttr(s) {
-  return String(s ?? "").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function card(item) {
