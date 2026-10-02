@@ -21,7 +21,6 @@ export const navItemsData = [
   { url: "/theaters", text: "In Theaters" },
   { url: "/releases", text: "Upcoming" },
   { url: "/marvel", text: "Marvel" },
-  { url: "/awards", text: "Awards" },
   { url: "/news", text: "News" },
   { url: "/games", text: "Games" },
   { url: "/my-list", text: "My List" }

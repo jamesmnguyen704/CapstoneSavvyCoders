@@ -33,10 +33,9 @@ Cinemetrics pulls live data from **TMDB**, **12 news outlets**, and **OpenStreet
 | 🎞️ **Movies** | Trending, popular and top-rated, with genre / year / rating / sort filters |
 | 📺 **TV & Streaming** | Browse by service — Netflix, HBO Max, Prime, Disney+, Apple TV+, Hulu, Peacock |
 | 🎟️ **In Theaters** | Enter a ZIP → what's playing + the closest cinemas within 25 miles |
-| 🦸 **Marvel** | The full MCU, grouped by phase with cinematic per-phase heroes |
-| 🏆 **Awards** | Oscars across six categories, enriched with TMDB data |
-| 📰 **News** | 12 outlets, deduped and balanced so no single wire dominates |
-| 🎮 **Games** | A personal library with cover art — and links to each title's screen adaptation |
+| 🦸 **Marvel** | A live countdown to *Avengers: Doomsday*, its 35-strong cast, and the full MCU by phase |
+| 📰 **News** | 19 outlets, deduped and balanced so no single wire dominates |
+| 🎮 **Games** | What's on the radar, the gaming wire, and a personal library with cover art |
 | 🔖 **My List** | Watchlist saved to `localStorage`, no account required |
 
 ---
@@ -68,15 +67,14 @@ Cinemetrics pulls live data from **TMDB**, **12 news outlets**, and **OpenStreet
 
 ## Things I'm proud of
 
-**⚡ 9.9 seconds → 5 milliseconds.** The Marvel and Awards pages each fanned out to dozens of TMDB calls on *every* request. A response-cache middleware that taps `res.json` — so no route handler changed — plus a boot-time warm-up:
+**⚡ 9.9 seconds → 5 milliseconds.** The curated pages each fanned out to dozens of TMDB calls on *every* request. A response-cache middleware that taps `res.json` — so no route handler changed — plus a boot-time warm-up:
 
 | Route | Before | After |
 |---|---|---|
 | `/movies/marvel` | 9866 ms | **5 ms** |
-| `/movies/awards` | 8143 ms | **2 ms** |
 | `/movies/upcoming-curated` | 2358 ms | **1 ms** |
 
-**🖼️ No more blank screens.** The router used to `await` every fetch before rendering, so slow routes showed an empty white page. Now the chrome and a shimmer skeleton paint first — Awards went from a 5.2 s blank screen to **first paint at 191 ms**.
+**🖼️ No more blank screens.** The router used to `await` every fetch before rendering, so slow routes showed an empty white page. Now the chrome and a shimmer skeleton paint first, so navigation is never a blank page.
 
 **🔍 Every news feed verified before shipping.** 30 candidate RSS feeds were tested against the live parser. The ones that 404'd, paywalled, timed out, or had gone stale are recorded in `REJECTED_FEEDS` with the reason, so nobody re-adds a dead source. A per-outlet cap keeps high-volume wires from crowding out slower ones.
 
@@ -101,7 +99,7 @@ Cinemetrics pulls live data from **TMDB**, **12 news outlets**, and **OpenStreet
 └── server/
     ├── app.js        # express app + middleware
     ├── routes/       # movies, tv, news, person, comments, auth
-    ├── controllers/  # curated Marvel / Oscars / upcoming data
+    ├── controllers/  # curated Marvel / upcoming data
     └── utils/cache.js
 ```
 
@@ -162,11 +160,11 @@ Base: `https://capstonesavvycoders.onrender.com`
 | `GET /movies/trending` · `/popular` · `/top_rated` · `/now_playing` | Movie lists |
 | `GET /movies/discover` | Filter by genre, year, rating, sort |
 | `GET /movies/:id/details` | Full detail — cast, crew, keywords, certification, reviews, providers |
-| `GET /movies/marvel` · `/awards` · `/upcoming-curated` | Curated, cached |
+| `GET /movies/marvel` · `/doomsday` · `/upcoming-curated` | Curated, cached |
 | `GET /movies/in-theaters?zip=` | Now playing + ticket links |
 | `GET /movies/theaters-near?zip=` | Cinemas within 25 miles |
 | `GET /tv` · `/tv/providers?provider=` · `/tv/:id/details` | TV shows |
-| `GET /news` · `/news/tv` · `/news/streaming` · `/news/gaming` | Aggregated wires |
+| `GET /news` · `/news/marvel` · `/news/tv` · `/news/streaming` · `/news/gaming` | Aggregated wires |
 | `POST /auth/signup` · `/auth/login` | JWT auth |
 
 ---

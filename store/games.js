@@ -7,6 +7,8 @@ export default {
   view: "Games",
   platform: "all", // "all" | switch | psn | steam | xbox | discord
   search: "",
+  showAllGames: false, // library renders a capped preview until this flips
   news: [],        // gaming wire, shown in the right rail
+  newsFetchedAt: 0, // epoch ms of the last successful wire fetch; 0 = never
   newsLoading: false
 };

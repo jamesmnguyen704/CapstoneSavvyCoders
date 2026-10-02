@@ -1,8 +1,8 @@
 // File: server/utils/cache.js
 // Purpose: In-memory TTL cache for TMDB-backed GET responses.
-// Notes: /movies/marvel and /movies/awards fan out to dozens of TMDB calls and
-//        took ~8-10s each on every single request. They're curated lists that
-//        barely change, so caching the assembled JSON is the whole fix.
+// Notes: /movies/marvel fans out to dozens of TMDB calls and took ~8-10s on
+//        every single request. It's a curated list that barely changes, so
+//        caching the assembled JSON is the whole fix.
 
 const store = new Map();
 

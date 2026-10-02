@@ -11,7 +11,6 @@ export { default as signup } from "./signup";
 export { default as Profile } from "./profile";
 export { default as News } from "./news";
 export { default as MyList } from "./myList";
-export { default as Awards } from "./awards";
 export { default as Games } from "./games";
 export { default as Theaters } from "./theaters";
 export { default as Tv } from "./tv";

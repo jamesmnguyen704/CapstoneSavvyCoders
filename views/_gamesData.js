@@ -3,7 +3,7 @@
 // Notes: GENERATED from hub/gaming.html + assets/game-covers/_manifest.json.
 //        Library data only. The hub page's rigs / platform-login panels are
 //        personal and intentionally excluded from this public repo.
-//        58 titles, 41 with cover art.
+//        58 titles, 45 with cover art.
 
 // The three machines, and which platform tags each one covers. Mirrors the
 // "gaming rigs" tree from the personal hub page — hardware and libraries only.
@@ -44,6 +44,62 @@ export const PLATFORMS = {
   "discord": "PC"
 };
 
+// Games I'm waiting on, newest-dated first. `status` drives the badge colour:
+// "dated" = publisher has given a day, "window" = a season or year only,
+// "rumored" = not officially announced. Release windows move constantly —
+// this is a hand-kept list, so correct it here rather than in the view.
+// `match` are lowercase substrings used to pull related headlines out of the
+// gaming wire onto the card — keep them specific enough not to catch strays
+// ("gears of war", not "gears").
+// `art` is a FRANCHISE STAND-IN, not this title's box art — none of these are
+// released, so no real cover exists on disk. It renders blurred and darkened
+// behind the card as atmosphere only. Swap in the real file once there is one;
+// null falls back to a plain gradient.
+export const UPCOMING = [
+  {
+    title: "Grand Theft Auto VI",
+    platforms: ["psn", "xbox"],
+    status: "dated",
+    window: "Nov 19, 2026",
+    note: "Delayed twice already. Leonida, two leads, and the first new GTA in 13 years.",
+    match: ["gta 6", "gta vi", "grand theft auto"],
+    adaptation: null,
+    art: null // no GTA art in the library at all
+  },
+  {
+    title: "Gears of War: E-Day",
+    platforms: ["xbox", "steam"],
+    status: "window",
+    window: "2026",
+    note: "Prequel — Marcus and Dom on Emergence Day, 14 years before Gears 1.",
+    match: ["gears of war", "e-day"],
+    adaptation: null,
+    art: "gears-5.jpg"
+  },
+  {
+    title: "Call of Duty (2026)",
+    platforms: ["psn", "xbox", "steam"],
+    status: "window",
+    window: "Fall 2026",
+    note: "Annual slot. Title and setting still unannounced.",
+    match: ["call of duty", "black ops", "warzone"],
+    adaptation: null,
+    art: "cod-black-ops-6.jpg"
+  },
+  {
+    title: "The Legend of Zelda: Ocarina of Time",
+    platforms: ["switch"],
+    status: "rumored",
+    window: "Unannounced",
+    note: "A Switch 2 remake has been rumored for years with nothing official. The live-action Zelda film lands May 2027 either way.",
+    // Deliberately not a bare "zelda" — that pulled in merch deals and
+    // Zelda-*like* indies. Better to show no headlines than wrong ones.
+    match: ["ocarina"],
+    adaptation: "The Legend of Zelda",
+    art: "zelda-totk.jpg"
+  }
+];
+
 export const GAMES = [
   {
     "title": "The Legend of Zelda: Breath of the Wild (Switch 2 Edition)",
@@ -82,7 +138,11 @@ export const GAMES = [
     },
     "featured": true,
     "recalled": false,
-    "cover": "re-requiem.jpg"
+    "cover": "re-requiem.jpg",
+    // Only a 231x87 store banner was available, not box art. Letterbox it
+    // rather than let object-fit:cover zoom-crop it into an unreadable smear.
+    // Drop a 2:3 cover in and delete this flag.
+    "coverWide": true
   },
   {
     "title": "Hollow Knight: Silksong",
@@ -148,7 +208,7 @@ export const GAMES = [
     ],
     "featured": true,
     "recalled": false,
-    "cover": null
+    "cover": "it-takes-two.jpg"
   },
   {
     "title": "Luigi's Mansion 3",
@@ -157,7 +217,7 @@ export const GAMES = [
     ],
     "featured": true,
     "recalled": false,
-    "cover": null
+    "cover": "luigis-mansion-3.jpg"
   },
   {
     "title": "Resident Evil Village",
@@ -599,7 +659,7 @@ export const GAMES = [
     ],
     "featured": false,
     "recalled": true,
-    "cover": null
+    "cover": "spiderman-1.jpg"
   },
   {
     "title": "Star Wars Battlefront II",
@@ -608,7 +668,7 @@ export const GAMES = [
     ],
     "featured": false,
     "recalled": true,
-    "cover": null
+    "cover": "battlefront-2.jpg"
   },
   {
     "title": "Ultimate Marvel vs. Capcom 3",
