@@ -162,23 +162,6 @@ export async function fetchMovieDetails(id) {
   }
 }
 
-// Oscars — curated + enriched with TMDB data, grouped by ceremony, across
-// Best Picture + the major acting / directing categories.
-export async function fetchAwards() {
-  try {
-    const response = await axios.get(`${API_BASE}/movies/awards`);
-    const data = response.data || {};
-    const categories = data.categories || { bestPicture: data.sections || [] };
-    return {
-      sections: Array.isArray(data.sections) ? data.sections : categories.bestPicture || [],
-      categories
-    };
-  } catch (err) {
-    console.error("AWARDS ERROR:", err);
-    return { sections: [], categories: {} };
-  }
-}
-
 // Genres — TMDB's movie genre list (used by the Discover page).
 export async function fetchGenres() {
   try {
@@ -309,6 +292,18 @@ export async function fetchUpcomingCurated() {
   } catch (err) {
     console.error("CURATED UPCOMING ERROR:", err);
     return { "2026": [], "2027": [], popular: [] };
+  }
+}
+
+// Avengers: Doomsday — detail, full billed cast and the newest official
+// trailer, for the Marvel page's hero hub.
+export async function fetchDoomsday() {
+  try {
+    const response = await axios.get(`${API_BASE}/movies/doomsday`);
+    return response.data || null;
+  } catch (err) {
+    console.error("DOOMSDAY API ERROR:", err);
+    return null;
   }
 }
 

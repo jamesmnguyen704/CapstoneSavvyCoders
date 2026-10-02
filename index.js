@@ -25,7 +25,7 @@ import {
   fetchTvByProvider,
   fetchTopRated,
   fetchMovieDetails,
-  fetchAwards,
+  fetchDoomsday,
   searchMovies,
   fetchGenres,
   discoverMovies,
@@ -57,6 +57,11 @@ const router = new Navigo("/");
 // Gaming lives on /games and TV + streaming on /tv, each in their own rail,
 // so /news is the movie wire only.
 const NEWS_TABS = ["movies"];
+
+// How long a fetched wire stays good on the client. Matches the API's own
+// 5-minute response cache, so a refetch past this either serves that cache or
+// genuinely pulls fresh headlines.
+const NEWS_MAX_AGE_MS = 5 * 60 * 1000;
 
 // my modal helper
 function getModalEls() {
@@ -263,12 +268,98 @@ async function render(st = state.Home) {
   attachTvHandlers();
   attachPersonClickHandler();
   attachMyListTabs();
-  attachAwardsCategoryTabs();
+  attachDoomsdayCountdown();
+  attachHeroSlideshows();
   syncBookmarkButtons();
 }
 
+// Crossfades every hero slideshow on the page — the Doomsday banner and each
+// phase banner. Where a slide names a film, the banner's title and buttons
+// follow it, so acting on the banner always acts on what's showing.
+// Paused for reduced-motion users; cleared on each render so nothing ticks
+// against a detached node.
+let slideshowTimers = [];
+function attachHeroSlideshows() {
+  slideshowTimers.forEach(clearInterval);
+  slideshowTimers = [];
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  document.querySelectorAll("[data-slideshow]").forEach((wrap, index) => {
+    const slides = [...wrap.querySelectorAll(".doom-hero-slide")];
+    if (slides.length < 2) return;
+
+    const banner = wrap.closest("section");
+    const titleEl = banner && banner.querySelector("[data-slide-title]");
+    const targets = banner ? [...banner.querySelectorAll("[data-slide-target]")] : [];
+
+    let i = 0;
+    const advance = () => {
+      slides[i].classList.remove("is-active");
+      i = (i + 1) % slides.length;
+      const slide = slides[i];
+      slide.classList.add("is-active");
+
+      if (titleEl && slide.dataset.title) titleEl.textContent = slide.dataset.title;
+      if (slide.dataset.movieId) {
+        targets.forEach(btn => {
+          btn.dataset.id = slide.dataset.movieId;
+          if (btn.dataset.infoId) btn.dataset.infoId = slide.dataset.movieId;
+        });
+      }
+    };
+
+    // Stagger each banner so the page doesn't flip every image in unison.
+    const start = setTimeout(() => {
+      advance();
+      slideshowTimers.push(setInterval(advance, 5000));
+    }, index * 900);
+    slideshowTimers.push(start);
+  });
+}
+
+// Doomsday countdown — the view renders correct digits at paint, this just
+// keeps them moving. The interval is cleared on the next render so navigating
+// away doesn't leave it ticking against a detached node.
+let countdownTimer = null;
+function attachDoomsdayCountdown() {
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+
+  const el = document.querySelector("[data-countdown]");
+  if (!el) return;
+
+  const target = new Date(`${el.dataset.countdown}T00:00:00`);
+  const pad = n => String(n).padStart(2, "0");
+  const slot = key => el.querySelector(`[data-cd="${key}"]`);
+
+  const tick = () => {
+    const diff = target - new Date();
+    if (diff <= 0) {
+      clearInterval(countdownTimer);
+      countdownTimer = null;
+      el.innerHTML = `<span class="doom-countdown-live">In theaters now</span>`;
+      el.classList.add("doom-countdown--out");
+      return;
+    }
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor((diff % 86400000) / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    if (slot("days")) slot("days").textContent = d;
+    if (slot("hours")) slot("hours").textContent = pad(h);
+    if (slot("mins")) slot("mins").textContent = pad(m);
+    if (slot("secs")) slot("secs").textContent = pad(s);
+  };
+
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
 // The router's `before` hook awaits every fetch before it lets a view render,
-// so a slow route (Marvel and Awards are the worst) used to leave #root
+// so a slow route (Marvel is the worst) used to leave #root
 // completely empty — a blank white page, not a slow one. Paint the chrome plus
 // a shimmer grid straight away so navigation always feels instant.
 function paintRouteSkeleton(st) {
@@ -302,7 +393,6 @@ const SKELETON_ROUTES = {
   movies: () => [state.Movies, state.Movies.results],
   marvel: () => [state.Marvel, state.Marvel.marvel],
   releases: () => [state.Releases, state.Releases.movies2026],
-  awards: () => [state.Awards, state.Awards.sections],
   news: () => [state.News, state.News.articles]
 };
 
@@ -668,25 +758,6 @@ function attachWatchlistHandler() {
     if (location.pathname === "/my-list") {
       render(state.MyList);
     }
-  });
-}
-
-// Awards category tabs — swap the active Oscar category without re-fetching.
-function attachAwardsCategoryTabs() {
-  if (location.pathname !== "/awards") return;
-  const tabs = document.querySelectorAll(".awards-cat-tab");
-  if (!tabs.length) return;
-  tabs.forEach(btn => {
-    btn.addEventListener("click", () => {
-      if (btn.disabled) return;
-      const key = btn.dataset.category;
-      if (!key || !state.Awards.categories?.[key]) return;
-      state.Awards.activeCategory = key;
-      state.Awards.sections = state.Awards.categories[key] || [];
-      render(state.Awards);
-      const el = document.querySelector(".awards-cat-tabs");
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
   });
 }
 
@@ -1380,6 +1451,18 @@ function attachGamesHandlers() {
     });
   }
 
+  // The library renders a capped preview so the page leads with news and
+  // upcoming releases; this expands it to the full shelf. Delegated for the
+  // same reason as the chips — the button is re-rendered with the grid.
+  if (!document.__gamesShowAllBound) {
+    document.__gamesShowAllBound = true;
+    document.addEventListener("click", e => {
+      if (!e.target.closest("[data-games-show-all]")) return;
+      state.Games.showAllGames = true;
+      renderGamesResults(state.Games);
+    });
+  }
+
   const search = filters.querySelector("#gamesSearch");
   if (search) {
     search.addEventListener("input", () => {
@@ -1637,10 +1720,20 @@ router.hooks({
 
       case "marvel":
         try {
-          const data = await fetchMarvelMovies();
+          // The hub needs all three, but none should be able to blank the page:
+          // a failed news wire still leaves the timeline and Doomsday standing.
+          const [data, doomsday, marvelNews] = await Promise.all([
+            fetchMarvelMovies(),
+            fetchDoomsday(),
+            fetchNewsTab("marvel")
+          ]);
           state.Marvel.marvel = Array.isArray(data) ? data : [];
+          state.Marvel.doomsday = doomsday || null;
+          state.Marvel.news = Array.isArray(marvelNews) ? marvelNews : [];
         } catch {
           state.Marvel.marvel = [];
+          state.Marvel.doomsday = null;
+          state.Marvel.news = [];
         }
         break;
 
@@ -1692,16 +1785,22 @@ router.hooks({
         // Pure-local data; render() reads it from localStorage on its own.
         break;
 
-      case "games":
-        // The library is static; only the news rail needs fetching.
-        if (!state.Games.news.length) {
+      case "games": {
+        // The library is static; only the news rail needs fetching. Refetch
+        // once the wire is older than the API's own cache window — keying off
+        // `.length` alone meant a tab left open all day kept the headlines it
+        // loaded on arrival, however stale the "9m ago" stamps had gone.
+        const wireAge = Date.now() - (state.Games.newsFetchedAt || 0);
+        if (!state.Games.news.length || wireAge > NEWS_MAX_AGE_MS) {
           try {
             state.Games.news = await fetchNewsTab("gaming");
+            state.Games.newsFetchedAt = Date.now();
           } catch {
             state.Games.news = [];
           }
         }
         break;
+      }
 
       case "tv": {
         // Shows and the combined TV + streaming wire, in parallel.
@@ -1747,25 +1846,6 @@ router.hooks({
         break;
       }
 
-      case "awards":
-        try {
-          const data = await fetchAwards();
-          const categories = data?.categories || {};
-          state.Awards.categories = {
-            bestPicture: categories.bestPicture || [],
-            bestDirector: categories.bestDirector || [],
-            bestActor: categories.bestActor || [],
-            bestActress: categories.bestActress || [],
-            supportingActor: categories.supportingActor || [],
-            supportingActress: categories.supportingActress || []
-          };
-          const active = state.Awards.activeCategory || "bestPicture";
-          state.Awards.sections = state.Awards.categories[active] || [];
-        } catch {
-          state.Awards.sections = [];
-        }
-        break;
-
     }
 
     done();
@@ -1786,7 +1866,6 @@ router
     "/profile": () => render(state.Profile),
     "/news": () => render(state.News),
     "/my-list": () => render(state.MyList),
-    "/awards": () => render(state.Awards),
     "/games": () => render(state.Games),
     "/theaters": () => render(state.Theaters),
     "/tv": () => render(state.Tv),

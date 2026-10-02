@@ -6,7 +6,7 @@
 //   - Titles with a film/TV adaptation get a "Watch the adaptation" chip that
 //     opens the existing movie search, tying the page into the rest of the app.
 import html from "html-literal";
-import { GAMES, PLATFORMS, RIGS } from "./_gamesData";
+import { GAMES, PLATFORMS, RIGS, UPCOMING } from "./_gamesData";
 import { gameCoverUrl, assetUrl } from "../services/api";
 
 function escapeAttr(s) {
@@ -62,7 +62,9 @@ function gameCard(game) {
       <div class="game-cover-wrap">
         ${
           cover
-            ? `<img class="game-cover" src="${escapeAttr(cover)}" alt="${escapeAttr(
+            ? `<img class="game-cover${
+                game.coverWide ? " game-cover--wide" : ""
+              }" src="${escapeAttr(cover)}" alt="${escapeAttr(
                 game.title
               )}" loading="lazy" />`
             : `<div class="game-cover game-cover--placeholder" aria-hidden="true">🎮</div>`
@@ -107,6 +109,74 @@ function filterChips(active) {
     .join("");
 }
 
+const STATUS_LABELS = {
+  dated: "Dated",
+  window: "Window",
+  rumored: "Rumored"
+};
+
+// Pull headlines off the gaming wire that mention a given upcoming title, so
+// each radar card carries its own live news instead of just a static blurb.
+export function newsForUpcoming(game, articles) {
+  const terms = game.match || [];
+  if (!terms.length) return [];
+  return (articles || [])
+    .filter(a => {
+      const title = String(a.title || "").toLowerCase();
+      return terms.some(t => title.includes(t));
+    })
+    .slice(0, 2);
+}
+
+// Upcoming titles have no box art in the library yet, so these cards lead with
+// the release window instead of a cover.
+function radarCard(game, articles) {
+  const related = newsForUpcoming(game, articles);
+
+  return `
+    <article class="radar-card" data-status="${escapeAttr(game.status)}">
+      ${
+        game.art
+          ? `<img class="radar-art" src="${escapeAttr(gameCoverUrl(game.art))}" alt="" aria-hidden="true" loading="lazy" />`
+          : ""
+      }
+      <div class="radar-top">
+        <span class="radar-status">${escapeAttr(STATUS_LABELS[game.status] || game.status)}</span>
+        <span class="radar-window">${escapeAttr(game.window)}</span>
+      </div>
+      <h3 class="radar-title">${escapeAttr(game.title)}</h3>
+      <div class="game-badges">${platformBadges(game.platforms)}</div>
+      <p class="radar-note">${escapeAttr(game.note)}</p>
+      ${
+        related.length
+          ? `<div class="radar-news">
+              ${related
+                .map(
+                  a => `
+                <a class="radar-news-item" href="${escapeAttr(a.url)}" target="_blank" rel="noopener noreferrer">
+                  <span class="radar-news-title">${escapeAttr(a.title)}</span>
+                  <span class="radar-news-meta">${escapeAttr(a.source)}${
+                    a.publishedAt ? ` · ${relativeTime(a.publishedAt)}` : ""
+                  }</span>
+                </a>`
+                )
+                .join("")}
+            </div>`
+          : // Without this the card bottoms out on a void whenever the wire has
+            // nothing matching, which reads as broken rather than quiet.
+            `<p class="radar-news-empty">No headlines on the wire yet.</p>`
+      }
+      ${
+        game.adaptation
+          ? `<button class="game-adapt" type="button" data-adaptation="${escapeAttr(
+              game.adaptation
+            )}">▶ Watch the adaptation</button>`
+          : ""
+      }
+    </article>
+  `;
+}
+
 // The rigs tree: one card per machine, with what's played on it.
 function rigCard(rig) {
   const owned = GAMES.filter(g => g.platforms.some(p => rig.platforms.includes(p)));
@@ -142,7 +212,7 @@ function rigCard(rig) {
 function newsItem(a) {
   const when = a.publishedAt ? relativeTime(a.publishedAt) : "";
   return `
-    <a class="gnews-item" href="${escapeAttr(a.url)}" target="_blank" rel="noopener noreferrer">
+    <a class="gnews-card" href="${escapeAttr(a.url)}" target="_blank" rel="noopener noreferrer">
       ${
         a.image
           ? `<img class="gnews-thumb" src="${escapeAttr(a.image)}" alt="" loading="lazy" />`
@@ -166,31 +236,70 @@ function relativeTime(iso) {
   return `${Math.round(hrs / 24)}d ago`;
 }
 
-// Right-hand gaming news rail. Re-rendered on its own once the feed lands.
+// The lead story carries a full-bleed image, so it has to be an item that
+// actually has one — the wire regularly returns text-only entries.
+function leadStory(a) {
+  return `
+    <a class="gnews-lead" href="${escapeAttr(a.url)}" target="_blank" rel="noopener noreferrer">
+      <img class="gnews-lead-img" src="${escapeAttr(a.image)}" alt="" loading="lazy" />
+      <div class="gnews-lead-body">
+        <span class="gnews-lead-kicker">Top story</span>
+        <h3 class="gnews-lead-title">${escapeAttr(a.title)}</h3>
+        ${a.excerpt ? `<p class="gnews-lead-excerpt">${escapeAttr(a.excerpt)}</p>` : ""}
+        <span class="gnews-meta">${escapeAttr(a.source)}${
+          a.publishedAt ? ` · ${relativeTime(a.publishedAt)}` : ""
+        }</span>
+      </div>
+    </a>
+  `;
+}
+
+// Gaming news, now the centrepiece of the page rather than a side rail.
+// Re-rendered on its own once the feed lands — and so is the radar, whose
+// cards embed headlines of their own.
 export function renderGamesNews(state) {
   const el = document.querySelector("#gamesNews");
-  if (!el) return;
-  el.innerHTML = gamesNewsPanel(state);
+  if (el) el.innerHTML = gamesNewsPanel(state);
+
+  const radar = document.querySelector("#radarGrid");
+  if (radar) radar.innerHTML = UPCOMING.map(g => radarCard(g, state.news)).join("");
 }
 
 function gamesNewsPanel(state) {
   const items = state.news || [];
+
+  if (state.newsLoading) {
+    return `
+      ${newsHead()}
+      <div class="gnews-grid">
+        ${Array.from({ length: 9 })
+          .map(() => `<div class="gnews-card gnews-card--skeleton"><span class="skeleton gnews-skel"></span></div>`)
+          .join("")}
+      </div>
+    `;
+  }
+
+  if (!items.length) {
+    return `${newsHead()}<p class="gnews-empty">Couldn't load the gaming wire right now.</p>`;
+  }
+
+  const leadIndex = items.findIndex(a => a.image);
+  const lead = leadIndex >= 0 ? items[leadIndex] : null;
+  const rest = lead ? items.filter((_, i) => i !== leadIndex) : items;
+
+  return `
+    ${newsHead()}
+    ${lead ? leadStory(lead) : ""}
+    <div class="gnews-grid">${rest.map(newsItem).join("")}</div>
+  `;
+}
+
+function newsHead() {
   return `
     <h2 class="gnews-head">
       Gaming News
-      <span class="gnews-sub">Consoles, PC &amp; the games worth your time</span>
+      <span class="gnews-sub">Consoles, PC &amp; the games worth your time — refreshed every few minutes</span>
     </h2>
-    <div class="gnews-list">
-      ${
-        state.newsLoading
-          ? Array.from({ length: 8 })
-              .map(() => `<div class="gnews-item gnews-item--skeleton"><span class="skeleton gnews-skel"></span></div>`)
-              .join("")
-          : items.length
-            ? items.map(newsItem).join("")
-            : `<p class="gnews-empty">Couldn't load the gaming wire right now.</p>`
-      }
-    </div>
   `;
 }
 
@@ -203,65 +312,112 @@ export function filterGames({ platform = "all", search = "" } = {}) {
   });
 }
 
+// The library is the archive, not the headline — show a slice of it by default
+// so the page leads with news and upcoming releases. Filtering or searching
+// opts out of the cap, since by then the visitor is deliberately digging.
+const LIBRARY_PREVIEW = 12;
+
+function visibleGames(state) {
+  const list = filterGames(state);
+  const browsing =
+    (state.platform && state.platform !== "all") || String(state.search || "").trim();
+
+  if (state.showAllGames || browsing) {
+    return { shown: list, total: list.length, hidden: 0 };
+  }
+  return {
+    shown: list.slice(0, LIBRARY_PREVIEW),
+    total: list.length,
+    hidden: Math.max(list.length - LIBRARY_PREVIEW, 0)
+  };
+}
+
+function showAllButton(hidden) {
+  if (!hidden) return "";
+  return `
+    <button class="games-showall" type="button" data-games-show-all>
+      Show all ${GAMES.length} games <span class="games-showall-more">+${hidden} more</span>
+    </button>
+  `;
+}
+
 // Re-renders just the grid + count, so typing in the search box doesn't
 // rebuild the whole page (and lose focus) on every keystroke.
 export function renderGamesResults(state) {
   const grid = document.querySelector("#gamesGrid");
   const count = document.querySelector("#gamesCount");
+  const more = document.querySelector("#gamesMore");
   if (!grid) return;
 
-  const list = filterGames(state);
-  grid.innerHTML = list.length
-    ? list.map(gameCard).join("")
+  const { shown, total, hidden } = visibleGames(state);
+  grid.innerHTML = shown.length
+    ? shown.map(gameCard).join("")
     : `<p class="game-empty">No games match that filter.</p>`;
-  if (count) count.textContent = `${list.length} of ${GAMES.length}`;
+  if (count) count.textContent = `${shown.length} of ${GAMES.length}`;
+  if (more) more.innerHTML = showAllButton(hidden);
+
+  return { total, hidden };
 }
 
 export default state => {
   const platform = state.platform || "all";
-  const list = filterGames(state);
-  const withCovers = GAMES.filter(g => g.cover).length;
+  const { shown, hidden } = visibleGames(state);
 
   return html`
     <section class="games-page">
       <header class="games-header">
         <span class="games-kicker">Off the clock</span>
-        <h1>The Library</h1>
+        <h1>The Gaming Desk</h1>
         <p class="games-subtitle">
-          ${GAMES.length} games across Switch, PlayStation, Xbox and PC —
-          ${withCovers} with cover art pulled from Steam. Several have a film or
-          TV adaptation you can jump straight into.
+          What's coming, what's being written about it, and the ${GAMES.length}
+          games sitting on my own shelf — several with a film or TV adaptation
+          you can jump straight into.
         </p>
       </header>
 
-      <div class="games-layout">
-        <div class="games-main">
-          <div class="rigs">${RIGS.map(rigCard).join("")}</div>
+      <section class="radar">
+        <h2 class="radar-head">
+          On My Radar
+          <span class="radar-sub">What I'm waiting on — dates move, these are the latest I have</span>
+        </h2>
+        <div class="radar-grid" id="radarGrid">
+          ${UPCOMING.map(g => radarCard(g, state.news)).join("")}
+        </div>
+      </section>
 
-          <div class="games-controls" id="gamesFilters">
-            <div class="game-chips">${filterChips(platform)}</div>
-            <div class="games-controls-right">
-              <input
-                id="gamesSearch"
-                class="games-search"
-                type="search"
-                placeholder="Search the library…"
-                value="${escapeAttr(state.search || "")}"
-                aria-label="Search games"
-              />
-              <span class="games-count" id="gamesCount">${list.length} of ${GAMES.length}</span>
-            </div>
-          </div>
+      <section class="games-news" id="gamesNews">${gamesNewsPanel(state)}</section>
 
-          <div class="games-grid" id="gamesGrid">
-            ${list.length
-              ? list.map(gameCard).join("")
-              : `<p class="game-empty">No games match that filter.</p>`}
+      <section class="games-library">
+        <h2 class="library-head">
+          The Library
+          <span class="library-sub">${RIGS.map(r => r.name).join(" · ")}</span>
+        </h2>
+
+        <div class="rigs">${RIGS.map(rigCard).join("")}</div>
+
+        <div class="games-controls" id="gamesFilters">
+          <div class="game-chips">${filterChips(platform)}</div>
+          <div class="games-controls-right">
+            <input
+              id="gamesSearch"
+              class="games-search"
+              type="search"
+              placeholder="Search the library…"
+              value="${escapeAttr(state.search || "")}"
+              aria-label="Search games"
+            />
+            <span class="games-count" id="gamesCount">${shown.length} of ${GAMES.length}</span>
           </div>
         </div>
 
-        <aside class="games-news" id="gamesNews">${gamesNewsPanel(state)}</aside>
-      </div>
+        <div class="games-grid games-grid--compact" id="gamesGrid">
+          ${shown.length
+            ? shown.map(gameCard).join("")
+            : `<p class="game-empty">No games match that filter.</p>`}
+        </div>
+
+        <div class="games-more" id="gamesMore">${showAllButton(hidden)}</div>
+      </section>
     </section>
   `;
 };

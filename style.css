@@ -339,7 +339,6 @@ section {
 
 /* Titles (movie, marvel, releases) – clamp to max 2 lines */
 .movie-title,
-.marvel-card-title,
 .release-title {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -352,7 +351,6 @@ section {
 
 /* Card flex layout so buttons pin to bottom */
 .movie-card,
-.marvel-card,
 .release-card {
   display: flex;
   flex-direction: column;
@@ -361,8 +359,7 @@ section {
 }
 
 .movie-card .movie-info,
-.release-card .release-info,
-.marvel-card .marvel-info {
+.release-card .release-info {
   display: flex;
   flex-direction: column;
 }
@@ -380,66 +377,11 @@ section {
   width: 100%;
 }
 
-.marvel-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.marvel-grid {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)) !important;
-  gap: 1rem !important;
-}
-
 .marvel-phase-title {
   font-size: 2rem;
   font-weight: 600;
   color: #ffd700;
   margin: 2rem 0 1rem;
-}
-
-.marvel-phase-row {
-  display: flex !important;
-  overflow-x: auto !important;
-  flex-wrap: nowrap !important;
-  gap: 0.75rem !important;
-  padding: 0.75rem 0 !important;
-  max-height: 420px !important;
-  margin-bottom: 1rem !important;
-  scrollbar-width: thin;
-  scrollbar-color: #ffd700 #222;
-}
-
-.marvel-card {
-  background: rgba(20, 20, 40, 0.65);
-  border-radius: 0.75rem;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 0.75rem;
-  min-width: 180px;
-  flex: 0 0 180px;
-  text-align: center;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-}
-
-.marvel-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 15px 35px rgba(255, 215, 0, 0.15);
-  border-color: rgba(255, 215, 0, 0.3);
-}
-
-.marvel-poster {
-  width: 100%;
-  height: 360px;
-  object-fit: cover;
-  border-radius: 10px;
-  display: block;
-  aspect-ratio: 2/3;
-  flex: 0 0 auto;
 }
 
 .marvel-title {
@@ -450,10 +392,6 @@ section {
 }
 
 /* Marvel trailer button full-width like movie cards */
-.marvel-card .trailer-btn {
-  width: 100% !important;
-  margin-top: auto;
-}
 
 /* RELEASES PAGE – curated upcoming cards */
 .releases-grid {
@@ -531,13 +469,6 @@ section {
 }
 
 /* Marvel phase row scrollbar a little larger */
-.marvel-phase-row::-webkit-scrollbar {
-  height: 10px;
-}
-
-.marvel-phase-row::-webkit-scrollbar-thumb {
-  height: 10px;
-}
 
 .trailer-modal.hidden {
   display: none;
@@ -617,7 +548,6 @@ section {
 
 /* Ensure trailer button sticks to bottom inside cards */
 .movie-card .trailer-btn,
-.marvel-card .trailer-btn,
 .release-card .trailer-btn {
   margin-top: auto;
   width: 100%;
@@ -625,31 +555,10 @@ section {
 }
 
 /* Strong gold styling for Marvel trailer buttons */
-.marvel-card .trailer-btn {
-  background: linear-gradient(135deg, #ffd700, #ffb400) !important;
-  color: #000 !important;
-  box-shadow: 0 4px 12px rgba(255,215,0,0.25) !important;
-  border-radius: 20px !important;
-  padding: 8px 12px !important;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
 
 /* Marvel row button layout tweaks */
-.marvel-phase-row .marvel-card .trailer-btn {
-  width: 100% !important;
-  margin: 0.45rem 0 0 0;
-}
 
 /* On very narrow screens give buttons more tap area */
-@media (max-width: 420px) {
-  .marvel-phase-row .marvel-card .trailer-btn {
-    width: 90%;
-  }
-}
 
 /* FOOTER – simple bottom band */
 footer {
@@ -739,7 +648,6 @@ footer {
   }
 
   .movie-card { padding: 0.6rem; }
-  .marvel-card { padding: 0.8rem; }
   .marvel-title { font-size: 1.1rem; }
 }
 
@@ -1346,8 +1254,7 @@ section {
 }
 
 /* =================== ROWS / CAROUSELS =================== */
-.movie-carousel,
-.marvel-phase-row {
+.movie-carousel {
   gap: var(--cm-row-gap) !important;
   padding: 0 !important;
   /* Fade edges so cards scroll under a soft mask instead of hard-clipping. */
@@ -1372,7 +1279,6 @@ section {
 
 /* Cards: drop the glass card chrome. The poster IS the card. */
 .movie-card,
-.marvel-card,
 .release-card {
   background: transparent !important;
   border: none !important;
@@ -1385,15 +1291,13 @@ section {
     box-shadow 220ms ease, z-index 0s linear 220ms;
 }
 
-.movie-carousel .movie-card,
-.marvel-phase-row .marvel-card {
+.movie-carousel .movie-card {
   flex: 0 0 clamp(150px, 15vw, 220px) !important;
   scroll-snap-align: start;
 }
 
 .movie-card img,
 .movie-poster,
-.marvel-poster,
 .release-poster img {
   width: 100% !important;
   height: auto !important;
@@ -1422,7 +1326,6 @@ section {
 
 /* Hover: signature streaming lift + scale, card pops above its row. */
 .movie-card:hover,
-.marvel-card:hover,
 .release-card:hover {
   transform: translateY(-4px) scale(1.045) !important;
   box-shadow: none !important;
@@ -1434,7 +1337,6 @@ section {
 
 .movie-card:hover img,
 .movie-card:hover .movie-poster,
-.marvel-card:hover .marvel-poster,
 .release-card:hover .release-poster img {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7),
     0 0 0 1px rgba(255, 215, 0, 0.25);
@@ -1442,7 +1344,6 @@ section {
 }
 
 .movie-card:hover h3,
-.marvel-card:hover .marvel-title,
 .release-card:hover .release-title {
   color: #fff !important;
 }
@@ -1463,28 +1364,12 @@ section {
 }
 
 .movie-card .trailer-btn,
-.marvel-card .trailer-btn,
 .release-card .trailer-btn {
   margin-top: 0.5rem !important;
   width: 100%;
 }
 
 /* Marvel grid/row spacing parity with the streaming rows. */
-.marvel-phase-row {
-  max-height: none !important;
-  padding: 0.5rem 0 1.25rem !important;
-}
-
-.marvel-header {
-  padding: 1.5rem clamp(1rem, 4vw, 3.5rem) 0.5rem !important;
-  text-align: left !important;
-  margin-bottom: 0 !important;
-}
-
-.marvel-header h1 {
-  font-size: clamp(1.75rem, 3vw, 2.5rem) !important;
-  letter-spacing: -0.01em;
-}
 
 /* Releases page: breathing room. */
 .releases-grid {
@@ -1629,8 +1514,7 @@ footer {
     right: 1rem;
   }
 
-  .movie-carousel .movie-card,
-  .marvel-phase-row .marvel-card {
+  .movie-carousel .movie-card {
     flex: 0 0 40vw !important;
   }
 }
@@ -1640,8 +1524,7 @@ footer {
     padding: 0.75rem 1rem !important;
   }
 
-  .movie-carousel .movie-card,
-  .marvel-phase-row .marvel-card {
+  .movie-carousel .movie-card {
     flex: 0 0 48vw !important;
   }
 }
@@ -2308,21 +2191,6 @@ footer {
   width: 100%;
 }
 
-.marvel-poster-wrap {
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border-radius: 8px;
-  outline: none;
-}
-.marvel-poster-wrap:hover,
-.marvel-poster-wrap:focus-visible {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.55);
-}
-.marvel-poster-wrap:focus-visible {
-  box-shadow: 0 0 0 2px var(--cm-accent, #ffd54a), 0 10px 24px rgba(0, 0, 0, 0.55);
-}
-
 .card-badges {
   position: absolute;
   top: 0.5rem;
@@ -2371,9 +2239,7 @@ footer {
 }
 
 .movie-card:hover .card-bookmark,
-.marvel-card:hover .card-bookmark,
 .release-card:hover .card-bookmark,
-.award-card:hover .card-bookmark,
 .card-bookmark:focus-visible,
 .card-bookmark--active {
   opacity: 1;
@@ -3917,15 +3783,15 @@ body.no-scroll {
 }
 
 /* 65 / 35 — library left, gaming news right. */
-.games-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 65fr) minmax(280px, 35fr);
-  gap: clamp(1.25rem, 2.5vw, 2.5rem);
-  align-items: start;
+/* The page runs as stacked full-width bands — radar, then news, then the
+   library — rather than the old main/aside split that squeezed the wire into
+   a 280px rail. */
+.games-page > section {
+  margin-bottom: clamp(2rem, 4vw, 3.25rem);
 }
 
-.games-main {
-  min-width: 0;
+.games-page > section:last-child {
+  margin-bottom: 0;
 }
 
 /* ---------- Rigs ---------- */
@@ -4024,8 +3890,6 @@ body.no-scroll {
 
 /* ---------- Gaming news rail ---------- */
 .games-news {
-  border-left: 1px solid var(--cm-border);
-  padding-left: 1.25rem;
   min-width: 0;
 }
 
@@ -4050,6 +3914,88 @@ body.no-scroll {
   color: var(--cm-muted);
 }
 
+/* Lead story — full-bleed art with the headline laid over the bottom. */
+.gnews-lead {
+  position: relative;
+  display: block;
+  margin-bottom: 1.1rem;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--cm-border);
+  text-decoration: none;
+  color: inherit;
+}
+
+.gnews-lead-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 21 / 9;
+  object-fit: cover;
+}
+
+.gnews-lead-body {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: clamp(1rem, 2.5vw, 1.75rem);
+  background: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.88) 55%);
+}
+
+.gnews-lead-kicker {
+  display: inline-block;
+  margin-bottom: 0.4rem;
+  padding: 0.12rem 0.5rem;
+  border-radius: 4px;
+  background: var(--cm-accent);
+  color: #000;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.gnews-lead-title {
+  margin: 0 0 0.35rem !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: clamp(1.1rem, 2.6vw, 1.9rem);
+  line-height: 1.15;
+  color: #fff;
+}
+
+.gnews-lead-excerpt {
+  margin: 0 0 0.4rem;
+  max-width: 62ch;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* Everything below the lead, as a wall of cards instead of a single column. */
+.gnews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+.gnews-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+
+.gnews-card:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--cm-border);
+}
+
+/* Rail default — still used by the TV page's side wire. */
 .gnews-list {
   display: flex;
   flex-direction: column;
@@ -4073,12 +4019,26 @@ body.no-scroll {
   border-color: var(--cm-border);
 }
 
+.gnews-item--skeleton {
+  grid-template-columns: 1fr;
+  min-height: 52px;
+  align-items: center;
+}
+
 .gnews-thumb {
   width: 76px;
   height: 52px;
   object-fit: cover;
   border-radius: 5px;
   background: rgba(255, 255, 255, 0.05);
+}
+
+/* …but inside a Games card the art sits on top, full width. */
+.gnews-card .gnews-thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: 6px;
 }
 
 .gnews-thumb--placeholder {
@@ -4103,10 +4063,9 @@ body.no-scroll {
   letter-spacing: 0.04em;
 }
 
-.gnews-item--skeleton {
-  grid-template-columns: 1fr;
-  min-height: 52px;
-  align-items: center;
+.gnews-card--skeleton {
+  min-height: 150px;
+  justify-content: center;
 }
 
 .gnews-skel {
@@ -4118,18 +4077,6 @@ body.no-scroll {
 .gnews-empty {
   color: var(--cm-muted);
   font-size: 0.85rem;
-}
-
-@media (max-width: 1000px) {
-  .games-layout {
-    grid-template-columns: 1fr;
-  }
-  .games-news {
-    border-left: none;
-    border-top: 1px solid var(--cm-border);
-    padding-left: 0;
-    padding-top: 1.5rem;
-  }
 }
 
 .games-header {
@@ -4272,6 +4219,13 @@ body.no-scroll {
   transform: scale(1.04);
 }
 
+/* Store banners are landscape; object-fit:cover would zoom-crop them past
+   legibility, so letterbox them in the same 2:3 slot instead. */
+.game-cover--wide {
+  object-fit: contain;
+  background: linear-gradient(180deg, #14161a, #0b0c0f);
+}
+
 .game-cover--placeholder {
   display: grid;
   place-items: center;
@@ -4325,6 +4279,284 @@ body.no-scroll {
 .game-badge[data-platform="steam"]  { background: #1b2838; color: #66c0f4; border-color: #66c0f4; }
 .game-badge[data-platform="xbox"]   { background: #107c10; color: #fff; }
 .game-badge[data-platform="discord"]{ background: #5865f2; color: #fff; }
+
+/* "On My Radar" — upcoming titles. No box art exists for these yet, so the
+   cards lead with the release window and lean on the status pill for colour. */
+/* Needs `section.` to beat the blanket `section { margin: 0 !important }`
+   earlier in this file. Bottom margin keeps the next heading off the card
+   edges — "Gaming News" was colliding with them. */
+section.radar {
+  margin: 2rem 0 3.25rem !important;
+}
+
+.radar-news-empty {
+  margin: auto 0 0;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--cm-border);
+  font-size: 0.74rem;
+  font-style: italic;
+  color: var(--cm-muted);
+}
+
+.radar-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.82rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--cm-accent);
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 0 1rem !important;
+}
+
+.radar-sub {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--cm-muted);
+}
+
+.radar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 0.9rem;
+}
+
+.radar-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.95rem;
+  border: 1px solid var(--cm-border);
+  border-left: 3px solid var(--radar-accent, var(--cm-muted));
+  border-radius: 12px;
+  background:
+    linear-gradient(165deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.015));
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+.radar-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+/* Franchise stand-in art — pushed right back so it reads as atmosphere and
+   never competes with the text sitting on it. */
+.radar-art {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+  /* Heavily blurred on purpose: this is a different game in the same
+     franchise, so its title treatment must not be readable behind a card
+     naming another title. */
+  opacity: 0.22;
+  filter: blur(7px) saturate(0.8) brightness(0.5);
+  transform: scale(1.08); /* hides the soft edges blur leaves at the bounds */
+  /* Fades out under the copy so headlines stay legible. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.35) 55%, transparent 92%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgba(0, 0, 0, 0.35) 55%, transparent 92%);
+}
+
+/* One accent per status, all drawn from the site palette rather than three
+   unrelated brand colours. */
+.radar-card[data-status="dated"]   { --radar-accent: var(--cm-accent); }
+.radar-card[data-status="window"]  { --radar-accent: #c9a227; }
+.radar-card[data-status="rumored"] { --radar-accent: #6b7280; }
+
+.radar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Scoped to the radar only — the library grid keeps its brand-coloured badges.
+   Four saturated fills side by side fought each other and the gold palette, so
+   here the colour shrinks to an identifying dot on a neutral chip. */
+.radar-card .game-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: rgba(255, 255, 255, 0.07) !important;
+  color: var(--cm-text) !important;
+  border: 1px solid rgba(255, 255, 255, 0.14) !important;
+  font-weight: 600;
+}
+.radar-card .game-badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--badge-dot, var(--cm-muted));
+  flex: 0 0 auto;
+}
+.radar-card .game-badge[data-platform="switch"]  { --badge-dot: #e60012; }
+.radar-card .game-badge[data-platform="psn"]     { --badge-dot: #0070d1; }
+.radar-card .game-badge[data-platform="steam"]   { --badge-dot: #66c0f4; }
+.radar-card .game-badge[data-platform="xbox"]    { --badge-dot: #107c10; }
+.radar-card .game-badge[data-platform="discord"] { --badge-dot: #5865f2; }
+
+.radar-status {
+  padding: 0.12rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--radar-accent);
+  color: var(--radar-accent);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.radar-card[data-status="rumored"] .radar-status {
+  border-style: dashed;
+}
+
+.radar-window {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--cm-text);
+}
+
+.radar-title {
+  margin: 0 !important;
+  font-size: 0.95rem;
+  line-height: 1.3;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.radar-note {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--cm-muted);
+}
+
+/* Live headlines matched to this title off the gaming wire. */
+.radar-news {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px dashed var(--cm-border);
+}
+
+.radar-news-item {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.radar-news-item:hover .radar-news-title {
+  color: var(--cm-accent);
+}
+
+.radar-news-title {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.35;
+  transition: color 150ms ease;
+}
+
+.radar-news-meta {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cm-muted);
+}
+
+/* ---------- Library (demoted below news + radar) ---------- */
+.library-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.82rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--cm-accent);
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 0 1rem !important;
+}
+
+.library-sub {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--cm-muted);
+}
+
+/* Denser than the old full-size grid — the shelf is an archive now, not the
+   headline, so it reads as a contact sheet rather than a storefront. */
+.games-grid--compact {
+  grid-template-columns: repeat(auto-fill, minmax(132px, 1fr));
+  gap: 0.8rem;
+}
+
+.games-grid--compact .game-title {
+  font-size: 0.82rem;
+}
+
+/* The play-note is the first thing to go when space is tight — but the
+   adaptation link stays, since cross-linking games to their films is the
+   whole reason this page sits inside a movie app. It just shrinks. */
+.games-grid--compact .game-note {
+  display: none;
+}
+
+.games-grid--compact .game-adapt {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.68rem;
+  line-height: 1.2;
+}
+
+.games-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.games-showall {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  padding: 0.5rem 1.4rem;
+  border-radius: 999px;
+  border: 1px solid var(--cm-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cm-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.games-showall:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--cm-accent);
+}
+
+.games-showall-more {
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: var(--cm-muted);
+}
 
 .game-note {
   margin: 0;
@@ -4446,154 +4678,6 @@ body.no-scroll {
   justify-content: center;
   font-size: 2rem;
   color: var(--cm-muted);
-}
-
-/* ============================================================
-   AWARDS PAGE
-   ============================================================ */
-.awards-page {
-  padding: 2rem clamp(1rem, 4vw, 3.5rem) 4rem !important;
-}
-
-.awards-header {
-  margin-bottom: 2rem;
-  max-width: 800px;
-}
-
-.awards-header h1 {
-  font-size: clamp(2.2rem, 4vw, 3.2rem);
-  color: var(--cm-text);
-  margin: 0.3rem 0;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.awards-header h1 .fa-trophy {
-  color: var(--cm-accent);
-}
-
-.awards-subtitle {
-  color: var(--cm-muted);
-  font-size: 1rem;
-  margin: 0;
-}
-
-.awards-section {
-  margin-bottom: 3rem;
-}
-
-.awards-section-head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--cm-border);
-  margin-bottom: 1.25rem;
-}
-
-.awards-kicker {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--cm-accent);
-  margin-bottom: 0.25rem;
-}
-
-.awards-section h2 {
-  color: var(--cm-text);
-  font-size: 1.25rem;
-  border: none !important;
-  padding: 0 !important;
-  margin: 0;
-  font-weight: 700;
-}
-
-.awards-year {
-  color: var(--cm-muted);
-  font-weight: 500;
-}
-
-.awards-winner-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.18), rgba(255, 138, 0, 0.12));
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  color: var(--cm-accent);
-  padding: 0.4rem 0.85rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.awards-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 1.25rem;
-}
-
-.award-card {
-  background: transparent;
-  border-radius: 8px;
-  position: relative;
-}
-
-.award-card--winner .movie-poster-wrap {
-  box-shadow: 0 0 0 3px var(--cm-accent), 0 12px 30px rgba(255, 215, 0, 0.25);
-  border-radius: 8px;
-}
-
-.award-card .movie-poster-wrap img {
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
-  border-radius: 6px;
-  display: block;
-}
-
-.award-badge {
-  position: absolute;
-  top: 0.5rem;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.2rem 0.65rem;
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  border-radius: 999px;
-  z-index: 2;
-  white-space: nowrap;
-}
-
-.award-badge--winner {
-  background: var(--cm-accent-grad);
-  color: #111;
-  box-shadow: 0 6px 16px rgba(255, 138, 0, 0.5);
-}
-
-.award-badge--winner .fa-trophy {
-  margin-right: 0.25rem;
-}
-
-.award-badge--nominee {
-  background: rgba(0, 0, 0, 0.75);
-  color: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.award-card-title {
-  color: var(--cm-text);
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin: 0.5rem 0 0;
-  line-height: 1.3;
 }
 
 /* ============================================================
@@ -5112,8 +5196,6 @@ img, video, iframe { max-width: 100%; }
    This makes posters scale naturally with card width at every breakpoint. */
 .movie-poster,
 .movie-card img,
-.marvel-poster,
-.marvel-card img,
 .release-poster img {
   height: auto !important;
   aspect-ratio: 2 / 3;
@@ -5124,8 +5206,7 @@ img, video, iframe { max-width: 100%; }
 @media (max-width: 1200px) {
   main { padding: 1.5rem; }
   .movies-grid,
-  .movie-grid,
-  .marvel-grid {
+.movie-grid {
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) !important;
   }
   .releases-grid {
@@ -5142,8 +5223,7 @@ img, video, iframe { max-width: 100%; }
   .hero-slider-container { height: clamp(280px, 45vh, 420px) !important; }
 
   .movies-grid,
-  .movie-grid,
-  .marvel-grid {
+.movie-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
     gap: 1rem !important;
   }
@@ -5153,8 +5233,6 @@ img, video, iframe { max-width: 100%; }
   }
 
   /* Marvel carousel: shrink card width */
-  .marvel-card { min-width: 150px; flex: 0 0 150px; }
-  .marvel-phase-row { max-height: none !important; }
 
   /* News: stack right-rail earlier for better reading */
   .news-layout {
@@ -5191,8 +5269,7 @@ img, video, iframe { max-width: 100%; }
   .home-banner { height: 200px; }
 
   .movies-grid,
-  .movie-grid,
-  .marvel-grid {
+.movie-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
     gap: 0.85rem !important;
   }
@@ -5200,8 +5277,6 @@ img, video, iframe { max-width: 100%; }
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
     gap: 1rem !important;
   }
-
-  .marvel-card { min-width: 140px; flex: 0 0 140px; }
   .marvel-phase-title { font-size: 1.5rem; }
 
   /* Profile / about / auth — tighten widths */
@@ -5229,8 +5304,7 @@ img, video, iframe { max-width: 100%; }
   .home-banner { height: 160px; }
 
   .movies-grid,
-  .movie-grid,
-  .marvel-grid {
+.movie-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
     gap: 0.7rem !important;
   }
@@ -5239,9 +5313,9 @@ img, video, iframe { max-width: 100%; }
   }
 
   .movie-card { padding: 0.5rem; }
-  .marvel-card { min-width: 130px; flex: 0 0 130px; padding: 0.5rem; }
 
-  .movie-title, .marvel-card-title, .release-title {
+  .movie-title,
+.release-title {
     font-size: 0.85rem;
     line-height: 1.1rem;
     min-height: 2.2rem;
@@ -5270,12 +5344,10 @@ img, video, iframe { max-width: 100%; }
 /* --------- Very small phone (≤380px) --------- */
 @media (max-width: 380px) {
   .movies-grid,
-  .movie-grid,
-  .marvel-grid {
+.movie-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.5rem !important;
   }
-  .marvel-card { min-width: 0; flex: 1 1 45%; }
   .hero-slider-container { height: clamp(180px, 34vh, 240px) !important; }
 }
 
@@ -5292,8 +5364,7 @@ img, video, iframe { max-width: 100%; }
    of bordered boxes. */
 @media (max-width: 640px) {
   /* Carousel edge-fade looks like cropping on narrow viewports — drop it */
-  .movie-carousel,
-  .marvel-phase-row {
+  .movie-carousel {
     -webkit-mask-image: none !important;
     mask-image: none !important;
     padding-bottom: 0.75rem !important;
@@ -5301,10 +5372,9 @@ img, video, iframe { max-width: 100%; }
 
   /* Stop reserving 2 lines below short titles; let cards hug content */
   .movie-card h3,
-  .movie-title,
-  .marvel-card-title,
-  .marvel-title,
-  .release-title {
+.movie-title,
+.marvel-title,
+.release-title {
     min-height: 0 !important;
     -webkit-line-clamp: 2;
     font-size: 0.82rem !important;
@@ -5312,8 +5382,7 @@ img, video, iframe { max-width: 100%; }
   }
 
   /* Carousel cards: a touch narrower so 2.5 fit in view, signalling scroll */
-  .movie-carousel .movie-card,
-  .marvel-phase-row .marvel-card {
+  .movie-carousel .movie-card {
     flex: 0 0 38vw !important;
     min-width: 0 !important;
   }
@@ -5379,7 +5448,7 @@ img, video, iframe { max-width: 100%; }
     font-size: 0.9rem;
   }
 
-  /* My List / Profile / Awards page wrappers: pull in from edges, kill big paddings */
+  /* My List / Profile page wrappers: pull in from edges, kill big paddings */
   .mylist-page,
   .profile-page,
   .auth-page {
@@ -5399,8 +5468,7 @@ img, video, iframe { max-width: 100%; }
 
 /* =========================================================
    PHONE FIXES — issues caught from real device screenshots
-   Nav overflow (Sign Up clipped), hero buttons spilling left,
-   awards section head crowding, award badge collision.
+   Nav overflow (Sign Up clipped), hero buttons spilling left.
    ========================================================= */
 @media (max-width: 640px) {
   /* Drop nav search on phones — discoverable inside the hamburger menu
@@ -5442,51 +5510,6 @@ img, video, iframe { max-width: 100%; }
     width: 100% !important;
     justify-content: center;
     text-align: center;
-  }
-
-  /* Awards section head: stack so the "took home the Oscar" chip drops
-     below the kicker/title instead of crowding it into 3-line wraps */
-  .awards-section-head {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 0.5rem !important;
-  }
-  .awards-winner-chip {
-    align-self: flex-start;
-    max-width: 100%;
-    font-size: 0.85rem !important;
-  }
-
-  /* Award cards: hide the year/rating badge stack — the section heading
-     already says the year, and the WINNER/NOMINEE pill is the real signal.
-     This kills the visual collision between WINNER and "2025 ★7.4" */
-  .award-card .card-badges { display: none !important; }
-  .award-badge {
-    top: 0.4rem;
-    font-size: 0.6rem;
-    padding: 0.18rem 0.5rem;
-  }
-
-  /* Awards display titles: the italic Playfair was rendering oversized */
-  .awards-header h1 {
-    font-size: 2rem !important;
-    line-height: 1.05 !important;
-  }
-  .awards-winners-hall-head h2 {
-    font-size: 1.3rem !important;
-  }
-  .awards-section h2 {
-    font-size: 1.15rem !important;
-  }
-  .awards-subtitle { font-size: 0.9rem !important; }
-
-  /* Winners hall tiles: smaller so 2.5 fit in view */
-  .awards-winner-tile {
-    flex: 0 0 42vw !important;
-  }
-  .awards-winners-row {
-    -webkit-mask-image: none !important;
-    mask-image: none !important;
   }
 }
 
@@ -5815,6 +5838,15 @@ img, video, iframe { max-width: 100%; }
   .marvel-hero-featured { display: none; }
   .marvel-hero-body { max-width: 85%; }
 }
+@media (max-width: 480px) {
+  /* 220px floor can't fit two columns under ~440px — phones were getting
+     one full-width landscape card per row instead of a real grid. */
+  .marvel-phase-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.6rem;
+    padding: 0 0.75rem 1.5rem;
+  }
+}
 
 /* =================== DETAIL MODAL — CINEMATIC UPGRADE =================== */
 /* Inspired by https://dribbble.com/shots/16619277-Movie-Video-Website-Design
@@ -5983,121 +6015,8 @@ img, video, iframe { max-width: 100%; }
   font-size: clamp(2.4rem, 5.4vw, 5rem) !important;
   line-height: 0.95 !important;
 }
-
-/* =================== AWARDS — FUTURE MEDIEVAL =================== */
 /* Dark editorial treatment: italic Playfair serif with a gold foil gradient,
    ornamental ✦ dividers, and a softly lit section head. */
-.awards-page {
-  background:
-    radial-gradient(circle at 20% 0%, rgba(255, 215, 0, 0.06), transparent 55%),
-    radial-gradient(circle at 85% 20%, rgba(255, 138, 0, 0.05), transparent 60%);
-}
-.awards-header {
-  text-align: center;
-  max-width: 820px !important;
-  margin: 1rem auto 3rem !important;
-  padding-top: 1.5rem;
-}
-.awards-header .news-kicker {
-  display: inline-block;
-  letter-spacing: 0.42em !important;
-  font-size: 0.72rem !important;
-  padding: 0.35rem 0.9rem;
-  border: 1px solid rgba(255, 215, 0, 0.45);
-  border-radius: 999px;
-  color: var(--cm-accent) !important;
-  margin-bottom: 1.2rem;
-}
-.awards-header h1 {
-  font-family: "Playfair Display", "Cormorant Garamond", Georgia, serif !important;
-  font-style: italic;
-  font-weight: 900 !important;
-  font-size: clamp(2.8rem, 6vw, 5rem) !important;
-  letter-spacing: -0.02em !important;
-  line-height: 1 !important;
-  justify-content: center;
-  background: linear-gradient(180deg, #fff3b0 0%, #ffd700 45%, #b8860b 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent !important;
-  margin: 0.5rem 0 1rem !important;
-}
-.awards-header h1 .fa-trophy {
-  color: #ffd700 !important;
-  -webkit-text-fill-color: #ffd700;
-  filter: drop-shadow(0 2px 6px rgba(255, 215, 0, 0.45));
-}
-.awards-subtitle {
-  font-style: italic;
-  font-size: 1.05rem !important;
-  color: rgba(255, 255, 255, 0.75) !important;
-  max-width: 60ch;
-  margin: 0 auto !important;
-}
-.awards-subtitle::before,
-.awards-subtitle::after {
-  content: "✦";
-  color: var(--cm-accent);
-  margin: 0 0.6rem;
-  font-style: normal;
-  opacity: 0.7;
-}
-
-.awards-section-head {
-  border-bottom: 0 !important;
-  padding: 1.25rem 0 0.75rem !important;
-  position: relative;
-}
-.awards-section-head::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 215, 0, 0.5) 15%,
-    rgba(255, 215, 0, 0.5) 85%,
-    transparent 100%
-  );
-}
-.awards-section h2 {
-  font-family: "Playfair Display", Georgia, serif !important;
-  font-style: italic;
-  font-weight: 800 !important;
-  font-size: clamp(1.4rem, 2vw, 1.9rem) !important;
-  letter-spacing: -0.01em !important;
-}
-.awards-kicker {
-  color: rgba(255, 215, 0, 0.92) !important;
-}
-.awards-kicker::before,
-.awards-kicker::after {
-  content: "✦";
-  margin: 0 0.5rem;
-  font-size: 0.65em;
-  opacity: 0.8;
-}
-.awards-winner-chip {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.22), rgba(184, 134, 11, 0.12)) !important;
-  font-style: italic;
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 0.95rem !important;
-}
-.award-card--winner .movie-poster-wrap {
-  box-shadow:
-    0 0 0 2px rgba(255, 215, 0, 0.85),
-    0 0 28px rgba(255, 215, 0, 0.35),
-    0 14px 32px rgba(0, 0, 0, 0.55) !important;
-}
-.award-card-title {
-  font-family: "Playfair Display", Georgia, serif;
-  font-style: italic;
-  font-weight: 700 !important;
-}
 
 /* =================== MARVEL HERO — DOOMSDAY ENSEMBLE =================== */
 .marvel-hero-tagline {
@@ -6133,156 +6052,6 @@ img, video, iframe { max-width: 100%; }
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.72);
-}
-
-/* =================== AWARDS — STATS / JUMPS / WINNERS HALL =================== */
-.awards-stats {
-  list-style: none;
-  padding: 0;
-  margin: 1.5rem auto 0;
-  display: flex;
-  justify-content: center;
-  gap: clamp(1.25rem, 3vw, 2.5rem);
-  flex-wrap: wrap;
-}
-.awards-stats li {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.15rem;
-  min-width: 110px;
-}
-.awards-stats li b {
-  font-family: "Playfair Display", Georgia, serif;
-  font-style: italic;
-  font-weight: 900;
-  font-size: clamp(1.8rem, 2.8vw, 2.4rem);
-  background: linear-gradient(180deg, #fff3b0 0%, #ffd700 50%, #b8860b 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  line-height: 1;
-}
-.awards-stats li span {
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.awards-jumps {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  margin-bottom: 2.5rem;
-}
-.awards-jump {
-  display: inline-block;
-  padding: 0.4rem 0.95rem;
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  border-radius: 999px;
-  color: rgba(255, 215, 0, 0.9);
-  font-family: "Playfair Display", Georgia, serif;
-  font-style: italic;
-  font-size: 0.95rem;
-  text-decoration: none;
-  transition: background 160ms ease, border-color 160ms ease;
-}
-.awards-jump:hover {
-  background: rgba(255, 215, 0, 0.12);
-  border-color: rgba(255, 215, 0, 0.7);
-}
-
-.awards-winners-hall {
-  margin-bottom: 3.5rem;
-}
-.awards-winners-hall-head {
-  text-align: center;
-  margin-bottom: 1.5rem;
-}
-.awards-winners-hall-head .awards-kicker {
-  display: inline-block;
-  margin-bottom: 0.5rem;
-}
-.awards-winners-hall-head h2 {
-  font-family: "Playfair Display", Georgia, serif !important;
-  font-style: italic;
-  font-weight: 800 !important;
-  font-size: clamp(1.6rem, 2.4vw, 2.2rem) !important;
-  color: rgba(255, 255, 255, 0.92) !important;
-  margin: 0 !important;
-  border: none !important;
-  padding: 0 !important;
-}
-.awards-winners-row {
-  display: flex;
-  gap: 1rem;
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  padding: 0.5rem 0.5rem 1rem;
-  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 2%, #000 98%, transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0, #000 2%, #000 98%, transparent 100%);
-}
-.awards-winners-row::-webkit-scrollbar { height: 6px; }
-.awards-winners-row::-webkit-scrollbar-thumb {
-  background: rgba(255, 215, 0, 0.25);
-  border-radius: 3px;
-}
-.awards-winner-tile {
-  flex: 0 0 clamp(160px, 18vw, 220px);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  text-decoration: none;
-  color: inherit;
-  scroll-snap-align: start;
-  transition: transform 220ms ease;
-}
-.awards-winner-tile:hover { transform: translateY(-3px); }
-.awards-winner-tile-art {
-  position: relative;
-  display: block;
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow:
-    0 0 0 2px rgba(255, 215, 0, 0.6),
-    0 0 24px rgba(255, 215, 0, 0.25),
-    0 14px 30px rgba(0, 0, 0, 0.55);
-}
-.awards-winner-tile-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-.awards-winner-tile-badge {
-  position: absolute;
-  top: 0.6rem;
-  left: 0.6rem;
-  background: linear-gradient(135deg, #ffd700, #b8860b);
-  color: #111;
-  padding: 0.25rem 0.6rem;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-  box-shadow: 0 4px 12px rgba(255, 138, 0, 0.45);
-}
-.awards-winner-tile-title {
-  font-family: "Playfair Display", Georgia, serif;
-  font-style: italic;
-  font-weight: 700;
-  color: #fff;
-  font-size: 1rem;
-  line-height: 1.25;
-}
-.awards-winner-tile-cer {
-  font-size: 0.72rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(255, 215, 0, 0.75);
 }
 
 /* =================== FOOTER — ABOUT LINK =================== */
@@ -6493,133 +6262,6 @@ img, video, iframe { max-width: 100%; }
   margin-top: 0;
 }
 
-/* ==========================================================================
-   Awards — category tab bar + person nominee cards
-   ========================================================================== */
-.awards-cat-tabs {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  padding: 0.25rem 1rem 1rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-.awards-cat-tab {
-  appearance: none;
-  border: 1px solid rgba(255, 215, 0, 0.25);
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--cm-text, #eaeaea);
-  padding: 0.6rem 1rem;
-  border-radius: 999px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: 0.02em;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
-}
-.awards-cat-tab:hover:not(:disabled) {
-  background: rgba(255, 215, 0, 0.12);
-  border-color: rgba(255, 215, 0, 0.55);
-  transform: translateY(-1px);
-}
-.awards-cat-tab:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-.awards-cat-tab--active {
-  background: linear-gradient(135deg, #ffd700, #ffb400);
-  color: #111;
-  border-color: transparent;
-  box-shadow: 0 6px 18px -6px rgba(255, 180, 0, 0.6);
-}
-.awards-cat-tab i {
-  opacity: 0.9;
-}
-
-/* Person nominee grid — a touch wider column for the headshot + meta block */
-.awards-grid.awards-grid--person {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 1rem;
-}
-.award-card--person {
-  display: flex;
-  flex-direction: column;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
-  overflow: hidden;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.award-card--person:hover {
-  transform: translateY(-3px);
-  border-color: rgba(255, 215, 0, 0.35);
-  box-shadow: 0 14px 28px -16px rgba(0, 0, 0, 0.8);
-}
-.award-card--person.award-card--winner {
-  border-color: rgba(255, 215, 0, 0.55);
-  box-shadow: 0 0 0 1px rgba(255, 215, 0, 0.35) inset,
-              0 18px 30px -18px rgba(255, 180, 0, 0.5);
-}
-.award-person-art {
-  position: relative;
-  aspect-ratio: 2 / 3;
-  background: #111;
-  overflow: hidden;
-}
-.award-person-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.award-person-body {
-  padding: 0.9rem 0.95rem 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-.award-person-body .award-card-title {
-  margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.25;
-}
-.award-person-role {
-  margin: 0;
-  font-style: italic;
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 0.88rem;
-}
-.award-person-film {
-  margin: 0;
-  color: #ffd700;
-  font-size: 0.85rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-.award-person-film i {
-  opacity: 0.85;
-}
-.award-card--person .card-actions {
-  margin-top: 0.3rem;
-  display: flex;
-  gap: 0.45rem;
-  flex-wrap: wrap;
-}
-
-/* Winners' Hall — support headshots alongside posters */
-.awards-winner-tile-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
 /* ============================================================
    TOUCH DEVICES — tap targets & legibility
    Audited on iPhone 15/16/17, Pixel 8/9/10, Galaxy S24 and the
@@ -6641,16 +6283,14 @@ img, video, iframe { max-width: 100%; }
   }
 
   .discover-chip,
-  .tv-chip,
-  .game-chip,
-  .news-tab,
-  .mylist-tab,
-  .awards-cat-tab,
-  .rig-filter,
-  .theater-ticket,
-  .awards-jump,
-  .trailer-btn,
-  .game-adapt {
+.tv-chip,
+.game-chip,
+.news-tab,
+.mylist-tab,
+.rig-filter,
+.theater-ticket,
+.trailer-btn,
+.game-adapt {
     min-height: 44px !important;
     display: inline-flex !important;
     align-items: center !important;
@@ -6708,18 +6348,17 @@ img, video, iframe { max-width: 100%; }
 
   /* Nothing below 12px on a phone. */
   .card-badge,
-  .show-badge,
-  .award-badge,
-  .news-pill,
-  .rig-service,
-  .game-badge,
-  .game-flag,
-  .theater-ticket,
-  .theater-tickets-label,
-  .gnews-meta,
-  .venue-address,
-  .info-keyword,
-  .search-item-meta {
+.show-badge,
+.news-pill,
+.rig-service,
+.game-badge,
+.game-flag,
+.theater-ticket,
+.theater-tickets-label,
+.gnews-meta,
+.venue-address,
+.info-keyword,
+.search-item-meta {
     font-size: 0.75rem !important; /* 12px */
   }
 
@@ -6729,4 +6368,434 @@ img, video, iframe { max-width: 100%; }
   .theater-title {
     font-size: 0.9rem !important;
   }
+}
+
+/* ==========================================================================
+   DOOMSDAY HUB — Marvel page headline event
+   Doom-forward palette: Latverian green and tarnished gold on near-black,
+   deliberately colder than the rest of the site's pure-gold accent.
+   ========================================================================== */
+:root {
+  --doom-void: #06080a;
+  --doom-deep: #0b1410;
+  --doom-green: #1d4030;
+  --doom-green-lit: #2f7355;
+  --doom-gold: #c9a227;
+  --doom-gold-lit: #e8c547;
+  --doom-steel: #8a9a93;
+}
+
+/* Column flex: headline block at the top, cast roster pinned to the bottom —
+   the banner names the film, so the roster lives in it rather than under it. */
+.doom-hero {
+  position: relative;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  /* Copy hugs the top-left corner, matching the phase banners. */
+  justify-content: flex-start !important;
+  padding-top: clamp(0.9rem, 2.5vh, 1.5rem) !important;
+  /* Bottom padding reserves the strip's height, since the roster is pinned
+     out of flow and would otherwise sit on top of the copy. */
+  padding-bottom: 232px !important;
+  min-height: clamp(560px, 76vh, 740px);
+  border-bottom: 1px solid rgba(201, 162, 39, 0.22);
+  overflow: hidden;
+}
+
+/* Crossfading stills from the trailer, in place of an embedded player —
+   no platform chrome, no autoplay rules to fight. */
+.doom-hero-slides {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.doom-hero-slide {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.4s ease-in-out;
+  /* Neutral by default — the phase banners reuse this slideshow and should
+     keep their own colour. */
+  filter: brightness(0.82);
+}
+/* Latverian grade, Doomsday banner only. */
+.doom-hero .doom-hero-slide {
+  filter: saturate(0.72) contrast(1.08) brightness(0.68) hue-rotate(-8deg);
+}
+
+/* ---------- Phase film strip, inside each phase banner ----------
+   Mirrors the Doomsday roster: pinned to the banner's bottom edge, over the
+   art, so each phase shows its films without a grid underneath. */
+.marvel-phase-hero {
+  position: relative;
+  display: flex !important;
+  flex-direction: column !important;
+  /* Copy sits in the top-left corner rather than floating mid-banner. */
+  justify-content: flex-start !important;
+  height: auto !important;
+  min-height: clamp(460px, 62vh, 580px) !important;
+  padding-top: clamp(0.9rem, 2.5vh, 1.5rem) !important;
+  padding-bottom: 196px !important;
+  overflow: hidden;
+}
+.marvel-phase-hero .marvel-hero-body {
+  position: relative;
+  z-index: 2;
+  margin-left: clamp(0.85rem, 2.5vw, 1.75rem);
+  max-width: min(560px, 64%);
+}
+.marvel-phase-hero .marvel-hero-title {
+  margin: 0.3rem 0 0.4rem;
+}
+.marvel-phase-hero .marvel-hero-tagline {
+  margin-bottom: 0.75rem;
+}
+
+/* Banner actions are secondary to the artwork — smaller than the site's
+   default hero buttons. */
+.marvel-phase-hero .trailer-btn.hero-btn,
+.doom-hero .trailer-btn.hero-btn {
+  padding: 0.45rem 0.95rem !important;
+  font-size: 0.82rem !important;
+  border-radius: 7px !important;
+  box-shadow: 0 5px 14px rgba(255, 138, 0, 0.28) !important;
+}
+.marvel-phase-hero .hero-info-btn,
+.doom-hero .hero-info-btn {
+  padding: 0.45rem 0.85rem !important;
+  font-size: 0.82rem !important;
+  border-radius: 7px !important;
+}
+.marvel-phase-strip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 1.4rem clamp(1rem, 4vw, 3rem) 1rem;
+  background: linear-gradient(to top, rgba(6, 8, 10, 0.94) 38%, rgba(6, 8, 10, 0.55) 72%, rgba(6, 8, 10, 0) 100%);
+}
+.marvel-phase-rail {
+  display: flex;
+  gap: 0.6rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+.marvel-phase-rail .marvel-phase-thumb {
+  flex: 0 0 196px;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 640px) {
+  .marvel-phase-hero {
+    min-height: clamp(400px, 56vh, 500px) !important;
+    padding-bottom: 150px !important;
+  }
+  .marvel-phase-strip { padding: 1.1rem 1rem 0.85rem; }
+  .marvel-phase-rail .marvel-phase-thumb { flex: 0 0 148px; }
+}
+.doom-hero-slide.is-active {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Hold the first frame rather than cycling. */
+  .doom-hero-slide { transition: none; }
+  .doom-hero-slide:not(:first-child) { display: none; }
+  .doom-hero-slide:first-child { opacity: 1; }
+}
+.doom-hero-bg {
+  filter: saturate(0.72) contrast(1.08) brightness(0.72) hue-rotate(-8deg);
+}
+/* Two-stop scrim: green cast from the lower-left, void from the bottom, so the
+   title sits on near-black no matter how bright the backdrop is. */
+.doom-hero-scrim {
+  background:
+    radial-gradient(120% 90% at 18% 85%, rgba(29, 64, 48, 0.82) 0%, rgba(29, 64, 48, 0) 62%),
+    linear-gradient(to top, var(--doom-void) 4%, rgba(6, 8, 10, 0.86) 34%, rgba(6, 8, 10, 0.25) 72%, rgba(6, 8, 10, 0.5) 100%);
+}
+.doom-hero-scrim {
+  z-index: 1;
+}
+.doom-hero-body {
+  max-width: min(640px, 72%);
+  position: relative;
+  z-index: 2;
+  margin-left: clamp(0.85rem, 2.5vw, 1.75rem);
+}
+
+/* ---------- Cast roster, inside the banner ----------
+   Absolute rather than in flow: pinned to the banner's bottom edge so it sits
+   over the art, and so a 34-card roster can't stretch the hero. */
+.doom-hero-cast {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  padding: 1.4rem clamp(1rem, 4vw, 3rem) 1rem;
+  background: linear-gradient(to top, rgba(6, 8, 10, 0.94) 38%, rgba(6, 8, 10, 0.55) 72%, rgba(6, 8, 10, 0) 100%);
+}
+.doom-hero-kicker {
+  color: var(--doom-gold-lit);
+  border: 1px solid rgba(201, 162, 39, 0.4);
+  background: rgba(6, 8, 10, 0.55);
+  backdrop-filter: blur(4px);
+}
+.doom-hero-title {
+  background: linear-gradient(180deg, #fff 18%, var(--doom-gold-lit) 62%, var(--doom-gold) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 18px 48px rgba(0, 0, 0, 0.75);
+}
+.doom-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.9rem;
+  margin: 0.15rem 0 0.9rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--doom-steel);
+}
+.doom-hero-meta span + span::before {
+  content: "\00b7";
+  margin-right: 0.9rem;
+  color: rgba(201, 162, 39, 0.65);
+}
+.doom-hero-overview {
+  max-width: 62ch;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+/* ---------- Countdown ---------- */
+.doom-countdown {
+  margin: 0 0 1.1rem;
+}
+.doom-countdown-label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--doom-gold);
+  margin-bottom: 0.4rem;
+}
+.doom-countdown-units {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+}
+.doom-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 3.4rem;
+  padding: 0.45rem 0.5rem 0.35rem;
+  border: 1px solid rgba(201, 162, 39, 0.3);
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(29, 64, 48, 0.5), rgba(6, 8, 10, 0.78));
+  box-shadow: inset 0 1px 0 rgba(232, 197, 71, 0.16);
+}
+.doom-unit b {
+  font-family: "Bebas Neue", "Oswald", Impact, sans-serif;
+  font-size: clamp(1.5rem, 3.4vw, 2.3rem);
+  line-height: 1;
+  color: #fff;
+  /* Tabular figures stop the seconds column jittering as digits change. */
+  font-variant-numeric: tabular-nums;
+}
+.doom-unit span {
+  font-size: 0.58rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--doom-steel);
+  margin-top: 0.15rem;
+}
+.doom-sep {
+  font-size: 1.4rem;
+  color: rgba(201, 162, 39, 0.5);
+  padding-bottom: 1rem;
+}
+.doom-countdown-live {
+  display: inline-block;
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  background: var(--doom-green-lit);
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+/* ---------- Shared section chrome ---------- */
+/* A blanket `section { padding:0 !important; background:transparent !important }`
+   lives earlier in this file, so these have to out-specify it. */
+section.doom-news {
+  padding: clamp(1.75rem, 4vw, 3rem) clamp(1rem, 4vw, 3rem) !important;
+  background: linear-gradient(180deg, var(--doom-void) 0%, var(--doom-deep) 55%, var(--doom-void) 100%) !important;
+  border-bottom: 1px solid rgba(201, 162, 39, 0.14) !important;
+}
+.doom-kicker {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--doom-gold);
+  margin-bottom: 0.3rem;
+}
+.doom-section-head h2 {
+  font-family: "Bebas Neue", "Oswald", Impact, sans-serif;
+  font-size: clamp(1.6rem, 3.4vw, 2.6rem);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #fff;
+  margin: 0 0 0.3rem;
+}
+.doom-section-head {
+  margin-bottom: 1.1rem;
+}
+
+/* ---------- Assemble wall (cast rail) ---------- */
+/* Horizontal rail — inside the banner there is only room for one row, so the
+   roster scrolls sideways instead of wrapping into a wall. */
+.doom-cast-rail {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding-bottom: 0.4rem;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+}
+.doom-cast-card {
+  flex: 0 0 94px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.doom-cast-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(201, 162, 39, 0.22);
+  background: var(--doom-deep);
+}
+.doom-cast-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(0.35) contrast(1.05);
+  transition: filter 0.25s ease, transform 0.25s ease;
+}
+.doom-cast-card:hover .doom-cast-art img,
+.doom-cast-card:focus-visible .doom-cast-art img {
+  filter: grayscale(0) contrast(1.1);
+  transform: scale(1.04);
+}
+.doom-cast-card:hover .doom-cast-art,
+.doom-cast-card:focus-visible .doom-cast-art {
+  border-color: var(--doom-gold-lit);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+}
+/* Hero name leads (it is what fans scan for), actor name underneath. */
+.doom-cast-role {
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--doom-gold-lit);
+  line-height: 1.2;
+}
+.doom-cast-name {
+  font-size: 0.66rem;
+  color: var(--doom-steel);
+  line-height: 1.25;
+}
+
+/* ---------- News ---------- */
+.doom-news-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 0.6rem;
+}
+.doom-news-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.6rem;
+  border: 1px solid rgba(201, 162, 39, 0.15);
+  border-radius: 10px;
+  background: rgba(11, 20, 16, 0.6);
+  text-decoration: none;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+.doom-news-item:hover,
+.doom-news-item:focus-visible {
+  border-color: var(--doom-gold);
+  background: rgba(29, 64, 48, 0.42);
+  transform: translateY(-2px);
+}
+.doom-news-art {
+  flex: 0 0 76px;
+  height: 56px;
+  border-radius: 7px;
+  overflow: hidden;
+  background: var(--doom-deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.doom-news-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.doom-news-art--empty {
+  color: rgba(201, 162, 39, 0.5);
+}
+.doom-news-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.doom-news-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.doom-news-meta {
+  font-size: 0.72rem;
+  color: var(--doom-steel);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 640px) {
+  .doom-hero { min-height: clamp(460px, 68vh, 600px); }
+  .doom-hero-body { max-width: 100%; }
+  .doom-unit { min-width: 2.9rem; padding: 0.35rem 0.35rem 0.3rem; }
+  .doom-sep { font-size: 1.1rem; padding-bottom: 0.9rem; }
+  .doom-cast-card { flex: 0 0 72px; }
+  .doom-hero-cast { padding: 1.1rem 1rem 0.85rem; }
+  .doom-hero { padding-bottom: 196px !important; }
+  .doom-news-list { grid-template-columns: 1fr; }
 }

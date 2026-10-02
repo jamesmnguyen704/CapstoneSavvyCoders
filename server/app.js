@@ -58,10 +58,21 @@ app.use(cors()); // So Spa can talk to API
 app.use(express.json()); // so backend can read JSON for
 app.use(logging); //loggin request for debug
 
+// Without this, a request to a Mongo-backed route sits through mongoose's 10s
+// buffering timeout and then fails with an internal driver message.
+const requireDatabase = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: "Accounts and comments are temporarily unavailable."
+    });
+  }
+  next();
+};
+
 // mounting the router
-app.use("/comments", commentsRouter); // Forward /comments requests
+app.use("/comments", requireDatabase, commentsRouter); // Forward /comments requests
 app.use("/movies", moviesRouter); // Forward /movies requests
-app.use("/auth", authRoutes); // user auth routes
+app.use("/auth", requireDatabase, authRoutes); // user auth routes
 app.use("/news", newsRoutes); // movie news (Guardian Film proxy)
 app.use("/person", personRoutes); // person/actor detail + filmography
 app.use("/tv", tvRoutes); // TV shows + streaming-service browse
@@ -101,16 +112,16 @@ const server = app.listen(PORT, "0.0.0.0", () => {
 // cache instead of paying the ~10s TMDB fan-out. Failures are non-fatal — the
 // route just stays cold and fills on first request.
 async function warmCache() {
-  const routes = ["/movies/marvel", "/movies/awards", "/movies/upcoming-curated"];
-  await Promise.all(
-    routes.map(async route => {
-      const started = Date.now();
-      try {
-        await axios.get(`http://127.0.0.1:${PORT}${route}`, { timeout: 60000 });
-        console.log(`Warmed ${route} in ${Date.now() - started}ms`);
-      } catch (err) {
-        console.warn(`Warm-up skipped for ${route}:`, err.message);
-      }
-    })
-  );
+  const routes = ["/movies/marvel", "/movies/upcoming-curated"];
+  // Sequential: warming these in parallel stacks three TMDB fan-outs on top of
+  // each other and trips the rate limiter, leaving the cache full of holes.
+  for (const route of routes) {
+    const started = Date.now();
+    try {
+      await axios.get(`http://127.0.0.1:${PORT}${route}`, { timeout: 60000 });
+      console.log(`Warmed ${route} in ${Date.now() - started}ms`);
+    } catch (err) {
+      console.warn(`Warm-up skipped for ${route}:`, err.message);
+    }
+  }
 }

@@ -38,8 +38,11 @@ const parser = new Parser({
 const GUARDIAN_BASE = "https://content.guardianapis.com/search";
 
 // How many stories the feed returns, and how many any one outlet may supply.
+// Per-source cap is deliberately low: the gaming list now runs to 16 feeds, and
+// at 6 apiece the high-volume wires (IGN, Kotaku, Destructoid) filled all 40
+// slots before the slower hardware feeds got a look in.
 const MAX_RESULTS = 40;
-const MAX_PER_SOURCE = 6;
+const MAX_PER_SOURCE = 4;
 
 // Movie-focused configuration.
 // Every URL here was verified live before being added — parses, returns items,
@@ -121,20 +124,31 @@ const GAMING_FEEDS = [
   { source: "Nintendo Life", url: "https://www.nintendolife.com/feeds/latest" },
   { source: "Push Square",   url: "https://www.pushsquare.com/feeds/latest" },
   { source: "Pure Xbox",     url: "https://www.purexbox.com/feeds/latest" },
-  { source: "ComingSoon",    url: "https://www.comingsoon.net/games/news/feed" }
+  { source: "ComingSoon",    url: "https://www.comingsoon.net/games/news/feed" },
+  // Hardware and adjacent tech — the console/game feeds above barely cover
+  // handhelds, GPUs, VR or storefront platform news.
+  { source: "Rock Paper Shotgun", url: "https://www.rockpapershotgun.com/feed" },
+  { source: "The Verge",     url: "https://www.theverge.com/rss/games/index.xml" },
+  { source: "Ars Technica",  url: "https://feeds.arstechnica.com/arstechnica/gaming" },
+  { source: "Tom's Hardware", url: "https://www.tomshardware.com/feeds/all" },
+  { source: "Road to VR",    url: "https://www.roadtovr.com/feed/" },
+  { source: "Windows Central", url: "https://www.windowscentral.com/feeds/all" },
+  { source: "Destructoid",   url: "https://www.destructoid.com/feed/" }
 ];
 const GAMING_GUARDIAN = {
   section: "games",
   query: [
     "playstation", "xbox", "nintendo", "switch", "steam", '"game pass"',
     '"grand theft auto"', "zelda", "mario", "pokemon", '"call of duty"',
-    "esports", '"video game"', "indie"
+    "esports", '"video game"', "indie",
+    '"steam deck"', "handheld", "gpu", "nvidia", '"graphics card"', "vr headset"
   ].join(" OR ")
 };
 
 // Checked and deliberately not used — keep this list so a dead feed doesn't
 // get re-added later. (Same reason /Film's TV URL was dropped previously.)
 export const REJECTED_FEEDS = {
+  "https://www.engadget.com/gaming/rss.xml": "404 — Engadget has no gaming-only feed",
   "https://www.empireonline.com/movies/news/feed/": "404",
   "https://www.vulture.com/rss/index.xml": "404",
   "https://ew.com/feed/": "402 paywall",
@@ -250,14 +264,17 @@ async function fetchGuardian({ section, query }) {
   }
 }
 
-async function aggregate({ rssFeeds, guardian }) {
+async function aggregate({ rssFeeds, guardian, match }) {
   const [guardianResults, ...rssResults] = await Promise.all([
     fetchGuardian(guardian),
     ...rssFeeds.map(fetchRssSource)
   ]);
 
   const all = [...guardianResults, ...rssResults.flat()]
-    .filter(a => a && a.title && a.url);
+    .filter(a => a && a.title && a.url)
+    // `match` narrows a general wire to one beat. The feeds are whole-section
+    // firehoses, so without this a Marvel tab is just the movie tab again.
+    .filter(a => !match || match.test(`${a.title} ${a.description || ""}`));
 
   // Sort newest-first so the oldest near-duplicate loses.
   all.sort((a, b) => {
@@ -301,8 +318,28 @@ const TV_STREAMING_FEEDS = [
   ...STREAMING_FEEDS.filter(f => !TV_FEEDS.some(t => t.url === f.url))
 ];
 
+// Marvel reuses the movie wire and narrows it by keyword. Titles and characters
+// are listed explicitly rather than relying on "marvel" alone, because most
+// coverage names the film or the actor without ever saying the studio.
+const MARVEL_MATCH = new RegExp(
+  [
+    "marvel", "mcu", "avengers", "doomsday", "secret wars",
+    "x-?men", "fantastic four", "spider-?man", "doctor doom", "dr\\.? doom",
+    "thunderbolts", "deadpool", "wolverine", "loki", "thor", "iron man",
+    "captain america", "black panther", "daredevil", "multiverse",
+    "ant-?man", "doctor strange", "guardians of the galaxy", "hulk",
+    "kevin feige", "disney\\+ marvel"
+  ].join("|"),
+  "i"
+);
+const MARVEL_GUARDIAN = {
+  section: "film",
+  query: ["marvel", "MCU", "avengers", "superhero", '"doctor doom"', "x-men"].join(" OR ")
+};
+
 const TABS = {
   movies:      { path: "/",             label: "movie",     rssFeeds: MOVIE_FEEDS,         guardian: MOVIE_GUARDIAN },
+  marvel:      { path: "/marvel",       label: "Marvel",    rssFeeds: MOVIE_FEEDS,         guardian: MARVEL_GUARDIAN, match: MARVEL_MATCH },
   tv:          { path: "/tv",           label: "TV",        rssFeeds: TV_FEEDS,            guardian: TV_GUARDIAN },
   streaming:   { path: "/streaming",    label: "streaming", rssFeeds: STREAMING_FEEDS,     guardian: STREAMING_GUARDIAN },
   gaming:      { path: "/gaming",       label: "gaming",    rssFeeds: GAMING_FEEDS,        guardian: GAMING_GUARDIAN },
@@ -312,7 +349,11 @@ const TABS = {
 for (const [key, tab] of Object.entries(TABS)) {
   router.get(tab.path, async (req, res) => {
     try {
-      const results = await aggregate({ rssFeeds: tab.rssFeeds, guardian: tab.guardian });
+      const results = await aggregate({
+        rssFeeds: tab.rssFeeds,
+        guardian: tab.guardian,
+        match: tab.match
+      });
       if (!results.length) {
         return res
           .status(502)

@@ -17,7 +17,6 @@ import Signup from "./signup";
 import Profile from "./profile";
 import News from "./news";
 import MyList from "./myList";
-import Awards from "./awards";
 import Games from "./games";
 import Theaters from "./theaters";
 import Tv from "./tv";
@@ -36,7 +35,6 @@ export {
   Profile,
   News,
   MyList,
-  Awards,
   Games,
   Theaters,
   Tv
@@ -56,7 +54,6 @@ export default {
   Profile,
   News,
   MyList,
-  Awards,
   Games,
   Theaters,
   Tv

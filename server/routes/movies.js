@@ -16,7 +16,7 @@ const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 const MINUTE = 60 * 1000;
 router.use(
   cacheJson(req => {
-    if (req.path === "/marvel" || req.path === "/awards") return 60 * MINUTE;
+    if (req.path === "/marvel" || req.path === "/doomsday") return 60 * MINUTE;
     if (req.path === "/upcoming-curated") return 30 * MINUTE;
     if (req.path === "/search") return 5 * MINUTE;
     // Keyed by full URL, so each ZIP caches separately.
@@ -30,145 +30,85 @@ router.use(
 
 // ⭐ my marvel movies yayyyyy — MUST BE AT TOP ⭐
 import getMCUMovies from "../controllers/curated/marvel.js";
-import {
-  oscarsBestPicture,
-  oscarsBestDirector,
-  oscarsBestActor,
-  oscarsBestActress,
-  oscarsSupportingActor,
-  oscarsSupportingActress
-} from "../controllers/curated/awards.js";
 router.get("/marvel", getMCUMovies);
 
-// Awards — enriches our curated Oscars lists with full TMDB data per nominee.
-// Best Picture returns film metadata; person-based categories return both
-// headshot/bio (from /person/{id}) and the nominated film details.
-router.get("/awards", async (req, res) => {
+// Avengers: Doomsday — the Marvel page's headline event. Detail, the full
+// billed cast (not the 10-cap /:id/details uses), and the newest official
+// trailer, in one payload so the hub renders from a single request.
+const DOOMSDAY_ID = 1003596;
+router.get("/doomsday", async (req, res) => {
   const key = process.env.TMDB_API_KEY;
-
-  const movieCache = new Map();
-  const personCache = new Map();
-
-  const fetchMovie = async id => {
-    if (movieCache.has(id)) return movieCache.get(id);
-    const p = axios
-      .get(`https://api.themoviedb.org/3/movie/${id}`, {
-        params: { api_key: key, language: "en-US" },
-        timeout: 6000
-      })
-      .then(r => r.data)
-      .catch(err => {
-        if (err.response?.status !== 404) {
-          console.warn(`AWARDS movie ${id}:`, err.message);
-        }
-        return null;
-      });
-    movieCache.set(id, p);
-    return p;
-  };
-
-  const fetchPerson = async id => {
-    if (personCache.has(id)) return personCache.get(id);
-    const p = axios
-      .get(`https://api.themoviedb.org/3/person/${id}`, {
-        params: { api_key: key, language: "en-US" },
-        timeout: 6000
-      })
-      .then(r => r.data)
-      .catch(err => {
-        if (err.response?.status !== 404) {
-          console.warn(`AWARDS person ${id}:`, err.message);
-        }
-        return null;
-      });
-    personCache.set(id, p);
-    return p;
-  };
-
-  const enrichFilmSection = async section => {
-    const nominees = await Promise.all(
-      section.nominees.map(async n => {
-        const m = await fetchMovie(n.id);
-        return m ? { ...m, winner: !!n.winner } : null;
-      })
-    );
-    return {
-      ceremony: section.ceremony,
-      year: section.year,
-      forYear: section.forYear,
-      nominees: nominees
-        .filter(Boolean)
-        .sort((a, b) => (b.winner === true) - (a.winner === true))
-    };
-  };
-
-  const enrichPersonSection = async section => {
-    const nominees = await Promise.all(
-      section.nominees.map(async n => {
-        const [person, film] = await Promise.all([
-          fetchPerson(n.personId),
-          fetchMovie(n.filmId)
-        ]);
-        return {
-          personId: n.personId,
-          name: person?.name || n.personName,
-          profile_path: person?.profile_path || null,
-          role: n.role || null,
-          winner: !!n.winner,
-          film: film
-            ? {
-                id: film.id,
-                title: film.title,
-                poster_path: film.poster_path,
-                backdrop_path: film.backdrop_path,
-                release_date: film.release_date,
-                vote_average: film.vote_average
-              }
-            : { id: n.filmId, title: n.filmTitle }
-        };
-      })
-    );
-    return {
-      ceremony: section.ceremony,
-      year: section.year,
-      forYear: section.forYear,
-      nominees: nominees
-        .filter(Boolean)
-        .sort((a, b) => (b.winner === true) - (a.winner === true))
-    };
-  };
-
   try {
-    const [
-      bestPicture,
-      bestDirector,
-      bestActor,
-      bestActress,
-      supportingActor,
-      supportingActress
-    ] = await Promise.all([
-      Promise.all(oscarsBestPicture.map(enrichFilmSection)),
-      Promise.all(oscarsBestDirector.map(enrichPersonSection)),
-      Promise.all(oscarsBestActor.map(enrichPersonSection)),
-      Promise.all(oscarsBestActress.map(enrichPersonSection)),
-      Promise.all(oscarsSupportingActor.map(enrichPersonSection)),
-      Promise.all(oscarsSupportingActress.map(enrichPersonSection))
+    const [detail, credits, videos, images] = await Promise.all([
+      axios.get(`https://api.themoviedb.org/3/movie/${DOOMSDAY_ID}`, {
+        params: { api_key: key, language: "en-US" },
+        timeout: 8000
+      }),
+      axios.get(`https://api.themoviedb.org/3/movie/${DOOMSDAY_ID}/credits`, {
+        params: { api_key: key, language: "en-US" },
+        timeout: 8000
+      }),
+      axios.get(`https://api.themoviedb.org/3/movie/${DOOMSDAY_ID}/videos`, {
+        params: { api_key: key, language: "en-US" },
+        timeout: 8000
+      }),
+      axios.get(`https://api.themoviedb.org/3/movie/${DOOMSDAY_ID}/images`, {
+        timeout: 8000,
+        params: { api_key: key }
+      })
     ]);
 
+    const d = detail.data;
+    const cast = (credits.data.cast || [])
+      .filter(c => c.profile_path)
+      .slice(0, 40)
+      .map(c => ({
+        id: c.id,
+        name: c.name,
+        character: c.character || "",
+        profile_path: c.profile_path
+      }));
+
+    // Prefer a real Trailer/Teaser over the featurettes and reaction videos
+    // TMDB also files under /videos, newest first.
+    const yt = (videos.data.results || [])
+      .filter(v => v.site === "YouTube" && v.key)
+      .sort((a, b) => Date.parse(b.published_at || 0) - Date.parse(a.published_at || 0));
+    const trailer =
+      yt.find(v => v.type === "Trailer" && v.official) ||
+      yt.find(v => v.type === "Teaser" && v.official) ||
+      yt.find(v => v.type === "Trailer" || v.type === "Teaser") ||
+      yt[0] ||
+      null;
+
+    // Text-free stills only (iso_639_1 null) — localized ones carry burnt-in
+    // title treatments that clash with the hero's own headline. Best-voted
+    // first so the slideshow leads with the strongest frames.
+    const backdrops = (images.data.backdrops || [])
+      .filter(b => !b.iso_639_1 && b.file_path)
+      .sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0))
+      .slice(0, 8)
+      .map(b => b.file_path);
+
     res.json({
-      sections: bestPicture, // legacy alias — Best Picture
-      categories: {
-        bestPicture,
-        bestDirector,
-        bestActor,
-        bestActress,
-        supportingActor,
-        supportingActress
-      }
+      id: d.id,
+      title: d.title,
+      overview: d.overview,
+      tagline: d.tagline,
+      backdrop_path: d.backdrop_path,
+      backdrops,
+      poster_path: d.poster_path,
+      release_date: d.release_date,
+      runtime: d.runtime,
+      status: d.status,
+      vote_average: d.vote_average,
+      castCount: (credits.data.cast || []).length,
+      cast,
+      trailer: trailer && { key: trailer.key, name: trailer.name, type: trailer.type }
     });
   } catch (err) {
-    console.error("AWARDS ERROR:", err.message);
-    res.status(500).json({ message: "Failed to load awards", sections: [] });
+    console.error("DOOMSDAY ERROR:", err.message);
+    res.status(500).json({ message: "Failed to load Doomsday", cast: [] });
   }
 });
 
