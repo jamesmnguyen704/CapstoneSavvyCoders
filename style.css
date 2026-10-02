@@ -1772,6 +1772,19 @@ footer {
   padding: 2.5rem;
 }
 
+/* A dead wire should read as a fault, not as the neutral "still loading" box. */
+.news-hero--failed {
+  border-color: rgba(229, 92, 92, 0.45);
+}
+
+.news-hero--failed h2 {
+  color: #e55c5c;
+}
+
+.news-hero--failed a {
+  color: var(--cm-accent);
+}
+
 /* ---------- Top Stories grid ---------- */
 .news-grid-head {
   display: flex;

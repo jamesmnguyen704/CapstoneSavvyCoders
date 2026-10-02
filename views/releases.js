@@ -70,8 +70,16 @@ function releaseCard(movie) {
   `;
 }
 
+// Escapes for both attribute and text contexts — TMDB titles and overviews are
+// community-edited, so they reach us as untrusted HTML and land in innerHTML.
+// `&` must go first or it would double-escape the entities added after it.
 function escapeAttr(s) {
-  return String(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function encodeCardMovie(movie) {
