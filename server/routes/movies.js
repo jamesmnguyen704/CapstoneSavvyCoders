@@ -6,7 +6,6 @@ import { cacheJson } from "../utils/cache.js";
 // import curated data
 import { curated2026, curated2027 } from "../controllers/curated/upcoming.js";
 
-console.log("DEBUG movies.js — ENV TMDB KEY =", process.env.TMDB_API_KEY);
 
 const router = express.Router();
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;

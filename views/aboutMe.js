@@ -66,7 +66,7 @@ export default () => html`
 
       <p>
         Most recently at <strong>Day & Night Solar</strong>, I am engineering an
-        internal operations platform ("Project Waffles") that uses Python,
+        internal operations platform that uses Python,
         Pandas, and SQLAlchemy to extract complex data from operational PDFs and
         Excel documents, build cohesive relational databases, and automate
         QuickBooks imports and business KPI dashboards.
