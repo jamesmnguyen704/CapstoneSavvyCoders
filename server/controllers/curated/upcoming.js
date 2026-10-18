@@ -27,7 +27,8 @@ export const curated2026 = [
   { id: 1281331, date: "2026-10-07" }, // The Social Reckoning — Aaron Sorkin
   { id: 1255833, date: "2026-10-14" }, // Whalefall
   { id: 1400940, date: "2026-10-21" }, // Clayface — real date now confirmed on TMDB
-  { id: 1400336, date: "2026-11-25" }  // Focker-in-Law (Meet the Parents 4)
+  { id: 1400336, date: "2026-11-25" }, // Focker-in-Law (Meet the Parents 4)
+  { id: 1300968, date: "2026-11-18" }  // The Hunger Games: Sunrise on the Reaping
 ];
 export const curated2027 = [
   { id: 1003598, date: "2027-12-17" }, // Avengers: Secret Wars
@@ -40,5 +41,6 @@ export const curated2027 = [
   { id: 1384758, date: "2027-02-05" }, // Ice Age: Boiling Point
   { id: 421892,  date: "2027-06-30" }, // Shrek 5
   { id: 1288438, date: "2027-03-26" }, // Godzilla x Kong: Supernova (2027)
-  { id: 1147572, date: "2027-02-11" }  // Narnia: The Magician's Nephew — Greta Gerwig
+  { id: 1147572, date: "2027-02-11" }, // Narnia: The Magician's Nephew — Greta Gerwig
+  { id: 1440769, date: "2027-01-13" }  // The Beekeeper 2
 ];
