@@ -19,9 +19,6 @@ import { dirname, join } from "path"; // build paths for loading .env
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// testing .env variables are being read
-console.log("TMDB KEY FROM ENV TEST:", process.env.TMDB_API_KEY);
-
 //importing my API endpoint routers
 const commentsRouter = (await import("./routes/comments.js")).default; // api request
 const moviesRouter = (await import("./routes/movies.js")).default; // movie request
