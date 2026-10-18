@@ -764,6 +764,12 @@ router.get("/upcoming-curated", async (req, res) => {
 
     // Also pull TMDB's most-anticipated upcoming so the page stays fresh with
     // movies we didn't manually curate.
+    // vote_count.gte=20 made this query return 0 results, always — an
+    // unreleased film can't have accumulated 20 votes yet, so the filter
+    // wasn't narrowing the list, it was eliminating it. Nothing here has
+    // released, so there's no established-audience signal to filter noise
+    // out of; dropped the floor and lean on popularity.desc plus a
+    // poster_path check instead.
     let popular = [];
     try {
       const nextYearMax = new Date();
@@ -778,8 +784,7 @@ router.get("/upcoming-curated", async (req, res) => {
             sort_by: "popularity.desc",
             include_adult: false,
             language: "en-US",
-            region: "US",
-            "vote_count.gte": 20
+            region: "US"
           },
           timeout: 8000
         }
