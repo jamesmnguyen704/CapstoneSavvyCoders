@@ -29,6 +29,9 @@ const fetchMovie = async id => {
 // Main controller
 export const getMCUMovies = async (req, res) => {
   console.log("getMCUMovies controller called!");
+  // Reset per-request — this was never cleared, so it just grew forever
+  // across every call to this route for the life of the process.
+  global.failedMarvelIDs = [];
   try {
     // If rate limit is an issue, fetch in batches of 5 with delay
     const batchSize = 5;
@@ -51,18 +54,29 @@ export const getMCUMovies = async (req, res) => {
         await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
       }
     }
-    // Log summary of failed IDs
-    if (global.failedMarvelIDs && global.failedMarvelIDs.length > 0) {
+    if (global.failedMarvelIDs.length > 0) {
       console.warn("Failed TMDB movie IDs:", global.failedMarvelIDs);
     }
-    console.log(
-      `Final MCU movies count: ${results.filter(r => r !== null).length}`
-    );
-    res.json({
-      success: true,
-      count: results.filter(r => r !== null).length,
-      movies: results.filter(r => r !== null)
-    });
+    const movies = results.filter(r => r !== null);
+    console.log(`Final MCU movies count: ${movies.length}`);
+
+    // A rate-limit spell drops several titles mid-fetch without the request
+    // itself ever failing — it still returns 200 with success:true, just
+    // missing films. That 60-minute-cached "complete" list then shows an MCU
+    // timeline with holes in it for up to an hour, even after TMDB recovers.
+    // 90% tolerates one or two genuinely dead ids without defeating caching
+    // forever over a single permanently-missing title.
+    const completeEnough = movies.length >= mcuMovieIds.length * 0.9;
+    if (!completeEnough) {
+      return res.status(503).json({
+        success: false,
+        message: "Marvel data temporarily incomplete, please retry",
+        count: movies.length,
+        movies
+      });
+    }
+
+    res.json({ success: true, count: movies.length, movies });
   } catch (err) {
     console.error("MCU Controller Error:", err.message);
     res.status(500).json({ success: false, message: "Server error" });
