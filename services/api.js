@@ -264,9 +264,19 @@ export async function fetchComments(movieId) {
   }
 }
 
+// Posting/deleting now require login — the server trusts the token for who
+// you are, not anything the client sends, so the Authorization header is
+// what actually lets these through.
+function authHeaders() {
+  const token = localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export async function postComment(commentData) {
   try {
-    const response = await axios.post(`${API_BASE}/comments`, commentData);
+    const response = await axios.post(`${API_BASE}/comments`, commentData, {
+      headers: authHeaders()
+    });
     return response.data;
   } catch (err) {
     console.error("POST COMMENT ERROR:", err);
@@ -276,7 +286,7 @@ export async function postComment(commentData) {
 
 export async function deleteComment(id) {
   try {
-    await axios.delete(`${API_BASE}/comments/${id}`);
+    await axios.delete(`${API_BASE}/comments/${id}`, { headers: authHeaders() });
     return true;
   } catch (err) {
     console.error("DELETE COMMENT ERROR:", err);
