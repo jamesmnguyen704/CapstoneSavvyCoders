@@ -221,6 +221,14 @@ function attachModalListenersOnce() {
 async function render(st = state.Home) {
   console.log("Rendering with state:", st);
 
+  // Every store already carries a `header` for in-page display — reuse it
+  // for the browser tab/search-result title too, instead of every route
+  // showing the same bare "Cinemetrics" regardless of what's on screen.
+  document.title =
+    st.header && st.header !== "Cinemetrics"
+      ? `${st.header} — Cinemetrics`
+      : "Cinemetrics — Movies, TV & Games Discovery";
+
   const mainContent = await Main(st);
 
   document.querySelector("#root").innerHTML = `
