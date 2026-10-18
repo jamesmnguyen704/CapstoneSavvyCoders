@@ -37,6 +37,8 @@ Cinemetrics pulls live data from **TMDB**, **12 news outlets**, and **OpenStreet
 | 📰 **News** | 19 outlets, deduped and balanced so no single wire dominates |
 | 🎮 **Games** | What's on the radar, the gaming wire, and a personal library with cover art |
 | 🔖 **My List** | Watchlist saved to `localStorage`, no account required |
+| ⭐ **Ratings & Watched** | A native 1-10 rating and "Mark Watched" per movie for signed-in users — Cinemetrics' own community score, kept visibly separate from TMDB's |
+| 🎭 **Marvel Comments** | ~70 fan-made Marvel character accounts post in-character, fact-grounded comments on real movies; a "Hot Takes" leaderboard splits real human discussion from the character threads so neither is mistaken for the other |
 
 ---
 
@@ -79,6 +81,10 @@ Cinemetrics pulls live data from **TMDB**, **12 news outlets**, and **OpenStreet
 **🔍 Every news feed verified before shipping.** 30 candidate RSS feeds were tested against the live parser. The ones that 404'd, paywalled, timed out, or had gone stale are recorded in `REJECTED_FEEDS` with the reason, so nobody re-adds a dead source. A per-outlet cap keeps high-volume wires from crowding out slower ones.
 
 **🎟️ Showtimes without a paid API.** No free showtimes API exists — Fandango has none, Gracenote wants a paid account. So Cinemetrics resolves the ZIP through Zippopotam, finds real cinemas via OpenStreetMap's Overpass API, and deep-links into Fandango/AMC/Regal/Cinemark with the movie and location pre-filled. On mobile those are universal links, so they open the chain's native app.
+
+**🤖 An independent AI audit, acted on honestly.** Ran Gemini and ChatGPT against the live codebase (not a description of it) to find real gaps. One finding: "Hot Takes" — a leaderboard of the busiest comment threads — was ranking 109 fan-made Marvel character accounts against exactly 1 real human user, so "busiest conversations" was 100% synthetic activity presented as community buzz. Fixed by splitting it into separate, clearly-labeled "Community" and "Character Chaos" surfaces rather than hiding or deleting the bot content — it's fine as an explicit entertainment feature, it just can't pretend to be organic.
+
+**🔀 Built with three AI sessions running in parallel.** Three Claude Code sessions worked this codebase simultaneously — one on content/bots, one on CSS/UI, one coordinating — with named lanes, explicit file ownership, and a shared living status doc instead of one thread doing everything in sequence. Full writeup in [`docs/ai-research-findings.md`](docs/ai-research-findings.md) and [`docs/project-status.md`](docs/project-status.md).
 
 ---
 
@@ -164,7 +170,12 @@ Base: `https://capstonesavvycoders.onrender.com`
 | `GET /movies/in-theaters?zip=` | Now playing + ticket links |
 | `GET /movies/theaters-near?zip=` | Cinemas within 25 miles |
 | `GET /tv` · `/tv/providers?provider=` · `/tv/:id/details` | TV shows |
+| `POST /tv/meta/availability` · `/movies/meta/availability` | Batched, 24h-cached "where to watch" lookup for a whole grid |
 | `GET /news` · `/news/marvel` · `/news/tv` · `/news/streaming` · `/news/gaming` | Aggregated wires |
+| `GET /comments/:movieId` · `POST /comments` · `/comments/:id/vote` | Comments + thumbs up/down |
+| `GET /comments/meta/top?audience=` | Hot Takes — `human` (real visitors) or `character` (the Marvel bots), never blended |
+| `POST /comments/meta/counts` | Batched comment-count lookup for a grid |
+| `GET/POST /user-media/:movieId` · `GET /user-media/meta/rating/:movieId` | Personal rating/watched state, and the aggregate community score |
 | `POST /auth/signup` · `/auth/login` | JWT auth |
 
 ---
@@ -192,6 +203,7 @@ comes up empty.
 - **Week 6 — Dev ergonomics.** Port management and env vars; added `BACKEND_PORT` so Parcel (`1234`) and the API (`3000`) stop competing.
 - **Week 7 — Polish & docs.** This README, plus CSS and auth fixes.
 - **Week 8 — Performance & scale.** Response caching, route skeletons, expanded news aggregation, and three new sections (TV, In Theaters, Games).
+- **Week 9 — Security, the Marvel comment system, and an AI research audit.** A full security pass (rate limiting, input validation, XSS fixes, ten PRs in one morning); a fan-made Marvel character comment system (~70 accounts, each grounded in real reviews or confirmed plot facts, with a voice/personality reference so they don't read generic); native 1-10 ratings and a "Watched" toggle; and an independent Gemini + ChatGPT research pass against the live codebase that caught a real integrity problem (Hot Takes ranking synthetic bot activity as community buzz) and a real SEO defect (every URL, even broken ones, returned HTTP 200) — both fixed the same day. Built across three Claude Code sessions running in parallel.
 
 </details>
 
@@ -233,11 +245,16 @@ curl -i http://localhost:3000/status     # API health
 
 ## Roadmap
 
+- [x] ~~Personal ratings and reviews — a real "Cinemetrics Score"~~ — shipped, kept separate from TMDB's own score
+- [x] ~~Browse-by-provider for movies, not just TV~~ — shipped for both, batched and cached
 - [ ] TV show detail modal (`/tv/:id/details` is built and waiting on a UI)
 - [ ] Metascore + Rotten Tomatoes scores via OMDb
-- [ ] Personal ratings and reviews — a real "Cinemetrics Score"
-- [ ] Browse-by-provider for movies, not just TV
+- [ ] Real person/cast pages (TMDB's `combined_credits`) — clicking an actor currently dead-ends
+- [ ] Franchise/collection pages for non-Marvel series (TMDB already has this data)
+- [ ] "On my services" personalized filtering, now that watch-provider data exists
 - [ ] Live Steam playtime on the Games page
+
+Full, current backlog (including findings from an external AI research pass) lives in [`docs/project-status.md`](docs/project-status.md) and [`docs/ai-research-findings.md`](docs/ai-research-findings.md).
 
 ---
 
