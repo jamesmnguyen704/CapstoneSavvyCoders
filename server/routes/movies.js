@@ -688,13 +688,33 @@ router.get("/upcoming-curated", async (req, res) => {
 
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
+    // customDate was always preferred over TMDB's own release_date, even when
+    // TMDB had a confirmed one — so a hand-typed guess from whenever this list
+    // was last edited could silently outrank a date TMDB later corrected.
+    // Frozen III showed "Nov 25, 2026" here while TMDB already had 2027-11-24;
+    // The Batman Part II showed 2027-10-01 against TMDB's 2028-02-17. Flipped
+    // the priority: live TMDB data (US theatrical, then any release_date) wins
+    // whenever it exists; the curated date is now only a fallback for films
+    // TMDB hasn't scheduled yet.
     const fetchMovie = async (m) => {
       try {
         const response = await axios.get(
           `https://api.themoviedb.org/3/movie/${m.id}`,
-          { headers }
+          { headers, params: { append_to_response: "release_dates" } }
         );
-        return { ...response.data, customDate: m.date };
+        const d = response.data;
+        const usReleases =
+          (d.release_dates?.results || []).find(r => r.iso_3166_1 === "US")
+            ?.release_dates || [];
+        const usDate =
+          usReleases.find(r => r.type === 3)?.release_date?.slice(0, 10) ||
+          usReleases.find(r => r.type === 2)?.release_date?.slice(0, 10) ||
+          null;
+        return {
+          ...d,
+          release_date: usDate || m.date || d.release_date,
+          customDate: usDate ? null : m.date
+        };
       } catch (err) {
         if (err.response && err.response.status === 404) {
           console.warn(`Movie ID ${m.id} not found on TMDB, skipping.`);
@@ -719,10 +739,28 @@ router.get("/upcoming-curated", async (req, res) => {
           return da.localeCompare(db);
         });
 
-    const [movies2026, movies2027] = await Promise.all([
-      Promise.all(curated2026.map(fetchMovie)).then(arr => filterAndSort(arr.filter(Boolean))),
-      Promise.all(curated2027.map(fetchMovie)).then(arr => filterAndSort(arr.filter(Boolean)))
+    // Which array a film was hand-placed in no longer decides its section —
+    // now that release_date above is resolved from live TMDB data, a film can
+    // drift years (The Batman: Part II moved from a typed "2027-10-01" to
+    // TMDB's actual 2028-02-18). Bucketing by original array membership would
+    // show it under a "2027 Releases" heading next to a 2028 date. Merge both
+    // lists and re-bucket by the year the resolved date actually falls in;
+    // anything outside 2026/2027 drops from this curated section (the page's
+    // own subtitle already scopes it to "2026 and 2027") rather than being
+    // mislabeled.
+    const [resolved2026, resolved2027] = await Promise.all([
+      Promise.all(curated2026.map(fetchMovie)).then(arr => arr.filter(Boolean)),
+      Promise.all(curated2027.map(fetchMovie)).then(arr => arr.filter(Boolean))
     ]);
+    const byYear = { 2026: [], 2027: [] };
+    for (const m of [...resolved2026, ...resolved2027]) {
+      const year = Number(String(m.release_date || "").slice(0, 4));
+      if (byYear[year]) byYear[year].push(m);
+    }
+    const [movies2026, movies2027] = [
+      filterAndSort(byYear[2026]),
+      filterAndSort(byYear[2027])
+    ];
 
     // Also pull TMDB's most-anticipated upcoming so the page stays fresh with
     // movies we didn't manually curate.
