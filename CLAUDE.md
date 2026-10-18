@@ -7,6 +7,7 @@ This file is auto-loaded at the start of every Claude Code session in this repo.
 - **`docs/project-status.md`** — running log of what's done, what's in progress, and what's open. Updated at the end of each work session. Check this before starting work and update it before you stop.
 - **`docs/bot-comments-handoff.md`** — everything about the Marvel fan-comment bot system (roster, content rules, posting pipeline, rate-limit workaround).
 - **`docs/mcu-storyline.md`** — chronological MCU plot/casting reference, used to ground unreleased-movie bot comments in confirmed facts.
+- **`docs/ai-research-findings.md`** — the actual findings (not just the prompts) from an external Gemini/ChatGPT research pass on the whole site: what's confirmed-and-fixed, what's recommended-but-not-built, and an explicit "don't bother" list. Check before re-suggesting something already covered here.
 
 ## Multiple sessions run against this repo at once
 
