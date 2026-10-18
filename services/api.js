@@ -21,22 +21,32 @@ export function assetUrl(path) {
 }
 
 export async function fetchHomeData() {
-  try {
-    const [trending, nowPlaying, popular] = await Promise.all([
-      axios.get(`${API_BASE}/movies/trending`),
-      axios.get(`${API_BASE}/movies/now_playing`),
-      axios.get(`${API_BASE}/movies/popular`)
-    ]);
+  // allSettled, not all: these are three independent TMDB calls. With
+  // Promise.all, one of them failing (e.g. now_playing 500s while trending
+  // and popular both succeed) rejected the whole thing and the catch below
+  // wiped all three to [] — the home page went fully blank over one bad
+  // call instead of just losing the row that actually failed.
+  const [trending, nowPlaying, popular] = await Promise.allSettled([
+    axios.get(`${API_BASE}/movies/trending`),
+    axios.get(`${API_BASE}/movies/now_playing`),
+    axios.get(`${API_BASE}/movies/popular`)
+  ]);
 
-    return {
-      trending: trending.data.results,
-      nowPlaying: nowPlaying.data.results,
-      popular: popular.data.results
-    };
-  } catch (err) {
-    console.error("HOME DATA ERR:", err);
-    return { trending: [], nowPlaying: [], popular: [] };
-  }
+  const results = r => (r.status === "fulfilled" ? r.value.data.results : []);
+  [trending, nowPlaying, popular].forEach((r, i) => {
+    if (r.status === "rejected") {
+      console.error(
+        `HOME DATA ERR (${["trending", "now_playing", "popular"][i]}):`,
+        r.reason
+      );
+    }
+  });
+
+  return {
+    trending: results(trending),
+    nowPlaying: results(nowPlaying),
+    popular: results(popular)
+  };
 }
 
 // popular
