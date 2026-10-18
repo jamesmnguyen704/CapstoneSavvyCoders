@@ -825,23 +825,58 @@ footer {
 
 /* ============================================================
    Auth pages (Login / Signup) — matches Cinemetrics dark/gold theme
+
+   .auth-page is a <section>, and the global "kill the glass card on
+   every section" reset below (section { margin: 0 !important; ... })
+   was clobbering this card's background, border, shadow, blur, padding
+   AND its `margin: auto` centering — every property here needs
+   !important to win back against that reset. See issue #39: the form
+   wasn't just left-aligned, the whole card was invisible.
    ============================================================ */
 .auth-page {
+  width: min(440px, 100%);
   max-width: 440px;
-  margin: 3rem auto;
-  padding: 2.25rem 2rem 2rem;
-  background: rgba(15, 52, 96, 0.55);
-  border: 1px solid rgba(255, 215, 0, 0.25);
-  border-radius: 14px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  margin: auto !important;
+  padding: 2.5rem 2rem 2.25rem !important;
+  background:
+    linear-gradient(160deg, rgba(255, 215, 0, 0.06), transparent 55%),
+    rgba(15, 52, 96, 0.55) !important;
+  border: 1px solid rgba(255, 215, 0, 0.25) !important;
+  border-radius: 16px !important;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 215, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
   color: #f5f5f5;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  animation: authCardIn 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes authCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-page {
+    animation: none;
+  }
 }
 
 .auth-title {
   text-align: center;
   margin: 0 0 1.5rem;
-  color: #ffd700;
+  background: linear-gradient(90deg, #ffd700, #ff8a00);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   font-size: 1.9rem;
   letter-spacing: 0.5px;
 }
@@ -1080,6 +1115,9 @@ body::before {
 #root {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* Full-bleed main; kill the global "glass card" on every section. */
@@ -6177,7 +6215,11 @@ img, video, iframe { max-width: 100%; }
 /* =================== FOOTER — ABOUT LINK =================== */
 .site-footer {
   border-top: 1px solid var(--cm-border);
-  margin-top: 3rem;
+  /* #root is a flex column (min-height: 100vh); an auto top margin here
+     eats all the leftover space so the footer sits flush at the bottom
+     of short pages instead of floating right under the content, while
+     still flowing naturally below content on long pages. */
+  margin-top: auto;
   padding: 1.5rem clamp(1rem, 4vw, 3rem);
   background: rgba(0, 0, 0, 0.35);
 }
