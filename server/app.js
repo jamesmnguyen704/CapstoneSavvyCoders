@@ -4,11 +4,19 @@ import axios from "axios"; // used to prime the response cache at boot
 import cors from "cors"; // Allows my frontend (Netlify) or Render to say whats up to my backend API
 import mongoose from "mongoose"; // MongoDB library that connects and interacts
 import rateLimit from "express-rate-limit";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 import { cacheStats } from "./utils/cache.js";
 import authRoutes from "./routes/auth.js";
 import newsRoutes from "./routes/news.js";
 import personRoutes from "./routes/person.js";
 import tvRoutes from "./routes/tv.js";
+import usersRoutes from "./routes/users.js";
+import userMediaRoutes from "./routes/userMedia.js";
+import researchCacheRoutes from "./routes/researchCache.js";
 
 //importing my API endpoint routers
 const commentsRouter = (await import("./routes/comments.js")).default; // api request
@@ -76,6 +84,9 @@ app.use("/auth", authLimiter, requireDatabase, authRoutes); // user auth routes
 app.use("/news", newsRoutes); // movie news (Guardian Film proxy)
 app.use("/person", personRoutes); // person/actor detail + filmography
 app.use("/tv", tvRoutes); // TV shows + streaming-service browse
+app.use("/users", requireDatabase, usersRoutes); // admin-only account directory
+app.use("/user-media", requireDatabase, userMediaRoutes); // native ratings + watched/watchlist
+app.use("/research-cache", requireDatabase, researchCacheRoutes); // bot-comment research fact cache, internal tooling only
 
 // testing starts here
 // Root route to confirm backend is running
@@ -101,6 +112,21 @@ app.get("/status", (req, res) => {
 // or anything else in the tree straight off the live Render URL, and the
 // catch-all was silently turning every mistyped route into a 200 instead of
 // a real 404.
+//
+// Game cover art and console logos are a different case: they're a folder of
+// dozens of images referenced dynamically by filename from data, not a fixed
+// handful the bundler can fingerprint one-by-one, so they still need to be
+// served as plain static files. Rather than bringing back the repo-root
+// catch-all, mount just these two Assets subfolders, each scoped to the
+// single directory it serves — nothing else in the repo is reachable here.
+app.use(
+  "/Assets/game-covers",
+  express.static(join(__dirname, "..", "Assets", "game-covers"))
+);
+app.use(
+  "/Assets/console-logos",
+  express.static(join(__dirname, "..", "Assets", "console-logos"))
+);
 
 // Anything that doesn't match a mounted router falls through to here instead
 // of Express's plain-text default — keeps every response on this API JSON-

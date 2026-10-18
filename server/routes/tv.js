@@ -10,8 +10,9 @@
 
 import express from "express";
 import axios from "axios";
-import { cacheJson } from "../utils/cache.js";
+import { cacheJson, getCached, setCached } from "../utils/cache.js";
 import { requireNumericId } from "../middleware/requireNumericId.js";
+import { getNielsenTop10 } from "../services/nielsenTop10.js";
 
 const router = express.Router();
 
@@ -31,6 +32,16 @@ export const TV_PROVIDERS = [
   { id: 386, name: "Peacock" }
 ];
 
+// TMDB's `popularity` score is all-time, so a plain popularity sort surfaces
+// decades-old talk shows and soaps (The Tonight Show, Law & Order SVU) ahead
+// of anything actually airing now — those formats rack up popularity just by
+// having thousands of episodes and votes. Pass this as `air_date.gte` to
+// `discover/tv` to restrict results to shows with an episode in roughly the
+// last 2 months, so "popular" tracks what's current instead of all-time.
+function recentAirDateFloor() {
+  return new Date(Date.now() - 60 * 24 * 60 * MINUTE).toISOString().slice(0, 10);
+}
+
 // Trim TMDB's show payload to what the cards actually render.
 function shapeShow(s) {
   return {
@@ -44,10 +55,35 @@ function shapeShow(s) {
   };
 }
 
+// Nielsen reports real viewership by title, not TMDB id, so each match needs
+// a lookup to get posters/ids for the card. Nielsen's titles sometimes carry
+// a year suffix TMDB's search doesn't expect (e.g. "East of Eden (2026)") —
+// strip a trailing "(YYYY)" before searching.
+async function resolveNielsenShow(title) {
+  const cleanTitle = title.replace(/\s*\(\d{4}\)\s*$/, "").trim();
+  try {
+    const r = await axios.get(`${TMDB}/search/tv`, {
+      params: { api_key: key(), language: "en-US", query: cleanTitle, page: 1 }
+    });
+    const match = (r.data.results || []).find(s => s.poster_path);
+    return match ? shapeShow(match) : null;
+  } catch (err) {
+    console.error("NIELSEN MATCH ERROR:", cleanTitle, err.message);
+    return null;
+  }
+}
+
 router.get("/", async (req, res) => {
   try {
     const [popular, topRated, onTheAir] = await Promise.all([
-      axios.get(`${TMDB}/tv/popular?api_key=${key()}&language=en-US`),
+      axios.get(`${TMDB}/discover/tv`, {
+        params: {
+          api_key: key(),
+          language: "en-US",
+          sort_by: "popularity.desc",
+          "air_date.gte": recentAirDateFloor()
+        }
+      }),
       axios.get(`${TMDB}/tv/top_rated?api_key=${key()}&language=en-US`),
       axios.get(`${TMDB}/tv/on_the_air?api_key=${key()}&language=en-US`)
     ]);
@@ -71,19 +107,42 @@ router.get("/providers", async (req, res) => {
     return res.status(400).json({ message: "provider must be a TMDB provider id", results: [] });
   }
   try {
-    const r = await axios.get(`${TMDB}/discover/tv`, {
-      params: {
-        api_key: key(),
-        language: "en-US",
-        with_watch_providers: provider,
-        watch_region: "US",
-        sort_by: "popularity.desc",
-        page: Math.min(Number(req.query.page) || 1, 500)
-      }
-    });
+    // Nielsen measures real viewing minutes per service — lead with that
+    // where it exists. It only covers ~10-40 titles a week across every
+    // service combined, so it rarely fills a whole grid on its own; TMDB's
+    // discover results (already filtered to recent air dates) backfill the
+    // rest, clearly marked as the estimate they are.
+    const [nielsenEntries, discoverResult] = await Promise.all([
+      getNielsenTop10(provider),
+      axios.get(`${TMDB}/discover/tv`, {
+        params: {
+          api_key: key(),
+          language: "en-US",
+          with_watch_providers: provider,
+          watch_region: "US",
+          sort_by: "popularity.desc",
+          "air_date.gte": recentAirDateFloor(),
+          page: Math.min(Number(req.query.page) || 1, 500)
+        }
+      })
+    ]);
+
+    const measuredShows = (
+      await Promise.all(nielsenEntries.map(e => resolveNielsenShow(e.title)))
+    )
+      .map((show, i) => (show ? { ...show, measured: true, rank: nielsenEntries[i].rank, minutes: nielsenEntries[i].minutes } : null))
+      .filter(Boolean)
+      .sort((a, b) => a.rank - b.rank);
+
+    const seenIds = new Set(measuredShows.map(s => s.id));
+    const estimatedShows = (discoverResult.data.results || [])
+      .filter(s => s.poster_path && !seenIds.has(s.id))
+      .map(s => ({ ...shapeShow(s), measured: false }));
+
     res.json({
-      total_results: r.data.total_results || 0,
-      results: (r.data.results || []).filter(s => s.poster_path).map(shapeShow)
+      total_results: discoverResult.data.total_results || 0,
+      measuredCount: measuredShows.length,
+      results: [...measuredShows, ...estimatedShows]
     });
   } catch (err) {
     console.error("TV PROVIDERS ERROR:", err.message);
@@ -136,6 +195,73 @@ router.get("/:id/details", requireNumericId(), async (req, res) => {
   } catch (err) {
     console.error("TV DETAIL ERROR:", err.message);
     res.status(404).json({ message: "Could not load show details" });
+  }
+});
+
+// Batched "where to watch" lookup for TV cards, same idea and shape as
+// /movies/meta/availability but pointed at TMDB's /tv/ namespace — show IDs
+// and movie IDs aren't the same space, so this needs its own route and its
+// own cache-key prefix rather than sharing the movie endpoint/cache.
+// Flatrate (subscription) only, same as the movie version and per James's
+// explicit requirement: never show per-title rent/buy pricing here, only
+// "this is free to watch if you already have the subscription."
+const TV_AVAILABILITY_TTL_MS = 24 * 60 * 60 * 1000;
+
+router.post("/meta/availability", async (req, res) => {
+  try {
+    const { showIds } = req.body;
+    const ids = Array.isArray(showIds)
+      ? [...new Set(showIds.map(Number).filter(id => !Number.isNaN(id)))]
+      : [];
+    if (!ids.length) return res.json({});
+
+    const result = {};
+    const uncached = [];
+    for (const id of ids) {
+      const hit = getCached(`tv-availability:${id}`);
+      if (hit !== undefined) {
+        if (hit) result[id] = hit;
+      } else {
+        uncached.push(id);
+      }
+    }
+
+    if (uncached.length) {
+      await Promise.all(
+        uncached.map(async id => {
+          let availability = null;
+          try {
+            const wp = await axios.get(
+              `${TMDB}/tv/${id}/watch/providers?api_key=${key()}`,
+              { timeout: 8000 }
+            );
+            const flatrate = wp.data?.results?.US?.flatrate || [];
+            if (flatrate.length) {
+              const best = [...flatrate].sort(
+                (a, b) => a.provider_name.length - b.provider_name.length
+              )[0];
+              availability = {
+                type: "streaming",
+                provider: best.provider_name,
+                label: `Now streaming on ${best.provider_name}`,
+                logo: best.logo_path
+                  ? `https://image.tmdb.org/t/p/w45${best.logo_path}`
+                  : null
+              };
+            }
+          } catch {
+            /* availability is a nice-to-have; the card renders fine without it */
+          }
+          setCached(`tv-availability:${id}`, availability, TV_AVAILABILITY_TTL_MS);
+          if (availability) result[id] = availability;
+        })
+      );
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error("TV AVAILABILITY ERROR:", err.message);
+    res.status(500).json({ error: "Could not load availability" });
   }
 });
 

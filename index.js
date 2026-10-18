@@ -3,6 +3,7 @@
 // Notes: Attaches auth handlers, intro/trailer modal logic, and router hooks to populate state.
 
 import { Header, Nav, Main, Footer } from "./components";
+import CommentsComponent from "./components/Comments";
 import * as state from "./store";
 import Navigo from "navigo";
 import { camelCase } from "lodash";
@@ -16,8 +17,17 @@ import {
   fetchMarvelMovies,
   fetchMovieVideos,
   fetchComments,
+  fetchTopThreads,
+  fetchCommentCounts,
+  fetchAvailability,
+  fetchTvAvailability,
+  fetchUserMedia,
+  saveUserMedia,
+  fetchCommunityRating,
+  fetchAllUsers,
   postComment,
   deleteComment,
+  voteComment,
   fetchNewsTab,
   fetchInTheaters,
   fetchTheatersNear,
@@ -51,12 +61,6 @@ const API_BASE =
   "http://localhost:3000";
 
 const router = new Navigo("/");
-
-// News tabs, in display order. Must match views/news.js TAB_CONFIG and the
-// route table in server/routes/news.js.
-// Gaming lives on /games and TV + streaming on /tv, each in their own rail,
-// so /news is the movie wire only.
-const NEWS_TABS = ["movies"];
 
 // How long a fetched wire stays good on the client. Matches the API's own
 // 5-minute response cache, so a refetch past this either serves that cache or
@@ -205,38 +209,6 @@ function attachModalListenersOnce() {
       return;
     }
 
-    // News tab switch (Movies / TV / Streaming / Gaming)
-    const newsTabBtn = e.target.closest("[data-news-tab]");
-    if (newsTabBtn) {
-      e.preventDefault();
-      const nextTab = NEWS_TABS.includes(newsTabBtn.dataset.newsTab)
-        ? newsTabBtn.dataset.newsTab
-        : "movies";
-      if (state.News.activeTab === nextTab) return;
-      state.News.activeTab = nextTab;
-      // Pull from cache if present, else fetch.
-      const cached = state.News.cache?.[nextTab];
-      if (cached && cached.length) {
-        state.News.articles = cached;
-        render(state.News);
-      } else {
-        state.News.articles = [];
-        render(state.News);
-        (async () => {
-          try {
-            const articles = await fetchNewsTab(nextTab);
-            state.News.articles = articles;
-            if (state.News.cache) state.News.cache[nextTab] = articles;
-            render(state.News);
-          } catch {
-            state.News.articles = [];
-            render(state.News);
-          }
-        })();
-      }
-      return;
-    }
-
     // Click outside content closes (backdrop)
     const modal = document.querySelector("#trailerModal");
     if (modal && e.target === modal) {
@@ -251,8 +223,34 @@ function attachModalListenersOnce() {
 }
 
 // where my rendering happens
+// A well-formed route (e.g. /comments/999999999) still gets served as HTTP
+// 200 by Netlify's rewrite — there's no server rendering this app to return
+// a real 4xx from. This is the client-side half of that fix: tell crawlers
+// not to index a page whose content turned out not to exist, the moment we
+// know that, same signal a real 404 status would carry. Cleared on every
+// other render so a stale flag can't stick around on a later, real page.
+function setRobotsMeta(noindex) {
+  let meta = document.querySelector('meta[name="robots"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.name = "robots";
+    document.head.appendChild(meta);
+  }
+  meta.content = noindex ? "noindex, nofollow" : "index, follow";
+}
+
 async function render(st = state.Home) {
   console.log("Rendering with state:", st);
+
+  // Every store already carries a `header` for in-page display — reuse it
+  // for the browser tab/search-result title too, instead of every route
+  // showing the same bare "Cinemetrics" regardless of what's on screen.
+  document.title =
+    st.header && st.header !== "Cinemetrics"
+      ? `${st.header} — Cinemetrics`
+      : "Cinemetrics — Movies, TV & Games Discovery";
+
+  setRobotsMeta(st === state.ViewNotFound || Boolean(st._entityNotFound));
 
   const mainContent = await Main(st);
 
@@ -276,6 +274,7 @@ async function render(st = state.Home) {
   attachSearchHandlers();
   attachWatchlistHandler();
   attachInfoButtonHandler();
+  attachCommentButtonHandler();
   attachMoviesFilterHandlers();
   attachGamesHandlers();
   attachGameAdaptationHandler();
@@ -283,6 +282,7 @@ async function render(st = state.Home) {
   attachTvHandlers();
   attachPersonClickHandler();
   attachMyListTabs();
+  attachHotTakesTabs();
   attachDoomsdayCountdown();
   attachHeroSlideshows();
   syncBookmarkButtons();
@@ -406,9 +406,7 @@ function paintRouteSkeleton(st) {
 const SKELETON_ROUTES = {
   home: () => [state.Home, state.Home.trending],
   movies: () => [state.Movies, state.Movies.results],
-  marvel: () => [state.Marvel, state.Marvel.marvel],
-  releases: () => [state.Releases, state.Releases.movies2026],
-  news: () => [state.News, state.News.articles]
+  marvel: () => [state.Marvel, state.Marvel.marvel]
 };
 
 function maybePaintSkeleton(view) {
@@ -472,8 +470,23 @@ function attachSignupHandler() {
         return;
       }
 
-      setAuthMsg("Account created! Redirecting to login…", "success");
-      setTimeout(() => router.navigate("/login"), 900);
+      // Auto-login right after signup instead of making someone type the
+      // same password twice in a row — the extra manual login step was
+      // confusing, unexplained friction for no real benefit.
+      const loginRes = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loginId: username, password })
+      });
+      const loginData = await loginRes.json();
+      if (loginRes.ok) {
+        localStorage.setItem("token", loginData.token);
+        setAuthMsg("Account created! Welcome to Cinemetrics.", "success");
+        setTimeout(() => router.navigate("/"), 800);
+      } else {
+        setAuthMsg("Account created! Please log in.", "success");
+        setTimeout(() => router.navigate("/login"), 900);
+      }
     } catch (err) {
       console.error("SIGNUP ERROR:", err);
       setAuthMsg("Network error. Please try again.");
@@ -534,7 +547,12 @@ function attachLogout() {
 
   btn.addEventListener("click", () => {
     localStorage.removeItem("token");
+    // navigate() alone doesn't re-render the header when the route doesn't
+    // change (e.g. logging out while already on "/") — the nav kept
+    // showing "Welcome, <user>! / Logout" until a manual refresh, making
+    // logout look like it silently failed.
     router.navigate("/");
+    render(state.Home);
   });
 }
 
@@ -612,6 +630,23 @@ function attachCommentHandlers() {
 
   if (list && movieId) {
     list.addEventListener("click", async event => {
+      const voteBtn = event.target.closest(".comment-vote");
+      if (voteBtn) {
+        if (voteBtn.disabled) return;
+        const id = voteBtn.dataset.id;
+        const type = voteBtn.dataset.vote;
+        if (!id || !type) return;
+        try {
+          await voteComment(id, type);
+          state.Comments.comments = await fetchComments(movieId);
+          render(state.Comments);
+        } catch {
+          // Leave the button as-is on failure — nothing to roll back since
+          // we never optimistically updated it.
+        }
+        return;
+      }
+
       const btn = event.target.closest(".delete-comment");
       if (!btn) return;
       const id = btn.dataset.id;
@@ -787,12 +822,38 @@ function attachMyListTabs() {
   if (!tabs.length) return;
   tabs.forEach(btn => {
     btn.addEventListener("click", () => {
-      const next = btn.dataset.tab === "about" ? "about" : "list";
+      const next = ["about", "users", "bots"].includes(btn.dataset.tab) ? btn.dataset.tab : "list";
       const url = new URL(window.location.href);
       if (next === "list") url.searchParams.delete("tab");
-      else url.searchParams.set("tab", "about");
+      else url.searchParams.set("tab", next);
       window.history.replaceState({}, "", url.toString());
       render(state.MyList);
+    });
+  });
+}
+
+// Hot Takes / Character Chaos tab switch — same URL-query pattern as My
+// List's tabs, so the two audiences are shareable/bookmarkable links
+// (?audience=character) rather than only reachable by clicking.
+function attachHotTakesTabs() {
+  if (location.pathname !== "/hot-takes") return;
+  const tabs = document.querySelectorAll(".hot-takes-tab");
+  if (!tabs.length) return;
+  tabs.forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const next = btn.dataset.audience === "character" ? "character" : "human";
+      if (state.HotTakes.audience === next) return;
+      const url = new URL(window.location.href);
+      if (next === "human") url.searchParams.delete("audience");
+      else url.searchParams.set("audience", next);
+      window.history.replaceState({}, "", url.toString());
+
+      state.HotTakes.audience = next;
+      state.HotTakes.loading = true;
+      render(state.HotTakes);
+      state.HotTakes.threads = await fetchTopThreads(next);
+      state.HotTakes.loading = false;
+      render(state.HotTakes);
     });
   });
 }
@@ -989,6 +1050,17 @@ async function openInfoModal(movieId) {
     })
     .join("");
 
+  const modalComments = await fetchComments(data.id);
+  const modalCurrentUser = getCurrentUser();
+
+  // Cinemetrics' own rating/watched state, kept visibly separate from TMDB's
+  // score above — logged-out visitors just see the community number with no
+  // personal controls, rather than the fetch failing the whole modal.
+  const [myMedia, communityRating] = await Promise.all([
+    modalCurrentUser ? fetchUserMedia(data.id) : Promise.resolve({ rating: null, watched: false, watchlisted: false }),
+    fetchCommunityRating(data.id)
+  ]);
+
   body.innerHTML = `
     ${
       data.backdrop_path
@@ -1067,6 +1139,51 @@ async function openInfoModal(movieId) {
           }
         </div>
 
+        <!-- Cinemetrics' own community score + a signed-in user's personal
+             rating/watched state — deliberately separate from TMDB's score
+             above, not blended with it. -->
+        <div class="info-user-media">
+          <p class="info-community-rating">
+            ${
+              communityRating.average != null
+                ? `<span class="info-community-score">★ ${communityRating.average}</span> <span class="info-community-count">Cinemetrics users (${communityRating.count})</span>`
+                : communityRating.count > 0
+                ? `<span class="info-community-empty">${communityRating.count} rating${communityRating.count === 1 ? "" : "s"} so far — not enough yet for an average</span>`
+                : `<span class="info-community-empty">No Cinemetrics ratings yet — be the first</span>`
+            }
+          </p>
+          ${
+            modalCurrentUser
+              ? `
+            <div class="info-rate-row" data-movie-id="${data.id}">
+              <span class="info-rate-label">Your rating</span>
+              <div class="info-rate-stars" role="group" aria-label="Rate this movie">
+                ${Array.from({ length: 10 }, (_, i) => i + 1)
+                  .map(
+                    n => `
+                  <button
+                    type="button"
+                    class="info-rate-star auth-btn${myMedia.rating && n <= myMedia.rating ? " info-rate-star--active" : ""}"
+                    data-rate="${n}"
+                    aria-label="Rate ${n} out of 10"
+                  >${n}</button>`
+                  )
+                  .join("")}
+              </div>
+              <button
+                type="button"
+                class="auth-btn info-watched-btn${myMedia.watched ? " info-watched-btn--active" : ""}"
+                data-watched-toggle
+              >
+                <i class="fa-solid fa-eye"></i>
+                <span>${myMedia.watched ? "Watched" : "Mark Watched"}</span>
+              </button>
+            </div>
+          `
+              : `<p class="info-rate-login-hint">Log in to rate this movie and track what you've watched.</p>`
+          }
+        </div>
+
         ${providersHtml ? `<div class="info-providers"><h3>Where to Watch</h3>${providersHtml}</div>` : ""}
         ${reviewsHtml}
       </div>
@@ -1075,7 +1192,13 @@ async function openInfoModal(movieId) {
     ${cast ? `<div class="info-section"><h3>Top Cast</h3><div class="info-cast">${cast}</div></div>` : ""}
     ${crew ? `<div class="info-section"><h3>Director, Writers &amp; Producers</h3><div class="info-cast">${crew}</div></div>` : ""}
     ${similar ? `<div class="info-section"><h3>If you liked this</h3><div class="info-similar">${similar}</div></div>` : ""}
+
+    <div class="info-section info-comments" data-movie-id="${data.id}">
+      ${CommentsComponent({ comments: modalComments, currentUser: modalCurrentUser })}
+    </div>
   `;
+
+  attachModalCommentHandlers(body, data.id);
 
   // Wire the "Add to My List" inside the modal.
   const saveBtn = body.querySelector(".info-save-btn");
@@ -1119,6 +1242,109 @@ async function openInfoModal(movieId) {
       if (id) openInfoModal(id);
     });
   });
+
+  // Cinemetrics' own rating (1-10) and watched toggle — only rendered when
+  // logged in, so these elements simply don't exist for a logged-out visitor.
+  const rateRow = body.querySelector(".info-rate-row");
+  if (rateRow) {
+    rateRow.querySelectorAll(".info-rate-star").forEach(star => {
+      star.addEventListener("click", async () => {
+        const rating = Number(star.dataset.rate);
+        rateRow.querySelectorAll(".info-rate-star").forEach(s => {
+          s.classList.toggle("info-rate-star--active", Number(s.dataset.rate) <= rating);
+        });
+        const saved = await saveUserMedia(data.id, { rating });
+        if (saved) showToast(`Rated ${rating}/10`, "success");
+      });
+    });
+
+    const watchedBtn = rateRow.querySelector("[data-watched-toggle]");
+    if (watchedBtn) {
+      watchedBtn.addEventListener("click", async () => {
+        const nextWatched = !watchedBtn.classList.contains("info-watched-btn--active");
+        watchedBtn.classList.toggle("info-watched-btn--active", nextWatched);
+        watchedBtn.querySelector("span").textContent = nextWatched ? "Watched" : "Mark Watched";
+        const saved = await saveUserMedia(data.id, { watched: nextWatched });
+        if (saved) showToast(nextWatched ? "Marked as watched" : "Removed from watched", "info");
+      });
+    }
+  }
+}
+
+// Comments embedded in the info modal — separate from attachCommentHandlers
+// (the standalone /comments/:id page), which calls the global render() on
+// success. Doing that here would blow away the whole #root tree and close
+// the modal out from under the user, so this re-renders only the modal's
+// own comment section instead.
+function attachModalCommentHandlers(body, movieId) {
+  const container = body.querySelector(".info-comments");
+  if (!container) return;
+
+  const refresh = async () => {
+    const comments = await fetchComments(movieId);
+    container.innerHTML = CommentsComponent({ comments, currentUser: getCurrentUser() });
+    attachModalCommentHandlers(body, movieId);
+  };
+
+  const form = container.querySelector("#commentForm");
+  if (form) {
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const msg = form.querySelector("#commentMsg");
+      const text = form.querySelector("#text").value.trim();
+      if (!text) {
+        if (msg) {
+          msg.textContent = "Comment can't be empty.";
+          msg.classList.add("auth-msg--error");
+        }
+        return;
+      }
+      try {
+        await postComment({ movieId: Number(movieId), text });
+        await refresh();
+      } catch (err) {
+        if (msg) {
+          msg.textContent =
+            err?.response?.status === 401
+              ? "Your session expired — please log in again."
+              : "Couldn't post comment. Please try again.";
+          msg.classList.add("auth-msg--error");
+        }
+      }
+    });
+  }
+
+  const list = container.querySelector(".comment-list");
+  if (list) {
+    list.addEventListener("click", async event => {
+      const voteBtn = event.target.closest(".comment-vote");
+      if (voteBtn) {
+        if (voteBtn.disabled) return;
+        const id = voteBtn.dataset.id;
+        const type = voteBtn.dataset.vote;
+        if (!id || !type) return;
+        try {
+          await voteComment(id, type);
+          await refresh();
+        } catch {
+          // Nothing optimistic to roll back.
+        }
+        return;
+      }
+
+      const btn = event.target.closest(".delete-comment");
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (!id) return;
+      btn.disabled = true;
+      try {
+        await deleteComment(id);
+        await refresh();
+      } catch {
+        btn.disabled = false;
+      }
+    });
+  }
 }
 
 // Opens the same #infoModal shell with game content instead of movie content.
@@ -1155,7 +1381,7 @@ function attachInfoButtonHandler() {
       return;
     }
     const posterHit = e.target.closest("[data-info-id]");
-    if (posterHit && !e.target.closest(".card-bookmark, .trailer-btn, .info-btn")) {
+    if (posterHit && !e.target.closest(".card-bookmark, .trailer-btn, .info-btn, .comment-btn")) {
       e.preventDefault();
       e.stopPropagation();
       const id = posterHit.dataset.infoId;
@@ -1169,6 +1395,21 @@ function attachInfoButtonHandler() {
     e.preventDefault();
     const id = el.dataset.infoId;
     if (id) openInfoModal(id);
+  });
+}
+
+// Comment button on movie cards — opens that movie's comments page. Was
+// pure dead markup before: nothing in the codebase ever listened for it.
+function attachCommentButtonHandler() {
+  if (document.__commentBtnBound) return;
+  document.__commentBtnBound = true;
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".comment-btn");
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const id = btn.dataset.movieid;
+    if (id) router.navigate(`/comments/${id}`);
   });
 }
 
@@ -1282,9 +1523,59 @@ function attachSearchHandlers() {
 // -------- Movies filters (live, debounced) --------
 let moviesDebounceId = null;
 
-async function refreshMovies() {
-  state.Movies.loading = true;
-  renderMoviesResults(state.Movies);
+// "Trending now" reuses Home's already-fetched trending list instead of a
+// discover call — it's a fixed TMDB feed, not something genre/year/rating
+// filters apply to, so picking it just swaps the grid to that list.
+// Bulk-fetches comment counts for a page's worth of cards in one request
+// and writes `.commentCount` onto each item in place, so card templates can
+// read it the same way they read vote_average/poster_path. Items without a
+// numeric `.id` (shouldn't happen, but a bad API response could) are skipped
+// rather than sent to the server as NaN.
+async function attachCommentCounts(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const ids = items.map(m => m?.id).filter(id => typeof id === "number" && !Number.isNaN(id));
+  if (!ids.length) return;
+  const counts = await fetchCommentCounts(ids);
+  items.forEach(m => {
+    if (m && typeof m.id === "number") m.commentCount = counts[m.id] || 0;
+  });
+}
+
+// Same batching pattern as attachCommentCounts, for the "where to watch"
+// badge — writes `.availability` onto each item (same shape the hero badge
+// already reads: {type, label, provider?, logo?}), left untouched when
+// nothing is known rather than set to a falsy placeholder.
+async function attachAvailability(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const ids = items.map(m => m?.id).filter(id => typeof id === "number" && !Number.isNaN(id));
+  if (!ids.length) return;
+  const availability = await fetchAvailability(ids);
+  items.forEach(m => {
+    if (m && typeof m.id === "number" && availability[m.id]) m.availability = availability[m.id];
+  });
+}
+
+// Same pattern, TV's own endpoint/namespace.
+async function attachTvAvailability(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const ids = items.map(m => m?.id).filter(id => typeof id === "number" && !Number.isNaN(id));
+  if (!ids.length) return;
+  const availability = await fetchTvAvailability(ids);
+  items.forEach(m => {
+    if (m && typeof m.id === "number" && availability[m.id]) m.availability = availability[m.id];
+  });
+}
+
+async function loadMoviesResults() {
+  if (state.Movies.sort === "trending") {
+    state.Movies.results = state.Home.trending || [];
+    state.Movies.total_results = state.Movies.results.length;
+    await Promise.all([
+      attachCommentCounts(state.Movies.results),
+      attachAvailability(state.Movies.results)
+    ]);
+    return;
+  }
   const data = await discoverMovies({
     genres: state.Movies.selectedGenres,
     year: state.Movies.year,
@@ -1293,6 +1584,16 @@ async function refreshMovies() {
   });
   state.Movies.results = data.results || [];
   state.Movies.total_results = data.total_results || 0;
+  await Promise.all([
+    attachCommentCounts(state.Movies.results),
+    attachAvailability(state.Movies.results)
+  ]);
+}
+
+async function refreshMovies() {
+  state.Movies.loading = true;
+  renderMoviesResults(state.Movies);
+  await loadMoviesResults();
   state.Movies.loading = false;
   renderMoviesResults(state.Movies);
   syncBookmarkButtons();
@@ -1325,12 +1626,13 @@ function attachMoviesFilterHandlers() {
       state.Movies.selectedGenres = [];
       state.Movies.year = "";
       state.Movies.minRating = 0;
-      state.Movies.sort = "popularity.desc";
+      state.Movies.sort = "trending";
       state.Movies.loading = true;
-      // Re-render the whole view so chip UI resets cleanly, THEN refetch —
-      // render() only replays `state.Movies.results`, which still holds the
-      // old filtered list, so without this the grid never actually resets.
-      render(state.Movies).then(refreshMovies);
+      // Re-render Home (the "Browse All" grid now lives there, not on its
+      // own page) so chip UI resets cleanly, THEN refetch — render() only
+      // replays `state.Movies.results`, which still holds the old filtered
+      // list, so without this the grid never actually resets.
+      render(state.Home).then(refreshMovies);
     }
   });
 
@@ -1730,7 +2032,12 @@ function attachPersonClickHandler() {
 router.hooks({
   before: async (done, match) => {
     const path = match?.url || "/";
-    const view = path === "/" || path === "" ? "home" : camelCase(path.replace("/", ""));
+    // Only the first segment names the view — a param route like
+    // "/comments/969681" has to resolve to "comments", not get camelCased
+    // whole (which lodash turns into "comments969681", matching no case
+    // below and silently falling through to the 404 page).
+    const firstSegment = path.split("/").filter(Boolean)[0] || "";
+    const view = path === "/" || path === "" ? "home" : camelCase(firstSegment);
 
     console.log("Router resolved view:", view);
 
@@ -1739,6 +2046,9 @@ router.hooks({
 
     switch (view) {
       case "home": {
+        // Home now also carries the old standalone Movies page's "Browse All"
+        // filter grid (state.Home.movies === state.Movies, same object) —
+        // merged so visitors don't have to leave Home to filter/browse.
         const [home, topRated] = await Promise.all([
           fetchHomeData(),
           fetchTopRated()
@@ -1747,29 +2057,37 @@ router.hooks({
         state.Home.nowPlaying = home.nowPlaying;
         state.Home.popular = home.popular;
         state.Home.topRated = topRated;
-        break;
-      }
 
-      case "movies":
         try {
           if (!state.Movies.genres.length) {
             state.Movies.genres = await fetchGenres();
           }
           state.Movies.loading = true;
-          const data = await discoverMovies({
-            genres: state.Movies.selectedGenres,
-            year: state.Movies.year,
-            minRating: state.Movies.minRating,
-            sort: state.Movies.sort
-          });
-          state.Movies.results = data.results || [];
-          state.Movies.total_results = data.total_results || 0;
+          await loadMoviesResults();
           state.Movies.loading = false;
         } catch {
           state.Movies.results = [];
           state.Movies.loading = false;
         }
+
+        // Movie News folded in too (state.Home.news === state.News) — TV and
+        // Games already distribute their own news instead of a shared page,
+        // this is the same move for the movie wire.
+        if (!state.News.cache.movies?.length) {
+          try {
+            const articles = await fetchNewsTab("movies");
+            state.News.articles = articles;
+            state.News.failed = false;
+            state.News.cache.movies = articles;
+          } catch {
+            state.News.articles = [];
+            state.News.failed = true;
+          }
+        } else {
+          state.News.articles = state.News.cache.movies;
+        }
         break;
+      }
 
       case "marvel": {
         // allSettled, not all: fetchNewsTab now rejects on a real failure
@@ -1787,24 +2105,20 @@ router.hooks({
         break;
       }
 
-      case "releases":
-        try {
-          const curated = await fetchUpcomingCurated();
-          state.Releases.movies2026 = curated["2026"] || [];
-          state.Releases.movies2027 = curated["2027"] || [];
-          state.Releases.popular = curated.popular || [];
-        } catch {
-          state.Releases.movies2026 = [];
-          state.Releases.movies2027 = [];
-          state.Releases.popular = [];
-        }
-        break;
-
       case "comments": {
         const movieId = match.data.movieId;
         state.Comments.movieId = movieId;
-        state.Comments.comments = await fetchComments(movieId);
+        const [comments, details] = await Promise.all([
+          fetchComments(movieId),
+          fetchMovieDetails(movieId)
+        ]);
+        state.Comments.comments = comments;
+        state.Comments.movieTitle = details?.title || null;
+        state.Comments.moviePoster = details?.poster_path || null;
         state.Comments.currentUser = getCurrentUser();
+        // A syntactically valid movieId that TMDB doesn't recognize — a real
+        // 404, just one Netlify's rewrite can't express as an HTTP status.
+        state.Comments._entityNotFound = !details;
         break;
       }
 
@@ -1813,32 +2127,23 @@ router.hooks({
       case "profile":
         break;
 
-      case "news": {
-        const tab = NEWS_TABS.includes(state.News.activeTab)
-          ? state.News.activeTab
-          : "movies";
-        // Use per-tab cache if we already fetched this tab.
-        if (state.News.cache?.[tab]?.length) {
-          state.News.articles = state.News.cache[tab];
-          break;
-        }
-        try {
-          const articles = await fetchNewsTab(tab);
-          state.News.articles = articles;
-          state.News.failed = false;
-          if (state.News.cache) state.News.cache[tab] = articles;
-        } catch {
-          // An empty list on its own is indistinguishable from "still loading",
-          // so the view would sit on a loading message forever. Flag it.
-          state.News.articles = [];
-          state.News.failed = true;
-        }
+      case "hotTakes": {
+        const requestedAudience = new URLSearchParams(window.location.search).get("audience");
+        state.HotTakes.audience = requestedAudience === "character" ? "character" : "human";
+        state.HotTakes.loading = true;
+        state.HotTakes.threads = await fetchTopThreads(state.HotTakes.audience);
+        state.HotTakes.loading = false;
         break;
       }
 
-      case "myList":
-        // Pure-local data; render() reads it from localStorage on its own.
+      case "myList": {
+        // Pure-local watchlist data; render() reads it from localStorage.
+        // The admin user directory is the one exception — only fetched (and
+        // only shown) for the site owner's own account.
+        const current = getCurrentUser();
+        state.MyList.adminUsers = current?.username === "aznjames704" ? await fetchAllUsers() : [];
         break;
+      }
 
       case "games": {
         // The library is static; only the news rail needs fetching. Refetch
@@ -1871,6 +2176,8 @@ router.hooks({
           state.Tv.popular = shows.value.popular || [];
           state.Tv.topRated = shows.value.topRated || [];
           state.Tv.onTheAir = shows.value.onTheAir || [];
+          const tvShows = [...state.Tv.popular, ...state.Tv.topRated, ...state.Tv.onTheAir];
+          await Promise.all([attachCommentCounts(tvShows), attachTvAvailability(tvShows)]);
         }
         if (news.status === "fulfilled" && news.value) state.Tv.news = news.value;
         break;
@@ -1892,6 +2199,7 @@ router.hooks({
             state.Theaters.location = data.location;
             state.Theaters.results = data.results || [];
             state.Theaters.radius = data.radius || 25;
+            await attachCommentCounts(state.Theaters.results);
             // Fetched after paint so a cold Overpass call can't stall the route.
             state.Theaters.venuesLoading = true;
             fetchTheatersNear(state.Theaters.zip).then(near => {
@@ -1900,6 +2208,20 @@ router.hooks({
               renderTheaterResults(state.Theaters);
             });
           }
+        }
+
+        // Upcoming folded into Theaters as a curated-releases section below
+        // the ZIP/theater UI (state.Theaters.releases === state.Releases,
+        // same object — see store/index.js).
+        try {
+          const curated = await fetchUpcomingCurated();
+          state.Releases.movies2026 = curated["2026"] || [];
+          state.Releases.movies2027 = curated["2027"] || [];
+          state.Releases.popular = curated.popular || [];
+        } catch {
+          state.Releases.movies2026 = [];
+          state.Releases.movies2027 = [];
+          state.Releases.popular = [];
         }
         break;
       }
@@ -1914,20 +2236,27 @@ router.hooks({
 router
   .on({
     "/": () => render(state.Home),
-    "/movies": () => render(state.Movies),
-    "/releases": () => render(state.Releases),
     "/marvel": () => render(state.Marvel),
     "/about": () => render(state.AboutMe),
     "/comments/:movieId": () => render(state.Comments),
     "/login": () => render(state.Login),
     "/signup": () => render(state.Signup),
     "/profile": () => render(state.Profile),
-    "/news": () => render(state.News),
     "/my-list": () => render(state.MyList),
     "/games": () => render(state.Games),
     "/theaters": () => render(state.Theaters),
     "/tv": () => render(state.Tv),
-    "/discover": () => router.navigate("/movies")
+    "/hot-takes": () => render(state.HotTakes),
+    // Movies folded into Home's "Browse All" section — both old routes just
+    // bounce home now instead of 404ing for anyone with an old link saved.
+    "/discover": () => router.navigate("/"),
+    "/movies": () => router.navigate("/"),
+    // Upcoming folded into Theaters as a curated-releases section — bounce
+    // old links there instead of 404ing.
+    "/releases": () => router.navigate("/theaters"),
+    // Movie News folded into Home as its own section — bounce old links
+    // there instead of 404ing.
+    "/news": () => router.navigate("/")
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();

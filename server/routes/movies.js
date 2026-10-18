@@ -1,7 +1,7 @@
 // my movies.js routes to tmdb, for trending, now playing, popular and videos for the front end
 import express from "express";
 import axios from "axios";
-import { cacheJson } from "../utils/cache.js";
+import { cacheJson, getCached, setCached } from "../utils/cache.js";
 import { requireNumericId } from "../middleware/requireNumericId.js";
 
 // import curated data
@@ -160,9 +160,15 @@ router.get("/discover", async (req, res) => {
       language: "en-US",
       include_adult: false,
       sort_by: sort,
-      page,
-      "vote_count.gte": 25
+      page
     };
+    // The usual 25-vote floor keeps obscure/no-rating junk out of normal
+    // browsing, but it also silently empties out "Biggest box office" for
+    // the current/upcoming year — new releases haven't accumulated 25 votes
+    // yet even when they already have real box-office revenue. Box-office
+    // sort already orders by something meaningful (revenue), so it doesn't
+    // need the vote floor as a quality gate the way popularity/rating do.
+    if (sort !== "revenue.desc") params["vote_count.gte"] = 25;
     if (genres) params.with_genres = genres;
     if (year) params.primary_release_year = year;
     if (minRating) params["vote_average.gte"] = minRating;
@@ -480,6 +486,86 @@ router.get("/now_playing", async (req, res) => {
     res.json({ results: response.data.results });
   } catch (error) {
     res.status(500).json({ message: "Failed to load now playing" });
+  }
+});
+
+// Batched "where to watch" lookup for a page's worth of cards at once,
+// instead of the old approach (server/routes/movies.js's /trending handler)
+// which only paid for a providers call on the first 5 hero items. Each
+// movie ID's result is cached individually for 24h — watch-provider
+// availability barely changes day to day, so repeat views of the same grid
+// cost nothing after the first visitor warms the cache.
+const AVAILABILITY_TTL_MS = 24 * 60 * 60 * 1000;
+
+router.post("/meta/availability", async (req, res) => {
+  try {
+    const { movieIds } = req.body;
+    const ids = Array.isArray(movieIds)
+      ? [...new Set(movieIds.map(Number).filter(id => !Number.isNaN(id)))]
+      : [];
+    if (!ids.length) return res.json({});
+
+    const key = process.env.TMDB_API_KEY;
+    const result = {};
+    const uncached = [];
+    for (const id of ids) {
+      const hit = getCached(`availability:${id}`);
+      if (hit !== undefined) {
+        if (hit) result[id] = hit;
+      } else {
+        uncached.push(id);
+      }
+    }
+
+    if (uncached.length) {
+      // One now_playing call covers every uncached id's "in theaters" check,
+      // rather than a separate TMDB round trip per movie.
+      const nowPlaying = await axios
+        .get(
+          `https://api.themoviedb.org/3/movie/now_playing?api_key=${key}&language=en-US&region=US`
+        )
+        .catch(() => null);
+      const inTheaters = new Set((nowPlaying?.data?.results || []).map(m => m.id));
+
+      await Promise.all(
+        uncached.map(async id => {
+          let availability = null;
+          if (inTheaters.has(id)) {
+            availability = { type: "theaters", label: "Playing in theaters" };
+          } else {
+            try {
+              const wp = await axios.get(
+                `https://api.themoviedb.org/3/movie/${id}/watch/providers?api_key=${key}`,
+                { timeout: 8000 }
+              );
+              const flatrate = wp.data?.results?.US?.flatrate || [];
+              if (flatrate.length) {
+                const best = [...flatrate].sort(
+                  (a, b) => a.provider_name.length - b.provider_name.length
+                )[0];
+                availability = {
+                  type: "streaming",
+                  provider: best.provider_name,
+                  label: `Now streaming on ${best.provider_name}`,
+                  logo: best.logo_path
+                    ? `https://image.tmdb.org/t/p/w45${best.logo_path}`
+                    : null
+                };
+              }
+            } catch {
+              /* availability is a nice-to-have; the card renders fine without it */
+            }
+          }
+          setCached(`availability:${id}`, availability, AVAILABILITY_TTL_MS);
+          if (availability) result[id] = availability;
+        })
+      );
+    }
+
+    res.json(result);
+  } catch (err) {
+    console.error("MOVIE AVAILABILITY ERROR:", err.message);
+    res.status(500).json({ error: "Could not load availability" });
   }
 });
 

@@ -14,8 +14,23 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function timeAgo(dateString) {
+  if (!dateString) return "";
+  const diffMs = Date.now() - new Date(dateString).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateString).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export default function Comments(state) {
-  const comments = Array.isArray(state.comments) ? state.comments : [];
+  const comments = Array.isArray(state.comments)
+    ? [...state.comments].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    : [];
   const currentUser = state.currentUser || null;
 
   const list = comments.length
@@ -24,14 +39,53 @@ export default function Comments(state) {
           const name = escapeHtml(c.username || c.author || "Anonymous");
           const text = escapeHtml(c.text || "");
           const id = escapeHtml(c._id || "");
+          const avatar = c.avatar ? escapeHtml(c.avatar) : null;
+          const characterBadge = c.isCharacter
+            ? `<span class="comment-character-badge" title="Fan-made character account, not a real Cinemetrics user">🎭 Character</span>`
+            : "";
           // Server enforces real ownership on delete; this just hides the
           // button for comments that would be rejected anyway.
           const isOwn = currentUser && c.username === currentUser.username;
+          const likeCount = c.likeCount ?? (c.likedBy ? c.likedBy.length : 0);
+          const dislikeCount = c.dislikeCount ?? (c.dislikedBy ? c.dislikedBy.length : 0);
+          const myVote =
+            currentUser && Array.isArray(c.likedBy) && c.likedBy.some(uid => String(uid) === String(currentUser.id))
+              ? "like"
+              : currentUser && Array.isArray(c.dislikedBy) && c.dislikedBy.some(uid => String(uid) === String(currentUser.id))
+                ? "dislike"
+                : null;
           return `
             <li class="comment-item">
+              ${
+                avatar
+                  ? `<img class="comment-avatar" src="${avatar}" alt="${name}" loading="lazy" />`
+                  : `<span class="comment-avatar comment-avatar--fallback">${name.charAt(0).toUpperCase()}</span>`
+              }
               <div class="comment-body">
                 <strong class="comment-author">${name}</strong>
+                ${characterBadge}
+                <span class="comment-time">${timeAgo(c.createdAt)}</span>
                 <p class="comment-text">${text}</p>
+                <div class="comment-votes">
+                  <button
+                    class="comment-vote comment-vote--like ${myVote === "like" ? "comment-vote--active" : ""}"
+                    data-id="${id}"
+                    data-vote="like"
+                    ${currentUser ? "" : "disabled"}
+                    aria-label="Like this comment"
+                  >
+                    <i class="fa-solid fa-thumbs-up"></i> <span class="comment-vote-count">${likeCount}</span>
+                  </button>
+                  <button
+                    class="comment-vote comment-vote--dislike ${myVote === "dislike" ? "comment-vote--active" : ""}"
+                    data-id="${id}"
+                    data-vote="dislike"
+                    ${currentUser ? "" : "disabled"}
+                    aria-label="Dislike this comment"
+                  >
+                    <i class="fa-solid fa-thumbs-down"></i> <span class="comment-vote-count">${dislikeCount}</span>
+                  </button>
+                </div>
               </div>
               ${
                 isOwn

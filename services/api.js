@@ -8,9 +8,12 @@ import axios from "axios";
 // Fallback to localhost for local development.
 const API_BASE = process.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-// Game cover art lives in Assets/game-covers and is served by the API's
-// express.static of the repo root, so it works locally and on Render without
-// needing the bundler to fingerprint 50 images.
+// Game cover art lives in Assets/game-covers and is served by narrowly-scoped
+// express.static routes mounted in server/app.js (just that one folder, plus
+// Assets/console-logos below) — not the repo-root catch-all that was removed
+// for leaking the whole tree. Dynamic, dozens-of-files-by-runtime-name, so
+// Parcel can't fingerprint them the way it does the handful of imported
+// Assets/images/* files.
 export function gameCoverUrl(file) {
   return file ? `${API_BASE}/Assets/game-covers/${file}` : null;
 }
@@ -278,6 +281,93 @@ export async function fetchComments(movieId) {
   }
 }
 
+// Bulk comment counts for a page's worth of cards at once, rather than one
+// request per card. Returns a plain { [movieId]: count } map; a failed
+// fetch returns {} so callers can treat a missing id as "no comments" and
+// keep rendering instead of breaking the page.
+export async function fetchCommentCounts(movieIds) {
+  const ids = Array.isArray(movieIds) ? [...new Set(movieIds)].filter(id => id != null) : [];
+  if (!ids.length) return {};
+  try {
+    const response = await axios.post(`${API_BASE}/comments/meta/counts`, { movieIds: ids });
+    return response.data && typeof response.data === "object" ? response.data : {};
+  } catch (err) {
+    console.error("FETCH COMMENT COUNTS ERROR:", err);
+    return {};
+  }
+}
+
+// Cinemetrics' own rating/watched/watchlist state — separate from TMDB's
+// score. authHeaders() is defined further down (comment posting/voting use
+// it too); the declaration is hoisted so the call order here is fine.
+export async function fetchUserMedia(movieId) {
+  try {
+    const response = await axios.get(`${API_BASE}/user-media/${movieId}`, {
+      headers: authHeaders()
+    });
+    return response.data;
+  } catch (err) {
+    // Logged-out visitors hit this constantly (every modal open) — a 401
+    // here just means "no personal state to show," not a real error.
+    if (err.response?.status !== 401) console.error("FETCH USER MEDIA ERROR:", err);
+    return { rating: null, watched: false, watchlisted: false };
+  }
+}
+
+export async function saveUserMedia(movieId, updates) {
+  try {
+    const response = await axios.post(`${API_BASE}/user-media/${movieId}`, updates, {
+      headers: authHeaders()
+    });
+    return response.data;
+  } catch (err) {
+    console.error("SAVE USER MEDIA ERROR:", err);
+    return null;
+  }
+}
+
+// Aggregate "Cinemetrics users rated this" — shown alongside, not blended
+// with, TMDB's own score. No auth needed; this is a public number.
+export async function fetchCommunityRating(movieId) {
+  try {
+    const response = await axios.get(`${API_BASE}/user-media/meta/rating/${movieId}`);
+    return response.data;
+  } catch (err) {
+    console.error("FETCH COMMUNITY RATING ERROR:", err);
+    return { average: null, count: 0 };
+  }
+}
+
+// Bulk "where to watch" lookup, same batching idea as fetchCommentCounts.
+// Returns { [movieId]: { type, label, provider?, logo? } } — an id with no
+// known availability is simply absent from the response, not an error.
+export async function fetchAvailability(movieIds) {
+  const ids = Array.isArray(movieIds) ? [...new Set(movieIds)].filter(id => id != null) : [];
+  if (!ids.length) return {};
+  try {
+    const response = await axios.post(`${API_BASE}/movies/meta/availability`, { movieIds: ids });
+    return response.data && typeof response.data === "object" ? response.data : {};
+  } catch (err) {
+    console.error("FETCH AVAILABILITY ERROR:", err);
+    return {};
+  }
+}
+
+// Same idea, TV's own namespace — show IDs aren't movie IDs, so this hits a
+// separate endpoint/cache rather than reusing fetchAvailability. Flatrate
+// (subscription) only, never rent/buy pricing.
+export async function fetchTvAvailability(showIds) {
+  const ids = Array.isArray(showIds) ? [...new Set(showIds)].filter(id => id != null) : [];
+  if (!ids.length) return {};
+  try {
+    const response = await axios.post(`${API_BASE}/tv/meta/availability`, { showIds: ids });
+    return response.data && typeof response.data === "object" ? response.data : {};
+  } catch (err) {
+    console.error("FETCH TV AVAILABILITY ERROR:", err);
+    return {};
+  }
+}
+
 // Posting/deleting now require login — the server trusts the token for who
 // you are, not anything the client sends, so the Authorization header is
 // what actually lets these through.
@@ -308,6 +398,16 @@ export async function deleteComment(id) {
   }
 }
 
+export async function voteComment(id, type) {
+  try {
+    const response = await axios.post(`${API_BASE}/comments/${id}/vote`, { type }, { headers: authHeaders() });
+    return response.data;
+  } catch (err) {
+    console.error("VOTE COMMENT ERROR:", err);
+    throw err;
+  }
+}
+
 // curated upcoming movies
 export async function fetchUpcomingCurated() {
   try {
@@ -328,6 +428,32 @@ export async function fetchDoomsday() {
   } catch (err) {
     console.error("DOOMSDAY API ERROR:", err);
     return null;
+  }
+}
+
+// Admin-only account directory — the backend rejects anyone but the site
+// owner, so a non-owner request here comes back empty rather than erroring.
+export async function fetchAllUsers() {
+  try {
+    const response = await axios.get(`${API_BASE}/users`, { headers: authHeaders() });
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+// Busiest comment threads site-wide, ranked by distinct voices then volume.
+// audience: "human" (real users, the default — this is what "Hot Takes"
+// should mean) or "character" (the Marvel bot accounts' own threads, meant
+// to be surfaced as its own clearly-labeled "Character Chaos"-style feature,
+// never blended into the same list as real activity).
+export async function fetchTopThreads(audience = "human") {
+  try {
+    const response = await axios.get(`${API_BASE}/comments/meta/top`, { params: { audience } });
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (err) {
+    console.error("TOP THREADS ERROR:", err);
+    return [];
   }
 }
 

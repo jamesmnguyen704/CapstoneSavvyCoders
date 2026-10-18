@@ -1,99 +1,16 @@
 // File: views/home.js
-// Purpose: Home page — hero slider + Trending / Popular / Top Rated rows.
-//          "Now Playing in U.S. Theaters" moved to its own /theaters page,
+// Purpose: Home page — hero slider + the "Browse All" filter/grid section
+//          (Trending/Popular/Top Rated are now just sort options there,
+//          instead of three separate duplicate rows below the hero).
+//          "Now Playing in U.S. Theaters" lives on its own /theaters page,
 //          where it pairs with the ZIP lookup and nearby-cinema list.
 // Notes: Uses state populated by the router (fetchHomeData + fetchTopRated).
 
 import html from "html-literal";
 import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
-
-// Escapes for both attribute and text contexts — TMDB titles and overviews are
-// community-edited, so they reach us as untrusted HTML and land in innerHTML.
-// `&` must go first or it would double-escape the entities added after it.
-function escapeAttr(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function encodeMovie(movie) {
-  return escapeAttr(
-    JSON.stringify({
-      id: movie.id,
-      title: movie.title,
-      poster_path: movie.poster_path || null,
-      release_date: movie.release_date || null,
-      vote_average: typeof movie.vote_average === "number" ? movie.vote_average : null
-    })
-  );
-}
-
-function movieCard(movie) {
-  const year = (movie.release_date || "").slice(0, 4);
-  const rating =
-    typeof movie.vote_average === "number" && movie.vote_average > 0
-      ? movie.vote_average.toFixed(1)
-      : null;
-
-  return `
-    <div class="movie-card" data-movie-id="${movie.id}">
-      <div class="movie-poster-wrap">
-        <img
-          src="https://image.tmdb.org/t/p/w300${movie.poster_path}"
-          alt="${escapeAttr(movie.title)}"
-          loading="lazy"
-          onerror="this.onerror=null; this.src='${placeholderPoster}'"
-        />
-        <div class="card-badges">
-          ${year ? `<span class="card-badge card-badge--year">${year}</span>` : ""}
-          ${rating ? `<span class="card-badge card-badge--rating">★ ${rating}</span>` : ""}
-        </div>
-        <button
-          class="card-bookmark"
-          type="button"
-          aria-label="Add to My List"
-          data-movie='${encodeMovie(movie)}'
-        >
-          <i class="fa-regular fa-bookmark"></i>
-        </button>
-      </div>
-      <h3>${escapeAttr(movie.title)}</h3>
-      <div class="card-actions">
-        <button class="trailer-btn" data-id="${movie.id}">▶ Trailer</button>
-        <button class="info-btn" type="button" data-id="${movie.id}" aria-label="More info">
-          <i class="fa-solid fa-circle-info"></i>
-        </button>
-      </div>
-    </div>
-  `;
-}
-
-function skeletonRow(count = 8) {
-  return Array.from({ length: count })
-    .map(
-      () => `
-      <div class="movie-card skeleton-card">
-        <div class="skeleton skeleton-poster"></div>
-        <div class="skeleton skeleton-line"></div>
-        <div class="skeleton skeleton-line skeleton-line--short"></div>
-      </div>
-    `
-    )
-    .join("");
-}
-
-function row(label, items) {
-  const cards = items && items.length ? items.map(movieCard).join("") : skeletonRow();
-  return `
-    <section>
-      <h2>${label}</h2>
-      <div class="movie-carousel">${cards}</div>
-    </section>
-  `;
-}
+import { browseAllSection } from "./movies";
+import { movieNewsSection } from "./news";
+import { escapeAttr } from "./_cards";
 
 // "Playing in theaters" vs "Now streaming on Netflix" — the backend tags each
 // trending title by checking TMDB's now_playing list and watch providers.
@@ -152,19 +69,12 @@ export default st => {
         `}
     </section>
 
-    <section id="trending">
-      <h2>Trending Movies</h2>
-      <div class="movie-carousel">
-        ${st.trending && st.trending.length > 0
-          ? st.trending.slice(1).map(movieCard).join("")
-          : skeletonRow()}
-      </div>
+    <section id="browse-all">
+      ${browseAllSection(st.movies || {})}
     </section>
 
-    ${row("Popular in the U.S.", st.popular)
-      .replace("<section>", `<section id="popular">`)}
-
-    ${row("Top Rated of All Time", st.topRated)
-      .replace("<section>", `<section id="top-rated">`)}
+    <section id="movie-news">
+      ${movieNewsSection(st.news || {})}
+    </section>
   `;
 };

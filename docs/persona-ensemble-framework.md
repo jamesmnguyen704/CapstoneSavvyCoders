@@ -1,0 +1,80 @@
+# Persona Ensemble Conversation Framework
+
+A project-agnostic methodology for making multiple AI-written personas comment/converse believably on shared content — built out of the Cinemetrics Marvel bot-comments feature (see `docs/bot-comments-handoff.md` and `docs/character-voices.md` for that specific implementation), but the pipeline and rules below apply to any site or product where several distinct "characters" need to post in the same space and feel like they're actually talking to each other, not just taking turns.
+
+This doc is Layer 1 of three: this methodology, a Claude Skill that packages it into an invokable pipeline, and a reusable code template (schema + idempotent posting script) for the technical plumbing. Built 2026-10-18.
+
+In the Cinemetrics implementation specifically, this doc is one of four meant to be used together, not separately — see `docs/bot-comments-handoff.md`'s "Required reading" section for how they connect (that doc for rules/pipeline, `docs/mcu-storyline.md` for plot/continuity, `docs/character-voices.md` for voice).
+
+## Why this exists
+
+The naive version of "AI characters commenting on the same thing" reliably fails in the same few ways regardless of platform: every character ends up making the same point in a different voice, nobody actually responds to what the previous speaker said, and the thread reads as a pile of isolated one-liners instead of a conversation. This was diagnosed independently by two separate deep-research passes (ChatGPT and Gemini, both October 2026) against real academic and industry sources, and confirmed by hands-on fixes applied to a live 150-account comment-bot system. The fixes below are not theoretical — every rule here caused a specific, visible, measured improvement to a real feature.
+
+## The pipeline
+
+1. **Research** — gather real, verifiable facts about the content being commented on (plot points, real metrics, real reception). Never invent facts; a research agent should cite sources or confirm claims via a real data source (API, web search), not rely on pretrained memory, which goes stale.
+2. **Voice profile check** — before writing any character's line, check (or build) a profile for that character covering tone, speech patterns, signature phrases, and what makes them *distinct* from superficially similar characters. Facts alone produce technically-correct-but-generic lines.
+3. **Explicit objectives, not just angles** — before drafting a multi-character exchange, write down one line per character: what they're actually trying to accomplish in this specific exchange, not just their general vibe. Objectives need to conflict or diverge for the exchange to have real friction. ("Character A wants to prove it's a technical failure. Character B wants to prove it's an ethical one.")
+4. **Threaded drafting** — write turns in order, each one aware of what came before. A turn must change what the conversation is about (new information, a changed interpretation, or a changed consequence) — not just restate the setup in a different voice.
+5. **A real, separate editing pass** — after drafting the whole exchange, re-read it specifically for: does each line still serve its stated objective, is each voice distinguishable from the others, does the thread actually escalate, does the ending land. This is a distinct second pass, not a mental checklist while drafting — the two produce different results in practice.
+6. **Human review gate** — a person reviews the batch before anything goes live. Automating this away entirely removes the main quality control that catches what the rules above miss.
+7. **Post via an idempotent mechanism** — any posting script must check what's already been posted before posting again, so a crash/rate-limit/retry never produces duplicates.
+
+## Voice consistency discipline
+
+Borrowed directly from how real brand-voice social accounts stay consistent over years and across staff turnover (Wendy's Twitter persona runs on documented, pre-approved response workflows, not ad hoc improvisation by whoever's logged in that day). Practical form: a maintained "character bible" per persona — not just adjectives ("sarcastic") but **observable behaviors** ("deflects with a joke within one line of being complimented"), verified signature phrases, and an explicit "distinct from" note contrasting each character against others that could blur into the same voice. Convert traits into behaviors, not just descriptions — a 2026 industry write-up on "character drift" in long AI conversations makes the same point: vague traits degrade over a conversation, concrete behavioral triggers survive longer.
+
+## Ensemble conversation craft rules
+
+- **Anti-patterns to actively avoid**: "four flavors of agreement" (everyone restates the same verdict in their own voice), "@-mention theater" (name-dropping another character without engaging their actual point), "punchline resets" (everyone lands their own self-contained joke instead of reacting to the one before), "forced consensus" (don't make characters agree just to be cooperative — real disagreement is more interesting), "endless topping" (know when the exchange has paid off and stop).
+- **Two-topper cap**: a single premise/comparison can be escalated at most twice in a row before the next line must puncture, subvert, or close the beat instead of adding a third escalation.
+- **Terminal placement**: the punchline or key stat goes at the end of the sentence, not buried mid-sentence with an explanation tacked on after.
+- **No filler openers**: never open a reply with a polite transition ("I agree," "you make a good point, but"). Start mid-strike.
+- **Status shifts, not static status**: a grandiose/high-status character earns more from getting punctured by a blunt fact than from just being grandiose in a vacuum; an oblivious character earns more from misreading a metaphor literally than from landing their own zinger. Track who's "winning" the exchange line to line and let it move.
+- **Sanity checks before posting a thread**: the *reorder test* (if you could shuffle the replies and the thread reads almost the same, they're not really responding to each other) and the *removal test* (if deleting a middle comment doesn't change the ending's impact, it's filler).
+
+## Feedback loop (the thing we weren't doing yet)
+
+Duolingo's social team describes their approach as "the comment section is our social brief — the community drives what we do." Real engagement signals (likes, votes, replies) should feed back into what gets made next, not just inform a one-way generation process. A system with vote/like data sitting unused is leaving its best source of "what's actually landing" on the table. Concretely: before a new research pass, check which existing bits/characters/joke-styles got the strongest real reaction, and weight new content toward what's working.
+
+## Volume and pacing discipline
+
+Paid comment-farm operations (astroturfing services, state-run troll farms) are well-documented for *unethical* reasons, but the structural lesson is ethically neutral and worth taking: real operations didn't dump twenty-plus accounts onto a single post at once — the Russian IRA's documented account lifecycle was introduction → growth → amplification, paced over time, not maximum volume immediately. Applied honestly (with fully disclosed, non-deceptive character accounts): cap how many personas comment on one piece of content, and prefer fewer, sharper voices over maximum coverage. "Bigger/more important content can support more comments" is still true, but there's a ceiling past which more voices just dilutes the thread — found the hard way when one piece of content had every available persona pile on with repetitive takes.
+
+## Platform precedent (why these rules aren't arbitrary)
+
+- **Harvard, "Measuring and Controlling Persona Drift in Language Model Dialogs" (2024, arXiv 2402.10962)** — independently measured that LLM-driven personas lose character within ~8 conversational turns, caused by attention decay over the exchange. Real, published, peer-reviewed-adjacent confirmation that persona drift is a measurable phenomenon, not a vibe.
+- **Stanford/Google "Generative Agents" (Smallville, 2023, arXiv 2304.03442)** — 25 LLM agents given memory + reflection + planning (not just a static persona prompt) produced genuinely emergent social behavior — one agent's mayoral candidacy and the resulting gossip spread through the town without being scripted. Suggests giving personas some memory of past interactions, not just a fresh static prompt every time, is what produces behavior that feels alive rather than generated.
+- **Wendy's / Duolingo brand-voice social accounts** — real, large-scale, successful, *openly disclosed* persistent character voices. Proof the underlying idea (a maintained character with a consistent voice, posting in public, read as entertainment rather than a corporate statement) works at scale when done transparently.
+- **Letterboxd vs. IMDb** — Letterboxd (community-voted, conversational, witty reviews bubble to the top) is a more engaged, more loved platform than IMDb (database-first, weak community voice) for user-generated film commentary specifically. Evidence that "comments as conversation" beats "comments as review database" for this kind of content.
+- **Reddit's "Best" comment ranking** — uses a Wilson score confidence interval rather than raw vote count, specifically to stop early comments from permanently dominating just because they had more time to accumulate votes. Relevant to any feature that surfaces "top" threads/comments, not just to writing them.
+- **Commercial multi-character AI platforms (Character.AI Group Chat, Inworld, Convai)** — confirmed to exist and work at a product level, but none publish their internal orchestration. Useful to know this is a real, demanded capability; not useful as a source of technique, since the internals are proprietary.
+- **Paid comment farms / astroturfing (ethically off-limits, structurally informative)** — the term dates to a 1985 Sen. Lloyd Bentsen letter-writing campaign; modern versions (Devumi, shut down by the NY AG in 2019; Samsung fined in Taiwan in 2013) relied on "persona management software" generating fake identities at scale. The Russian Internet Research Agency's documented account lifecycle (introduction → growth → amplification, paced over time, trolling volume dropping 35% on Russian holidays) is the source for the pacing/volume-cap rule above — studied here purely for the structural lesson (don't dump every voice on one post at once), explicitly not for the deceptive parts, since our accounts are openly disclosed.
+
+### Sources (so this doesn't need re-researching)
+
+- Li, Liu, Bashkansky, Bau, Viégas, Pfister, Wattenberg, "Measuring and Controlling Persona Drift in Language Model Dialogs" (2024) — [arxiv.org/abs/2402.10962](https://arxiv.org/abs/2402.10962) · [PDF](https://arxiv.org/pdf/2402.10962v1) · [code](https://github.com/likenneth/persona_drift)
+- Park et al., "Generative Agents: Interactive Simulacra of Human Behavior" (Stanford/Google, UIST 2023) — [arxiv.org/abs/2304.03442](https://arxiv.org/abs/2304.03442) · [Stanford HAI summary](https://hai.stanford.edu/news/computational-agents-exhibit-believable-humanlike-behavior)
+- Wendy's Twitter brand-voice case study — [Everything PR: "Wendy's Twitter: How Sustained Real-Time Brand Voice Outperforms Episodic Newsjacking"](https://everything-pr.com/wendys-twitter-how-sustained-real-time-brand-voice-outperforms-episodic-newsjacking)
+- Duolingo "Duo" owl persona strategy — [Adweek: "Duolingo's Duo Owl Marketing Strategy"](https://www.adweek.com/brand-marketing/duolingo-duo-owl-marketing-strategy/) · [Technical.ly: Duolingo viral marketing lessons](https://technical.ly/company-culture/duolingo-viral-marketing-strategy-lessons)
+- Letterboxd vs. IMDb comparison — [Stat Significant: "IMDb vs Letterboxd, What's the Difference"](https://stat-significant.beehiiv.com/p/imdb-vs-letterboxd-whats-the-difference)
+- Reddit "Best" comment sort (Wilson score) — [LessWrong: "New 'Best' comment sorting system"](https://www.lesswrong.com/posts/NwbQFJ8n7rsQkpN8b/new-best-comment-sorting-system) · [Medium: "How Reddit ranking algorithms work"](https://medium.com/hacking-and-gonzo/how-reddit-ranking-algorithms-work-ef111e33d0d9)
+- Character.AI Group Chat launch — [TechCrunch, Oct 2023](https://techcrunch.com/2023/10/11/character-ai-introduces-group-chats-where-people-and-multiple-ais-can-talk-to-each-other)
+- Inworld AI multi-agent docs — [docs.inworld.ai/docs/tutorial-basics/multi-agent](https://docs.inworld.ai/docs/tutorial-basics/multi-agent)
+- Astroturfing history and Devumi/Samsung cases — [ppc.land/astroturfing](https://ppc.land/astroturfing/) · [Stanford Internet Observatory: Rally Forge Facebook takedown analysis](https://cyber.fsi.stanford.edu/node/21033)
+- IRA account lifecycle and pacing — [arxiv.org/pdf/2204.01790](https://arxiv.org/pdf/2204.01790) ("Leaders or Followers? A Temporal Analysis of Tweets from IRA Trolls") · [NBER working paper on holiday/weather effects](https://nber.org/system/files/working_papers/w28035/w28035.pdf)
+- "Character drift" in long AI conversations — [blog.meganova.ai/why-your-ai-character-breaks-after-10-messages](https://blog.meganova.ai/why-your-ai-character-breaks-after-10-messages) · [blog.meganova.ai/character-drift-why-ai-characters-break-over-time](https://blog.meganova.ai/character-drift-why-ai-characters-break-over-time/)
+- Original two AI-assisted research syntheses (ChatGPT + Gemini, full text) that kicked this off — saved in this conversation's history 2026-10-18; worth copying into this repo verbatim if they need to survive a context reset (not yet done — flag if wanted).
+
+## Known constraints / scaling problems (logged 2026-10-18, for a future research pass)
+
+This system works, but it has real throughput limits worth researching better solutions for before scaling further. Logged here specifically so a future session doesn't have to rediscover these the hard way:
+
+1. **`/auth` rate limiting (10 req/15min) forces a backend restart for every ~10 comments posted.** The single biggest friction point in any large posting batch — 11+ manual restarts in one session for a ~112-comment batch. Worth researching: a dev-only bypass, a separate unauthenticated bulk-insert path for bot content, or a proper rate-limit library with a localhost/internal-script allowlist.
+2. **No shared "already-verified facts" cache across research passes — until the one described below exists.** Every new research agent re-verifies a movie's box office/reception/cast-to-roster mapping from scratch via WebSearch + TMDB, even when a previous pass minutes earlier already found and verified the same thing.
+3. **Large ensemble cast-pulls are expensive and repeated per agent.** Checking a 100+ person cast (Endgame, Infinity War) against the 72-account roster is a lot of individual lookups, redone fresh every time instead of computed once and reused.
+4. **Parallel agents can't see each other's in-flight research**, risking duplicate WebSearches for the same fact when two agents work on adjacent movies at once.
+5. **Every batch requires human review before posting** — deliberate, not a bug (it's what catches real mistakes like the Doomsday X-Men-only skew), but it's the actual ceiling on throughput, not the AI steps.
+6. **The feedback loop (using real like/vote data to steer future research) still isn't wired up** — every batch is still a cold start with no signal from what already landed well.
+
+**Fix in progress for #2 and #3:** `server/models/movieResearchCache.js` (see below) — a persistent, DB-backed cache of verified facts and roster-to-cast mappings per movie, so a research agent checks this first and only hits TMDB/WebSearch for what's actually missing, then writes back what it found for the next pass to reuse.
