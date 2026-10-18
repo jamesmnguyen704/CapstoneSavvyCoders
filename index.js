@@ -32,7 +32,7 @@ import {
   fetchPersonDetails
 } from "./services/api";
 import { renderMoviesResults } from "./views/movies";
-import { renderGamesResults } from "./views/games";
+import { renderGamesResults, gameModalContent } from "./views/games";
 import { renderTheaterResults } from "./views/theaters";
 import { renderTvShows } from "./views/tv";
 import { DEFAULT_ZIP } from "./store/theaters";
@@ -1121,6 +1121,20 @@ async function openInfoModal(movieId) {
   });
 }
 
+// Opens the same #infoModal shell with game content instead of movie content.
+// No fetch: every game's matching headlines come from state.Games.news,
+// already loaded on the page, so this is synchronous.
+function openGameModal(key) {
+  ensureChrome();
+  const modal = document.querySelector("#infoModal");
+  const body = modal?.querySelector(".info-modal-body");
+  if (!modal || !body) return;
+
+  body.innerHTML = gameModalContent(key, state.Games);
+  modal.classList.remove("hidden");
+  document.body.classList.add("no-scroll");
+}
+
 function closeInfoModal() {
   const modal = document.querySelector("#infoModal");
   if (!modal) return;
@@ -1487,6 +1501,26 @@ function attachGamesHandlers() {
     search.addEventListener("input", () => {
       state.Games.search = search.value;
       renderGamesResults(state.Games);
+    });
+  }
+
+  // Click/Enter on a library or radar card opens its reviews-and-release
+  // modal — but not when the click actually landed on the adapt button or a
+  // headline link inside the card, which already have their own destination.
+  if (!document.__gameModalBound) {
+    document.__gameModalBound = true;
+    document.addEventListener("click", e => {
+      if (e.target.closest(".game-adapt, a, .card-bookmark")) return;
+      const card = e.target.closest("[data-game-key]");
+      if (card) openGameModal(card.dataset.gameKey);
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      if (e.target.closest(".game-adapt, a, .card-bookmark")) return;
+      const card = e.target.closest("[data-game-key]");
+      if (!card) return;
+      e.preventDefault();
+      openGameModal(card.dataset.gameKey);
     });
   }
 }

@@ -77,16 +77,6 @@ export const UPCOMING = [
     art: "gears-5.jpg"
   },
   {
-    title: "Call of Duty (2026)",
-    platforms: ["psn", "xbox", "steam"],
-    status: "window",
-    window: "Fall 2026",
-    note: "Annual slot. Title and setting still unannounced.",
-    match: ["call of duty", "black ops", "warzone"],
-    adaptation: null,
-    art: "cod-black-ops-6.jpg"
-  },
-  {
     title: "The Legend of Zelda: Ocarina of Time",
     platforms: ["switch"],
     status: "rumored",
