@@ -21,6 +21,7 @@ import {
   fetchAllUsers,
   postComment,
   deleteComment,
+  voteComment,
   fetchNewsTab,
   fetchInTheaters,
   fetchTheatersNear,
@@ -411,7 +412,6 @@ const SKELETON_ROUTES = {
   home: () => [state.Home, state.Home.trending],
   movies: () => [state.Movies, state.Movies.results],
   marvel: () => [state.Marvel, state.Marvel.marvel],
-  releases: () => [state.Releases, state.Releases.movies2026],
   news: () => [state.News, state.News.articles]
 };
 
@@ -636,6 +636,23 @@ function attachCommentHandlers() {
 
   if (list && movieId) {
     list.addEventListener("click", async event => {
+      const voteBtn = event.target.closest(".comment-vote");
+      if (voteBtn) {
+        if (voteBtn.disabled) return;
+        const id = voteBtn.dataset.id;
+        const type = voteBtn.dataset.vote;
+        if (!id || !type) return;
+        try {
+          await voteComment(id, type);
+          state.Comments.comments = await fetchComments(movieId);
+          render(state.Comments);
+        } catch {
+          // Leave the button as-is on failure — nothing to roll back since
+          // we never optimistically updated it.
+        }
+        return;
+      }
+
       const btn = event.target.closest(".delete-comment");
       if (!btn) return;
       const id = btn.dataset.id;
@@ -811,7 +828,7 @@ function attachMyListTabs() {
   if (!tabs.length) return;
   tabs.forEach(btn => {
     btn.addEventListener("click", () => {
-      const next = ["about", "users"].includes(btn.dataset.tab) ? btn.dataset.tab : "list";
+      const next = ["about", "users", "bots"].includes(btn.dataset.tab) ? btn.dataset.tab : "list";
       const url = new URL(window.location.href);
       if (next === "list") url.searchParams.delete("tab");
       else url.searchParams.set("tab", next);
@@ -1200,6 +1217,21 @@ function attachModalCommentHandlers(body, movieId) {
   const list = container.querySelector(".comment-list");
   if (list) {
     list.addEventListener("click", async event => {
+      const voteBtn = event.target.closest(".comment-vote");
+      if (voteBtn) {
+        if (voteBtn.disabled) return;
+        const id = voteBtn.dataset.id;
+        const type = voteBtn.dataset.vote;
+        if (!id || !type) return;
+        try {
+          await voteComment(id, type);
+          await refresh();
+        } catch {
+          // Nothing optimistic to roll back.
+        }
+        return;
+      }
+
       const btn = event.target.closest(".delete-comment");
       if (!btn) return;
       const id = btn.dataset.id;
@@ -1436,10 +1468,11 @@ function attachMoviesFilterHandlers() {
       state.Movies.minRating = 0;
       state.Movies.sort = "popularity.desc";
       state.Movies.loading = true;
-      // Re-render the whole view so chip UI resets cleanly, THEN refetch —
-      // render() only replays `state.Movies.results`, which still holds the
-      // old filtered list, so without this the grid never actually resets.
-      render(state.Movies).then(refreshMovies);
+      // Re-render Home (the "Browse All" grid now lives there, not on its
+      // own page) so chip UI resets cleanly, THEN refetch — render() only
+      // replays `state.Movies.results`, which still holds the old filtered
+      // list, so without this the grid never actually resets.
+      render(state.Home).then(refreshMovies);
     }
   });
 
@@ -1853,6 +1886,9 @@ router.hooks({
 
     switch (view) {
       case "home": {
+        // Home now also carries the old standalone Movies page's "Browse All"
+        // filter grid (state.Home.movies === state.Movies, same object) —
+        // merged so visitors don't have to leave Home to filter/browse.
         const [home, topRated] = await Promise.all([
           fetchHomeData(),
           fetchTopRated()
@@ -1861,10 +1897,7 @@ router.hooks({
         state.Home.nowPlaying = home.nowPlaying;
         state.Home.popular = home.popular;
         state.Home.topRated = topRated;
-        break;
-      }
 
-      case "movies":
         try {
           if (!state.Movies.genres.length) {
             state.Movies.genres = await fetchGenres();
@@ -1884,6 +1917,7 @@ router.hooks({
           state.Movies.loading = false;
         }
         break;
+      }
 
       case "marvel": {
         // allSettled, not all: fetchNewsTab now rejects on a real failure
@@ -1901,19 +1935,6 @@ router.hooks({
         break;
       }
 
-      case "releases":
-        try {
-          const curated = await fetchUpcomingCurated();
-          state.Releases.movies2026 = curated["2026"] || [];
-          state.Releases.movies2027 = curated["2027"] || [];
-          state.Releases.popular = curated.popular || [];
-        } catch {
-          state.Releases.movies2026 = [];
-          state.Releases.movies2027 = [];
-          state.Releases.popular = [];
-        }
-        break;
-
       case "comments": {
         const movieId = match.data.movieId;
         state.Comments.movieId = movieId;
@@ -1923,6 +1944,7 @@ router.hooks({
         ]);
         state.Comments.comments = comments;
         state.Comments.movieTitle = details?.title || null;
+        state.Comments.moviePoster = details?.poster_path || null;
         state.Comments.currentUser = getCurrentUser();
         break;
       }
@@ -2031,6 +2053,20 @@ router.hooks({
             });
           }
         }
+
+        // Upcoming folded into Theaters as a curated-releases section below
+        // the ZIP/theater UI (state.Theaters.releases === state.Releases,
+        // same object — see store/index.js).
+        try {
+          const curated = await fetchUpcomingCurated();
+          state.Releases.movies2026 = curated["2026"] || [];
+          state.Releases.movies2027 = curated["2027"] || [];
+          state.Releases.popular = curated.popular || [];
+        } catch {
+          state.Releases.movies2026 = [];
+          state.Releases.movies2027 = [];
+          state.Releases.popular = [];
+        }
         break;
       }
 
@@ -2044,8 +2080,6 @@ router.hooks({
 router
   .on({
     "/": () => render(state.Home),
-    "/movies": () => render(state.Movies),
-    "/releases": () => render(state.Releases),
     "/marvel": () => render(state.Marvel),
     "/about": () => render(state.AboutMe),
     "/comments/:movieId": () => render(state.Comments),
@@ -2058,7 +2092,13 @@ router
     "/theaters": () => render(state.Theaters),
     "/tv": () => render(state.Tv),
     "/hot-takes": () => render(state.HotTakes),
-    "/discover": () => router.navigate("/movies")
+    // Movies folded into Home's "Browse All" section — both old routes just
+    // bounce home now instead of 404ing for anyone with an old link saved.
+    "/discover": () => router.navigate("/"),
+    "/movies": () => router.navigate("/"),
+    // Upcoming folded into Theaters as a curated-releases section — bounce
+    // old links there instead of 404ing.
+    "/releases": () => router.navigate("/theaters")
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();

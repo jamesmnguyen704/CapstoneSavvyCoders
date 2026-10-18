@@ -7,6 +7,7 @@
 //        they open the chain's native app when it's installed.
 import html from "html-literal";
 import { skeletonCards } from "./_cards";
+import { upcomingSection } from "./releases";
 
 function escapeAttr(s) {
   return String(s ?? "")
@@ -56,6 +57,9 @@ function theaterCard(movie) {
         ${rating ? `<span class="theater-rating">★ ${rating}</span>` : ""}
         <button class="theater-info" type="button" data-id="${movie.id}" aria-label="More info on ${escapeAttr(movie.title)}">
           <i class="fa-solid fa-circle-info"></i>
+        </button>
+        <button class="theater-trailer trailer-btn" type="button" data-id="${movie.id}" aria-label="Watch trailer for ${escapeAttr(movie.title)}">
+          <i class="fa-solid fa-play"></i>
         </button>
       </div>
       <h3 class="theater-title">${escapeAttr(movie.title)}</h3>
@@ -182,4 +186,6 @@ export default state => html`
       <aside class="theater-venues" id="theaterVenues">${venuePanel(state)}</aside>
     </div>
   </section>
+
+  ${upcomingSection(state.releases || {})}
 `;

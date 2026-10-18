@@ -4,8 +4,7 @@
 export { default as Home } from "./home";
 export { default as AboutMe } from "./aboutMe";
 export { default as marvel } from "./marvel";
-export { default as Movies } from "./movies";
-export { default as Releases } from "./releases";
+export { upcomingSection } from "./releases";
 export { default as login } from "./login";
 export { default as signup } from "./signup";
 export { default as Profile } from "./profile";

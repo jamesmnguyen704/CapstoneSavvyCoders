@@ -5,6 +5,7 @@ export default {
   view: "Comments",
   movieId: null,
   movieTitle: null,
+  moviePoster: null,
   comments: [],
   currentUser: null
 };

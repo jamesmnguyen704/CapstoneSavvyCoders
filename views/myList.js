@@ -52,7 +52,7 @@ function card(item) {
       </div>
       <h3>${escapeAttr(item.title)}</h3>
       <div class="card-actions">
-        <button class="trailer-btn" data-id="${item.id}">▶ Trailer</button>
+        <button class="trailer-btn" data-id="${item.id}">▶</button>
         <button class="info-btn" type="button" data-id="${item.id}" aria-label="More info">
           <i class="fa-solid fa-circle-info"></i>
         </button>
@@ -64,7 +64,7 @@ function card(item) {
 function getActiveTab() {
   if (typeof window === "undefined") return "list";
   const tab = new URLSearchParams(window.location.search).get("tab");
-  if (tab === "list" || tab === "users") return tab;
+  if (tab === "list" || tab === "users" || tab === "bots") return tab;
   // Default (no ?tab= param, i.e. clicking "My List" in the nav) lands on
   // About first — the watchlist and admin panel are still one click away.
   return "about";
@@ -101,6 +101,15 @@ function tabBar(active, showAdmin) {
               aria-selected="${active === "users"}"
             >
               <i class="fa-solid fa-lock"></i> Users
+            </button>
+            <button
+              role="tab"
+              type="button"
+              class="mylist-tab ${active === "bots" ? "mylist-tab--active" : ""}"
+              data-tab="bots"
+              aria-selected="${active === "bots"}"
+            >
+              <i class="fa-solid fa-robot"></i> Bots
             </button>`
           : ""
       }
@@ -108,7 +117,7 @@ function tabBar(active, showAdmin) {
   `;
 }
 
-function usersPanel(users) {
+function usersPanel(users, { title, emptyLabel }) {
   const rows = users.length
     ? users
         .map(
@@ -127,13 +136,13 @@ function usersPanel(users) {
         `
         )
         .join("")
-    : `<li class="admin-user-row">No users found.</li>`;
+    : `<li class="admin-user-row">${emptyLabel}</li>`;
 
   return `
     <header class="mylist-header">
       <div>
         <span class="news-kicker">Admin — Visible Only To You</span>
-        <h1>All Signed-Up Users</h1>
+        <h1>${title}</h1>
         <p class="mylist-sub">${users.length} account${users.length === 1 ? "" : "s"} total.</p>
       </div>
     </header>
@@ -179,12 +188,20 @@ function listPanel() {
 
 export default state => {
   const adminUsers = Array.isArray(state.adminUsers) ? state.adminUsers : [];
+  const realUsers = adminUsers.filter(u => !u.isCharacter);
+  const botUsers = adminUsers.filter(u => u.isCharacter);
   const showAdmin = adminUsers.length > 0;
   const requested = getActiveTab();
-  const active = requested === "users" && !showAdmin ? "list" : requested;
+  const active = (requested === "users" || requested === "bots") && !showAdmin ? "list" : requested;
 
   const panel =
-    active === "about" ? aboutMe() : active === "users" ? usersPanel(adminUsers) : listPanel();
+    active === "about"
+      ? aboutMe()
+      : active === "users"
+      ? usersPanel(realUsers, { title: "Real Users", emptyLabel: "No real users yet." })
+      : active === "bots"
+      ? usersPanel(botUsers, { title: "Character Bots", emptyLabel: "No bot accounts yet." })
+      : listPanel();
 
   return html`
     <section class="mylist-page">

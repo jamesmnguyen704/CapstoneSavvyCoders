@@ -6,6 +6,7 @@
 
 import html from "html-literal";
 import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
+import { browseAllSection } from "./movies";
 
 // Escapes for both attribute and text contexts — TMDB titles and overviews are
 // community-edited, so they reach us as untrusted HTML and land in innerHTML.
@@ -62,7 +63,7 @@ function movieCard(movie) {
       </div>
       <h3>${escapeAttr(movie.title)}</h3>
       <div class="card-actions">
-        <button class="trailer-btn" data-id="${movie.id}">▶ Trailer</button>
+        <button class="trailer-btn" data-id="${movie.id}">▶</button>
         <button class="info-btn" type="button" data-id="${movie.id}" aria-label="More info">
           <i class="fa-solid fa-circle-info"></i>
         </button>
@@ -166,5 +167,9 @@ export default st => {
 
     ${row("Top Rated of All Time", st.topRated)
       .replace("<section>", `<section id="top-rated">`)}
+
+    <section id="browse-all">
+      ${browseAllSection(st.movies || {})}
+    </section>
   `;
 };

@@ -311,6 +311,16 @@ export async function deleteComment(id) {
   }
 }
 
+export async function voteComment(id, type) {
+  try {
+    const response = await axios.post(`${API_BASE}/comments/${id}/vote`, { type }, { headers: authHeaders() });
+    return response.data;
+  } catch (err) {
+    console.error("VOTE COMMENT ERROR:", err);
+    throw err;
+  }
+}
+
 // curated upcoming movies
 export async function fetchUpcomingCurated() {
   try {

@@ -11,7 +11,7 @@ const router = express.Router(); // creates express router for comments
 // Express doesn't swallow this path as a literal movieId.
 router.get("/meta/top", async (req, res) => {
   try {
-    const limit = Math.min(Number(req.query.limit) || 8, 20);
+    const requestedLimit = Number(req.query.limit);
     const top = await Comment.aggregate([
       {
         $group: {
@@ -25,7 +25,7 @@ router.get("/meta/top", async (req, res) => {
       // different characters talking feels "busier" than one person posting
       // five times in a row, even if the totals match.
       { $sort: { voiceCount: -1, count: -1 } },
-      { $limit: limit }
+      ...(requestedLimit > 0 ? [{ $limit: requestedLimit }] : [])
     ]);
 
     const key = process.env.TMDB_API_KEY;
@@ -59,8 +59,16 @@ router.get("/meta/top", async (req, res) => {
 // Reading comments stays public — only posting/deleting requires login.
 router.get("/:movieId", async (req, res) => {
   try {
-    const comments = await Comment.find({ movieId: req.params.movieId });
-    res.json(comments);
+    const comments = await Comment.find({ movieId: req.params.movieId }).lean();
+    // Counts computed here so the frontend doesn't need to know the schema;
+    // likedBy/dislikedBy (raw ids) stay on the payload too, so the client can
+    // work out whether *this* visitor already voted without a second call.
+    const withCounts = comments.map(c => ({
+      ...c,
+      likeCount: (c.likedBy || []).length,
+      dislikeCount: (c.dislikedBy || []).length
+    }));
+    res.json(withCounts);
   } catch (err) {
     res.status(500).json({ error: "Could not fetch comments" });
   }
@@ -84,6 +92,46 @@ router.post("/", requireAuth, async (req, res) => {
     res.status(201).json(saved);
   } catch (err) {
     res.status(400).json({ error: "Invalid comment data" });
+  }
+});
+
+// Thumbs up/down — one vote per user per comment. Toggling the same vote
+// again removes it; voting the opposite way switches it. Anyone can vote on
+// anyone's comment (including their own), same as the rest of the web.
+router.post("/:id/vote", requireAuth, async (req, res) => {
+  try {
+    const { type } = req.body;
+    if (type !== "like" && type !== "dislike") {
+      return res.status(400).json({ error: "type must be 'like' or 'dislike'" });
+    }
+    const comment = await Comment.findById(req.params.id);
+    if (!comment) {
+      return res.status(404).json({ error: "Comment not found" });
+    }
+
+    const uid = req.user.id;
+    const alreadyLiked = comment.likedBy.some(id => id.toString() === uid);
+    const alreadyDisliked = comment.dislikedBy.some(id => id.toString() === uid);
+
+    comment.likedBy = comment.likedBy.filter(id => id.toString() !== uid);
+    comment.dislikedBy = comment.dislikedBy.filter(id => id.toString() !== uid);
+
+    if (type === "like" && !alreadyLiked) comment.likedBy.push(uid);
+    if (type === "dislike" && !alreadyDisliked) comment.dislikedBy.push(uid);
+
+    await comment.save();
+    res.json({
+      likeCount: comment.likedBy.length,
+      dislikeCount: comment.dislikedBy.length,
+      userVote: comment.likedBy.some(id => id.toString() === uid)
+        ? "like"
+        : comment.dislikedBy.some(id => id.toString() === uid)
+          ? "dislike"
+          : null
+    });
+  } catch (err) {
+    console.error("VOTE ERROR:", err.message);
+    res.status(400).json({ error: "Could not record vote" });
   }
 });
 

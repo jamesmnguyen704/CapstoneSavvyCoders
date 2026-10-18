@@ -3,9 +3,10 @@
 //          "Most Anticipated" row pulled from TMDB /discover so the page
 //          stays fresh even as curated dates roll by.
 // Notes: Past-dated movies are filtered server-side before they reach here.
+//        Folded into Theaters as a section (see `upcomingSection` below) —
+//        no standalone hero/header here anymore; Theaters keeps its own.
 
 import html from "html-literal";
-import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
 
 function formatDate(iso) {
   if (!iso) return "TBA";
@@ -60,7 +61,7 @@ function releaseCard(movie) {
       <div class="release-info">
         <h3 class="release-title">${escapeAttr(movie.title || "")}</h3>
         <div class="card-actions">
-          <button class="trailer-btn" data-id="${movie.id}">▶ Trailer</button>
+          <button class="trailer-btn" data-id="${movie.id}">▶</button>
           <button class="info-btn" type="button" data-id="${movie.id}" aria-label="More info">
             <i class="fa-solid fa-circle-info"></i>
           </button>
@@ -96,49 +97,15 @@ function encodeCardMovie(movie) {
 
 const cardRow = movies => (movies || []).map(releaseCard).join("");
 
-export default st => {
+// Curated-rows-only markup — no hero/header of its own (Upcoming folded into
+// Theaters, which keeps its own ZIP-lookup hero/header; this renders as a
+// section below it on the same page).
+export function upcomingSection(st) {
   const movies2026 = (st.movies2026 || []).slice();
   const movies2027 = (st.movies2027 || []).slice();
   const popular = (st.popular || []).slice();
 
-  const heroPool = [...movies2026, ...movies2027, ...popular].filter(m => m.backdrop_path || m.poster_path);
-  const heroMovies = heroPool.slice(0, Math.min(5, heroPool.length));
-
   return html`
-    <section class="hero-slider-container">
-      ${heroMovies.length > 0
-        ? heroMovies
-            .map(
-              movie => `
-          <div class="hero-slide">
-            <img
-              class="hero-backdrop"
-              src="https://image.tmdb.org/t/p/original${movie.backdrop_path || movie.poster_path}"
-              alt="${escapeAttr(movie.title)} Backdrop"
-              onerror="this.onerror=null; this.src='${placeholderPoster}'"
-            />
-            <div class="hero-content">
-              <h1>${escapeAttr(movie.title)}</h1>
-              <p>Releasing: ${formatDate(movie.customDate || movie.release_date)}</p>
-              <div class="hero-actions">
-                <button class="trailer-btn hero-btn" data-id="${movie.id}">▶ Watch Trailer</button>
-                <button class="info-btn hero-info-btn" type="button" data-id="${movie.id}">
-                  <i class="fa-solid fa-circle-info"></i> More Info
-                </button>
-              </div>
-            </div>
-          </div>
-        `
-            )
-            .join("")
-        : `
-          <div class="hero-content">
-            <h1>Upcoming Releases</h1>
-            <p>Discover the biggest movies hitting theaters soon.</p>
-          </div>
-        `}
-    </section>
-
     <div class="releases-container">
       <section class="releases-header">
         <h1>My most anticipated movies</h1>
@@ -182,4 +149,4 @@ export default st => {
       }
     </div>
   `;
-};
+}

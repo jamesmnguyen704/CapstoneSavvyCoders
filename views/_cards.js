@@ -63,7 +63,7 @@ export function movieCard(movie, { showComment = false } = {}) {
       <h3 class="movie-title">${escapeAttr(movie.title)}</h3>
 
       <div class="card-actions">
-        <button class="trailer-btn" data-id="${movie.id}">▶ Trailer</button>
+        <button class="trailer-btn" data-id="${movie.id}">▶</button>
         <button class="info-btn" type="button" data-id="${movie.id}" aria-label="More info">
           <i class="fa-solid fa-circle-info"></i>
         </button>

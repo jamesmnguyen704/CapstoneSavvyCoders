@@ -4,7 +4,6 @@
 // Notes:   `renderMoviesResults` is exported for in-place grid updates when
 //          filters change, so inputs keep focus and the hero doesn't re-render.
 import html from "html-literal";
-import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
 import { escapeAttr, movieCard, skeletonCards } from "./_cards";
 
 const SORT_OPTIONS = [
@@ -36,10 +35,10 @@ export function renderMoviesResults(state) {
   }
 }
 
-export default function Movies(st) {
+// The filter bar + results grid, reused as Home's "Browse All" section
+// (Movies no longer has its own standalone page/hero — folded into Home).
+export function browseAllSection(st) {
   const results = Array.isArray(st.results) ? st.results : [];
-  const heroMovies = results.slice(0, 5);
-
   const genres = Array.isArray(st.genres) ? st.genres : [];
   const selected = Array.isArray(st.selectedGenres) ? st.selectedGenres : [];
   const sort = st.sort || "popularity.desc";
@@ -70,44 +69,10 @@ export default function Movies(st) {
   })();
 
   return html`
-    <section class="hero-slider-container">
-      ${heroMovies.length > 0
-        ? heroMovies
-            .map(
-              movie => `
-          <div class="hero-slide">
-            <img
-              class="hero-backdrop"
-              src="https://image.tmdb.org/t/p/original${movie.backdrop_path || movie.poster_path}"
-              alt="${escapeAttr(movie.title)} Backdrop"
-              onerror="this.onerror=null; this.src='${placeholderPoster}'"
-            />
-            <div class="hero-content">
-              <h1>${escapeAttr(movie.title)}</h1>
-              <p>${escapeAttr(movie.overview || "")}</p>
-              <div class="hero-actions">
-                <button class="trailer-btn hero-btn" data-id="${movie.id}">▶ Watch Trailer</button>
-                <button class="info-btn hero-info-btn" type="button" data-id="${movie.id}">
-                  <i class="fa-solid fa-circle-info"></i> More Info
-                </button>
-              </div>
-            </div>
-          </div>
-        `
-            )
-            .join("")
-        : `
-          <div class="hero-content">
-            <h1>Cinemetrics Community</h1>
-            <p>Rate, Review, and Discuss</p>
-          </div>
-        `}
-    </section>
-
     <div class="movies-container">
       <section class="movies-header">
         <div>
-          <h1>Cinemetrics Community: Rate, Review, and Discuss</h1>
+          <h1>Browse All Movies</h1>
           <p>Join the conversation — browse, filter, and pick your next watch.</p>
         </div>
         <div class="discover-count" id="moviesCount" aria-live="polite"></div>

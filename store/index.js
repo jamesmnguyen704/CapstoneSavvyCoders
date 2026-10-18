@@ -22,6 +22,17 @@ import Theaters from "./theaters";
 import Tv from "./tv";
 import HotTakes from "./hotTakes";
 
+// Movies folded into Home as a "Browse All" section (no more standalone
+// /movies route) — this keeps them the SAME object so every handler that
+// already reads/writes state.Movies directly keeps working unchanged.
+Home.movies = Movies;
+
+// Upcoming folded into Theaters as a curated-releases section below the
+// ZIP/theater UI (no more standalone /releases route) — same pattern: keep
+// them the SAME object so every handler that already reads/writes
+// state.Releases directly keeps working unchanged.
+Theaters.releases = Releases;
+
 export {
   Home,
   Movies,
