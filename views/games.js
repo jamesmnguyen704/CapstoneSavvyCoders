@@ -58,7 +58,13 @@ function gameCard(game) {
   const note = game.notes ? Object.values(game.notes)[0] : "";
 
   return `
-    <article class="game-card${game.recalled ? " game-card--recalled" : ""}">
+    <article
+      class="game-card${game.recalled ? " game-card--recalled" : ""}"
+      data-game-key="${escapeAttr(gameKey(game.title))}"
+      role="button"
+      tabindex="0"
+      aria-label="${escapeAttr(game.title)} — reviews and news"
+    >
       <div class="game-cover-wrap">
         ${
           cover
@@ -117,15 +123,118 @@ const STATUS_LABELS = {
 
 // Pull headlines off the gaming wire that mention a given upcoming title, so
 // each radar card carries its own live news instead of just a static blurb.
-export function newsForUpcoming(game, articles) {
-  const terms = game.match || [];
+// Radar entries carry a hand-picked `match` list (generic titles like "Call
+// of Duty" need it to avoid false hits). Library games don't — this derives
+// a reasonable term from the title alone by dropping edition/version
+// qualifiers that would never appear in a headline about the game.
+function deriveMatchTerm(title) {
+  return String(title || "")
+    .replace(/\s*\([^)]*\)\s*$/, "") // trailing "(Ultimate Edition)", "(2018)"
+    .replace(/\s*[:\-]\s*(remastered|definitive edition|goty)\b.*$/i, "")
+    .trim()
+    .toLowerCase();
+}
+
+export function matchTerms(game) {
+  if (game.match?.length) return game.match;
+  const term = deriveMatchTerm(game.title);
+  return term ? [term] : [];
+}
+
+export function newsForUpcoming(game, articles, limit = 2) {
+  const terms = matchTerms(game);
   if (!terms.length) return [];
   return (articles || [])
     .filter(a => {
       const title = String(a.title || "").toLowerCase();
       return terms.some(t => title.includes(t));
     })
-    .slice(0, 2);
+    .slice(0, limit);
+}
+
+// Every library game and radar entry gets a stable, URL-safe key so a card
+// can be looked back up by it (for the detail modal) without re-encoding the
+// whole object into a data attribute like the bookmark button does.
+export function gameKey(title) {
+  return encodeURIComponent(title);
+}
+
+export function findGameByKey(key) {
+  return (
+    GAMES.find(g => gameKey(g.title) === key) ||
+    UPCOMING.find(g => gameKey(g.title) === key) ||
+    null
+  );
+}
+
+function reviewsList(articles) {
+  if (!articles.length) {
+    return `<p class="game-modal-empty">No headlines on the wire yet for this one.</p>`;
+  }
+  return `
+    <ul class="game-modal-news">
+      ${articles
+        .map(
+          a => `
+        <li>
+          <a href="${escapeAttr(a.url)}" target="_blank" rel="noopener noreferrer">
+            <span class="game-modal-news-title">${escapeAttr(a.title)}</span>
+            <span class="game-modal-news-meta">${escapeAttr(a.source)}${
+              a.publishedAt ? ` · ${relativeTime(a.publishedAt)}` : ""
+            }</span>
+          </a>
+        </li>
+      `
+        )
+        .join("")}
+    </ul>
+  `;
+}
+
+// Modal body for a clicked game card — radar (unreleased) and library
+// (owned) entries share this, since both just need "what's being said about
+// it" plus whatever release info is on hand. No network round trip: every
+// game's news is matched client-side against the wire already in state.
+export function gameModalContent(key, state) {
+  const game = findGameByKey(key);
+  if (!game) return `<p class="game-modal-empty">Couldn't find that one.</p>`;
+
+  const isUpcoming = UPCOMING.includes(game);
+  const articles = newsForUpcoming(game, state?.news, 8);
+  const cover = game.cover ? gameCoverUrl(game.cover) : game.art ? gameCoverUrl(game.art) : null;
+  const adaptation = ADAPTATIONS[game.title];
+
+  return `
+    <div class="game-modal">
+      <div class="game-modal-head">
+        ${
+          cover
+            ? `<img class="game-modal-cover" src="${escapeAttr(cover)}" alt="" />`
+            : `<div class="game-modal-cover game-modal-cover--placeholder" aria-hidden="true">🎮</div>`
+        }
+        <div class="game-modal-head-body">
+          <h2 class="game-modal-title">${escapeAttr(game.title)}</h2>
+          <div class="game-badges">${platformBadges(game.platforms)}</div>
+          ${
+            isUpcoming
+              ? `<p class="game-modal-release">
+                   <strong>${escapeAttr(STATUS_LABELS[game.status] || game.status)}</strong>
+                   · ${escapeAttr(game.window)}
+                 </p>
+                 <p class="game-modal-note">${escapeAttr(game.note)}</p>`
+              : `<p class="game-modal-release"><strong>In the library</strong></p>`
+          }
+          ${
+            adaptation
+              ? `<button class="game-adapt" type="button" data-adaptation="${escapeAttr(adaptation)}">▶ Watch the adaptation</button>`
+              : ""
+          }
+        </div>
+      </div>
+      <h3 class="game-modal-section-head">Reviews &amp; news</h3>
+      ${reviewsList(articles)}
+    </div>
+  `;
 }
 
 // Upcoming titles have no box art in the library yet, so these cards lead with
@@ -134,7 +243,14 @@ function radarCard(game, articles) {
   const related = newsForUpcoming(game, articles);
 
   return `
-    <article class="radar-card" data-status="${escapeAttr(game.status)}">
+    <article
+      class="radar-card"
+      data-status="${escapeAttr(game.status)}"
+      data-game-key="${escapeAttr(gameKey(game.title))}"
+      role="button"
+      tabindex="0"
+      aria-label="${escapeAttr(game.title)} — reviews and release info"
+    >
       ${
         game.art
           ? `<img class="radar-art" src="${escapeAttr(gameCoverUrl(game.art))}" alt="" aria-hidden="true" loading="lazy" />`
