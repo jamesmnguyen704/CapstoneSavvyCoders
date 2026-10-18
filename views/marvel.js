@@ -1,32 +1,10 @@
 // File: views/marvel.js
 // Purpose: Render the Marvel Cinematic Universe pages grouped by phase.
-// Notes: Groups fetched MCU movies by hard-coded phase IDs and renders horizontal rows.
+// Notes: Groups fetched MCU movies by phase using the shared phase map (also
+//        used by the server to know which films to fetch) and renders rows.
 import html from "html-literal";
 import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
-
-const phaseIDs = {
-  "Phase 1": [1726, 1724, 10138, 10195, 1771, 24428],
-  "Phase 2": [68721, 76338, 100402, 118340, 99861, 102899],
-  "Phase 3": [
-    271110,
-    284052,
-    283995,
-    315635,
-    284053,
-    284054,
-    299536,
-    363088,
-    299537,
-    299534,
-    429617
-  ],
-  "Phase 4": [497698, 566525, 524434, 634649, 453395, 616037, 505642],
-  // Brave New World was missing entirely; Thunderbolts* was filed under
-  // Phase 6 even though it's Phase 5's own finale — Marvel Studios' official
-  // phase chart (and this file's own Phase 5 tagline below) puts it here.
-  "Phase 5": [640146, 447365, 609681, 533535, 822119, 986056],
-  "Phase 6": [617126, 969681, 1003596, 1003598]
-};
+import { phaseIDs } from "../shared/mcuPhases.js";
 
 // Cinematic lead + tagline per phase — drives the per-phase hero blocks.
 const phaseMeta = {
