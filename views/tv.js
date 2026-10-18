@@ -4,7 +4,7 @@
 // Notes: Mirrors the Games page layout (65/35). Provider chips call
 //        /tv/providers, which is TMDB discover/tv filtered by watch provider.
 import html from "html-literal";
-import { escapeAttr } from "./_cards";
+import { escapeAttr, availabilityIcon } from "./_cards";
 
 function relativeTime(iso) {
   const t = new Date(iso).getTime();
@@ -37,7 +37,10 @@ function showCard(show) {
         <div class="show-badges">
           ${show.measured ? `<span class="show-badge show-badge--measured" title="Real measured viewing minutes this week (Nielsen)">#${show.rank} this week</span>` : ""}
           ${year ? `<span class="show-badge">${year}</span>` : ""}
-          ${rating ? `<span class="show-badge show-badge--rating">★ ${rating}</span>` : ""}
+          <div class="show-badge-row">
+            ${rating ? `<span class="show-badge show-badge--rating">★ ${rating}</span>` : ""}
+            ${availabilityIcon(show)}
+          </div>
         </div>
       </div>
       <h3 class="show-title">${escapeAttr(show.name)}</h3>

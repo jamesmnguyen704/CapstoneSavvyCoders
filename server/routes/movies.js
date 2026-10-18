@@ -160,9 +160,15 @@ router.get("/discover", async (req, res) => {
       language: "en-US",
       include_adult: false,
       sort_by: sort,
-      page,
-      "vote_count.gte": 25
+      page
     };
+    // The usual 25-vote floor keeps obscure/no-rating junk out of normal
+    // browsing, but it also silently empties out "Biggest box office" for
+    // the current/upcoming year — new releases haven't accumulated 25 votes
+    // yet even when they already have real box-office revenue. Box-office
+    // sort already orders by something meaningful (revenue), so it doesn't
+    // need the vote floor as a quality gate the way popularity/rating do.
+    if (sort !== "revenue.desc") params["vote_count.gte"] = 25;
     if (genres) params.with_genres = genres;
     if (year) params.primary_release_year = year;
     if (minRating) params["vote_average.gte"] = minRating;

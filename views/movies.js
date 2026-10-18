@@ -27,7 +27,7 @@ export function renderMoviesResults(state) {
     el.innerHTML = `<p class="discover-empty">No movies match those filters — loosen something up.</p>`;
     return;
   }
-  el.innerHTML = results.map(m => movieCard(m, { showComment: true })).join("");
+  el.innerHTML = results.map(movieCard).join("");
   const count = document.querySelector("#moviesCount");
   if (count) {
     count.textContent = total_results
@@ -118,7 +118,7 @@ export function browseAllSection(st) {
 
       <div class="discover-grid" id="moviesResults">
         ${results.length
-          ? results.map(m => movieCard(m, { showComment: true })).join("")
+          ? results.map(movieCard).join("")
           : skeletonCards()}
       </div>
     </div>

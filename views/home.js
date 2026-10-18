@@ -69,12 +69,12 @@ export default st => {
         `}
     </section>
 
-    <section id="movie-news">
-      ${movieNewsSection(st.news || {})}
-    </section>
-
     <section id="browse-all">
       ${browseAllSection(st.movies || {})}
+    </section>
+
+    <section id="movie-news">
+      ${movieNewsSection(st.news || {})}
     </section>
   `;
 };
