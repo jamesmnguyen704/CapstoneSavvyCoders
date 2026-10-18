@@ -495,10 +495,26 @@ router.get("/popular", async (req, res) => {
 });
 
 // Top rated — lifetime highest rated on TMDB. Complements trending/popular.
+// TMDB's own /movie/top_rated has no vote-count floor, so a brand-new film
+// with a few hundred enthusiastic votes at 9.0 ranks above The Shawshank
+// Redemption (31,000+ votes, 8.7) on a row literally labeled "Top Rated of
+// All Time." Discover with a real floor gives control TMDB's canned
+// endpoint doesn't: sort by rating, but only among films enough people have
+// actually weighed in on to make that rating mean something.
 router.get("/top_rated", async (req, res) => {
   try {
     const response = await axios.get(
-      `https://api.themoviedb.org/3/movie/top_rated?api_key=${process.env.TMDB_API_KEY}&language=en-US&region=US`
+      "https://api.themoviedb.org/3/discover/movie",
+      {
+        params: {
+          api_key: process.env.TMDB_API_KEY,
+          language: "en-US",
+          region: "US",
+          sort_by: "vote_average.desc",
+          "vote_count.gte": 3000
+        },
+        timeout: 8000
+      }
     );
     res.json({ results: response.data.results });
   } catch {
