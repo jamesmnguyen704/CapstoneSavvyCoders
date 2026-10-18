@@ -223,6 +223,22 @@ function attachModalListenersOnce() {
 }
 
 // where my rendering happens
+// A well-formed route (e.g. /comments/999999999) still gets served as HTTP
+// 200 by Netlify's rewrite — there's no server rendering this app to return
+// a real 4xx from. This is the client-side half of that fix: tell crawlers
+// not to index a page whose content turned out not to exist, the moment we
+// know that, same signal a real 404 status would carry. Cleared on every
+// other render so a stale flag can't stick around on a later, real page.
+function setRobotsMeta(noindex) {
+  let meta = document.querySelector('meta[name="robots"]');
+  if (!meta) {
+    meta = document.createElement("meta");
+    meta.name = "robots";
+    document.head.appendChild(meta);
+  }
+  meta.content = noindex ? "noindex, nofollow" : "index, follow";
+}
+
 async function render(st = state.Home) {
   console.log("Rendering with state:", st);
 
@@ -233,6 +249,8 @@ async function render(st = state.Home) {
     st.header && st.header !== "Cinemetrics"
       ? `${st.header} — Cinemetrics`
       : "Cinemetrics — Movies, TV & Games Discovery";
+
+  setRobotsMeta(st === state.ViewNotFound || Boolean(st._entityNotFound));
 
   const mainContent = await Main(st);
 
@@ -2098,6 +2116,9 @@ router.hooks({
         state.Comments.movieTitle = details?.title || null;
         state.Comments.moviePoster = details?.poster_path || null;
         state.Comments.currentUser = getCurrentUser();
+        // A syntactically valid movieId that TMDB doesn't recognize — a real
+        // 404, just one Netlify's rewrite can't express as an HTTP status.
+        state.Comments._entityNotFound = !details;
         break;
       }
 
