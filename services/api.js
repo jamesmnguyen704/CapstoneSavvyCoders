@@ -281,6 +281,22 @@ export async function fetchComments(movieId) {
   }
 }
 
+// Bulk comment counts for a page's worth of cards at once, rather than one
+// request per card. Returns a plain { [movieId]: count } map; a failed
+// fetch returns {} so callers can treat a missing id as "no comments" and
+// keep rendering instead of breaking the page.
+export async function fetchCommentCounts(movieIds) {
+  const ids = Array.isArray(movieIds) ? [...new Set(movieIds)].filter(id => id != null) : [];
+  if (!ids.length) return {};
+  try {
+    const response = await axios.post(`${API_BASE}/comments/meta/counts`, { movieIds: ids });
+    return response.data && typeof response.data === "object" ? response.data : {};
+  } catch (err) {
+    console.error("FETCH COMMENT COUNTS ERROR:", err);
+    return {};
+  }
+}
+
 // Posting/deleting now require login — the server trusts the token for who
 // you are, not anything the client sends, so the Authorization header is
 // what actually lets these through.

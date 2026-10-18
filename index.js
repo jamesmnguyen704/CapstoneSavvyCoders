@@ -18,6 +18,7 @@ import {
   fetchMovieVideos,
   fetchComments,
   fetchTopThreads,
+  fetchCommentCounts,
   fetchAllUsers,
   postComment,
   deleteComment,
@@ -1387,10 +1388,26 @@ let moviesDebounceId = null;
 // "Trending now" reuses Home's already-fetched trending list instead of a
 // discover call — it's a fixed TMDB feed, not something genre/year/rating
 // filters apply to, so picking it just swaps the grid to that list.
+// Bulk-fetches comment counts for a page's worth of cards in one request
+// and writes `.commentCount` onto each item in place, so card templates can
+// read it the same way they read vote_average/poster_path. Items without a
+// numeric `.id` (shouldn't happen, but a bad API response could) are skipped
+// rather than sent to the server as NaN.
+async function attachCommentCounts(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const ids = items.map(m => m?.id).filter(id => typeof id === "number" && !Number.isNaN(id));
+  if (!ids.length) return;
+  const counts = await fetchCommentCounts(ids);
+  items.forEach(m => {
+    if (m && typeof m.id === "number") m.commentCount = counts[m.id] || 0;
+  });
+}
+
 async function loadMoviesResults() {
   if (state.Movies.sort === "trending") {
     state.Movies.results = state.Home.trending || [];
     state.Movies.total_results = state.Movies.results.length;
+    await attachCommentCounts(state.Movies.results);
     return;
   }
   const data = await discoverMovies({
@@ -1401,6 +1418,7 @@ async function loadMoviesResults() {
   });
   state.Movies.results = data.results || [];
   state.Movies.total_results = data.total_results || 0;
+  await attachCommentCounts(state.Movies.results);
 }
 
 async function refreshMovies() {
@@ -1983,6 +2001,7 @@ router.hooks({
           state.Tv.popular = shows.value.popular || [];
           state.Tv.topRated = shows.value.topRated || [];
           state.Tv.onTheAir = shows.value.onTheAir || [];
+          await attachCommentCounts([...state.Tv.popular, ...state.Tv.topRated, ...state.Tv.onTheAir]);
         }
         if (news.status === "fulfilled" && news.value) state.Tv.news = news.value;
         break;
@@ -2004,6 +2023,7 @@ router.hooks({
             state.Theaters.location = data.location;
             state.Theaters.results = data.results || [];
             state.Theaters.radius = data.radius || 25;
+            await attachCommentCounts(state.Theaters.results);
             // Fetched after paint so a cold Overpass call can't stall the route.
             state.Theaters.venuesLoading = true;
             fetchTheatersNear(state.Theaters.zip).then(near => {
