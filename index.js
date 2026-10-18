@@ -56,12 +56,6 @@ const API_BASE =
 
 const router = new Navigo("/");
 
-// News tabs, in display order. Must match views/news.js TAB_CONFIG and the
-// route table in server/routes/news.js.
-// Gaming lives on /games and TV + streaming on /tv, each in their own rail,
-// so /news is the movie wire only.
-const NEWS_TABS = ["movies"];
-
 // How long a fetched wire stays good on the client. Matches the API's own
 // 5-minute response cache, so a refetch past this either serves that cache or
 // genuinely pulls fresh headlines.
@@ -206,38 +200,6 @@ function attachModalListenersOnce() {
     if (e.target.closest(".close-modal")) {
       e.preventDefault();
       closeTrailerModal();
-      return;
-    }
-
-    // News tab switch (Movies / TV / Streaming / Gaming)
-    const newsTabBtn = e.target.closest("[data-news-tab]");
-    if (newsTabBtn) {
-      e.preventDefault();
-      const nextTab = NEWS_TABS.includes(newsTabBtn.dataset.newsTab)
-        ? newsTabBtn.dataset.newsTab
-        : "movies";
-      if (state.News.activeTab === nextTab) return;
-      state.News.activeTab = nextTab;
-      // Pull from cache if present, else fetch.
-      const cached = state.News.cache?.[nextTab];
-      if (cached && cached.length) {
-        state.News.articles = cached;
-        render(state.News);
-      } else {
-        state.News.articles = [];
-        render(state.News);
-        (async () => {
-          try {
-            const articles = await fetchNewsTab(nextTab);
-            state.News.articles = articles;
-            if (state.News.cache) state.News.cache[nextTab] = articles;
-            render(state.News);
-          } catch {
-            state.News.articles = [];
-            render(state.News);
-          }
-        })();
-      }
       return;
     }
 
@@ -411,8 +373,7 @@ function paintRouteSkeleton(st) {
 const SKELETON_ROUTES = {
   home: () => [state.Home, state.Home.trending],
   movies: () => [state.Movies, state.Movies.results],
-  marvel: () => [state.Marvel, state.Marvel.marvel],
-  news: () => [state.News, state.News.articles]
+  marvel: () => [state.Marvel, state.Marvel.marvel]
 };
 
 function maybePaintSkeleton(view) {
@@ -1921,6 +1882,23 @@ router.hooks({
           state.Movies.results = [];
           state.Movies.loading = false;
         }
+
+        // Movie News folded in too (state.Home.news === state.News) — TV and
+        // Games already distribute their own news instead of a shared page,
+        // this is the same move for the movie wire.
+        if (!state.News.cache.movies?.length) {
+          try {
+            const articles = await fetchNewsTab("movies");
+            state.News.articles = articles;
+            state.News.failed = false;
+            state.News.cache.movies = articles;
+          } catch {
+            state.News.articles = [];
+            state.News.failed = true;
+          }
+        } else {
+          state.News.articles = state.News.cache.movies;
+        }
         break;
       }
 
@@ -1964,29 +1942,6 @@ router.hooks({
         state.HotTakes.threads = await fetchTopThreads();
         state.HotTakes.loading = false;
         break;
-
-      case "news": {
-        const tab = NEWS_TABS.includes(state.News.activeTab)
-          ? state.News.activeTab
-          : "movies";
-        // Use per-tab cache if we already fetched this tab.
-        if (state.News.cache?.[tab]?.length) {
-          state.News.articles = state.News.cache[tab];
-          break;
-        }
-        try {
-          const articles = await fetchNewsTab(tab);
-          state.News.articles = articles;
-          state.News.failed = false;
-          if (state.News.cache) state.News.cache[tab] = articles;
-        } catch {
-          // An empty list on its own is indistinguishable from "still loading",
-          // so the view would sit on a loading message forever. Flag it.
-          state.News.articles = [];
-          state.News.failed = true;
-        }
-        break;
-      }
 
       case "myList": {
         // Pure-local watchlist data; render() reads it from localStorage.
@@ -2091,7 +2046,6 @@ router
     "/login": () => render(state.Login),
     "/signup": () => render(state.Signup),
     "/profile": () => render(state.Profile),
-    "/news": () => render(state.News),
     "/my-list": () => render(state.MyList),
     "/games": () => render(state.Games),
     "/theaters": () => render(state.Theaters),
@@ -2103,7 +2057,10 @@ router
     "/movies": () => router.navigate("/"),
     // Upcoming folded into Theaters as a curated-releases section — bounce
     // old links there instead of 404ing.
-    "/releases": () => router.navigate("/theaters")
+    "/releases": () => router.navigate("/theaters"),
+    // Movie News folded into Home as its own section — bounce old links
+    // there instead of 404ing.
+    "/news": () => router.navigate("/")
   })
   .notFound(() => render(state.ViewNotFound))
   .resolve();

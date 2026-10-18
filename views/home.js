@@ -9,6 +9,7 @@
 import html from "html-literal";
 import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
 import { browseAllSection } from "./movies";
+import { movieNewsSection } from "./news";
 import { escapeAttr } from "./_cards";
 
 // "Playing in theaters" vs "Now streaming on Netflix" — the backend tags each
@@ -66,6 +67,10 @@ export default st => {
             <p>Dive into trending films, box office chaos, and upcoming releases.</p>
           </div>
         `}
+    </section>
+
+    <section id="movie-news">
+      ${movieNewsSection(st.news || {})}
     </section>
 
     <section id="browse-all">

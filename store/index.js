@@ -33,6 +33,11 @@ Home.movies = Movies;
 // state.Releases directly keeps working unchanged.
 Theaters.releases = Releases;
 
+// Movie News folded into Home as its own section (no more standalone /news
+// route) — same pattern again: keep it the SAME object so every handler
+// that already reads/writes state.News directly keeps working unchanged.
+Home.news = News;
+
 export {
   Home,
   Movies,

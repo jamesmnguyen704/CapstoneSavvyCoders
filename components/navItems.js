@@ -19,7 +19,6 @@ export const navItemsData = [
   { url: "/tv", text: "TV" },
   { url: "/theaters", text: "Theater" },
   { url: "/marvel", text: "Marvel" },
-  { url: "/news", text: "News" },
   { url: "/games", text: "Games" },
   { url: "/my-list", text: "About" },
   { url: "/hot-takes", text: "Hot Takes" }

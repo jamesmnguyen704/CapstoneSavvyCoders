@@ -17,7 +17,8 @@ Three sessions run against this same working tree at once. Address each by name:
 ## Open items carried forward (top of file so they don't get buried)
 
 - UI is running a design-system audit on `style.css`: adding a spacing/radius/motion token scale, merging ~handful of genuinely-duplicated selectors (`.info-cast-card`, `.info-similar-card`, `.radar-card`, etc. — most of the ~50 multi-defined selectors turned out to be legitimate responsive/override layers, not debt), then building a shared base card class for the highest-traffic cards.
-- **Bot's comment-posting script isn't idempotent on rerun** — hitting the `/auth` rate limit mid-batch and restarting the backend (the standard workaround) can duplicate comments if the script re-posts ones that actually went through before the restart. Fix: a MongoDB unique index on (username, movieId, text) or similar, plus a real reusable posting script that checks what's already there before posting. Not blocking today's work, logged by Bot + UI as backlog.
+- ~~Bot's comment-posting script isn't idempotent on rerun~~ **Done (2026-10-18):** added a unique Mongo index on `{userId, movieId, text}` (`server/models/comments.js`) and a real, checked-in, idempotent script (`server/scripts/bot-comments.js`, `npm run bot-comments -- path/to/batch.json`) that skips anything already posted. Safe to rerun after an `/auth` rate-limit restart now.
+- **New for UI, not yet started:** James wants every movie card redesigned to match a reference screenshot he gave — rating badge top-left, info icon top-right, play button bottom-left with a hover popup trailer preview, and a small comment-count badge bottom-right, applied universally across every page's cards. Good timing with the shared base-card-class work already in progress; fold this into that instead of doing it twice.
 
 ## Session log
 
@@ -48,7 +49,15 @@ Work on this feature set has been ongoing since **Friday 2026-10-16**. Earlier d
 
 **Bot lane, in progress:**
 - Posted a `rogue` (Inde Navarrette) comment on *Obsession*
-- Researching/writing/posting for the 5 approved under-covered-but-popular titles: **Spider-Man: Brand New Day** (969681), **Resident Evil** 2026 (1423191), **Animals** (1236045), **Practical Magic 2** (1302904), **Masterplan** (1561726)
+- Batch 1 posted (9 comments): **Spider-Man: Brand New Day** (969681), **Resident Evil** 2026 (1423191), **Animals** (1236045), **Practical Magic 2** (1302904), **Masterplan** (1561726). 4 new verified accounts created: `aliciamasters` (Kerry Washington), `ronan` (Lee Pace), `wolfsbane` (Maisie Williams), `erskine` (Stanley Tucci).
+- Batch 2 posted (5 comments, James-selected from a 12-movie gossip/trendy-angle research pass): **Toy Story 5** (1084244), **Insidious: Out of the Further** (1291595), **Whalefall** (1255833), **Digger** (1248832), **You Can See Everything** (1765072) — all `popcornreview` except `thanos` on Whalefall (Josh Brolin, confirmed cast).
+- **New hard rule added to `docs/bot-comments-handoff.md` (#8):** a roster character can only comment "from inside" a Marvel movie if they're in its confirmed TMDB cast *and* the joke specifically ties to that film — no generic "Marvel character reacts to any Marvel movie" filler. Added after James caught `hela` commenting on *Avengers: Doomsday* despite not being in its cast; audited and removed 13 similar bad comments from that thread (`hela`, `wolverine`, `galactus`, `silversurfer`, `ultron`, `redskull`, `zemo`, `mandarin`, `thanos`, `valkyrie`, `warmachine`, `deadpool`).
+- Carried forward from Orchastrator: still need to do the systematic TMDB-credits sweep across `shared/mcuPhases.js`'s `mcuMovieIds` list, and a QA audit of other existing Marvel-movie comment threads against the new rule #8 (same mistake may exist elsewhere, pre-dating the rule).
+- **Review gate:** James wants candidate movies/comments run by him before anything posts — not just fact-checked and posted autonomously. Applies to future batches, including the TMDB sweep and QA audit above.
+
+**Committed (Orchastrator, pending — Movie News → Home merge):**
+- Folded Movie News into Home as its own section (`movieNewsSection()`, same shared-object-store pattern as `Home.movies`/`Theaters.releases`), retired the standalone `/news` route (redirects to `/`), removed it from the nav, and deleted the dead `tv`/`streaming`/`gaming` tab config in `views/news.js` that nothing could ever reach (`NEWS_TABS` in `index.js` was `["movies"]` only). TV and Games already distributed their own news this same way — News was the one page left out.
+- `views/news.js` currently has an unrelated uncommitted image-fallback fix sitting in it too (not from UI or Bot) — my changes are in a different part of the file (TAB_CONFIG/export shape, not the image markup) so there's no line-level conflict, but flagging in case whoever owns that fix wants to commit separately.
 
 **UI lane, in progress (uncommitted `style.css` diff, ~200+ lines):**
 - Fixing the `/theaters` page card grid (`.theater-grid`, ~style.css line 4215), working directly with James
@@ -56,7 +65,7 @@ Work on this feature set has been ongoing since **Friday 2026-10-16**. Earlier d
 - **Newly flagged, not yet started:** hero section on Home needs (1) Trailer/Info buttons made smaller and (2) the hero text block moved from bottom-left to top-left (`.hero-content` is currently `position: absolute; bottom: 18%`, ~style.css line 1594); also a visual bug where two hero slides' text overlaps/ghosts during the crossfade transition (`.hero-slide` crossfade animation, ~style.css line 226 — likely needs z-index/visibility handling between outgoing and incoming slides)
 
 **Untouched by any lane today (pre-existing, belongs to whichever session owns the Nielsen Top 10 feature):**
-- `server/routes/{news,tv}.js`, `views/{news,tv,_gamesData}.js`, untracked `server/services/`, new game-cover images (`cod-black-ops-6.png`, `mario-kart-world.png`)
+- `server/routes/{news,tv}.js`, `views/{tv,_gamesData}.js`, untracked `server/services/`, new game-cover images (`cod-black-ops-6.png`, `mario-kart-world.png`). (`views/news.js` now also has my News→Home merge changes mixed in with this lane's existing image-fallback fix — see above.)
 
 ## Open items carried forward
 
@@ -64,4 +73,4 @@ Work on this feature set has been ongoing since **Friday 2026-10-16**. Earlier d
 - Resolve the hero crossfade overlap bug and bottom→top-left reposition (UI lane)
 - Watch-provider badge feature — needs the API-cost tradeoff decision flagged to James before widening past the 5-item hero limit (UI lane)
 - Commit whatever the Nielsen Top 10 / news-tv session owns, once it's done with it
-- Exploratory, not actioned: whether the News tab is redundant with TV page's own news rail (recommended keeping as-is unless James wants to merge)
+- ~~Exploratory: whether the News tab is redundant with TV page's own news rail~~ **Resolved (2026-10-18):** yes — folded into Home, see above.
