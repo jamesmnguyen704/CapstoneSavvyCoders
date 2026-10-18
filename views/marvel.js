@@ -21,8 +21,11 @@ const phaseIDs = {
     429617
   ],
   "Phase 4": [497698, 566525, 524434, 634649, 453395, 616037, 505642],
-  "Phase 5": [640146, 447365, 609681, 533535],
-  "Phase 6": [986056, 617126, 969681, 1003596, 1003598]
+  // Brave New World was missing entirely; Thunderbolts* was filed under
+  // Phase 6 even though it's Phase 5's own finale — Marvel Studios' official
+  // phase chart (and this file's own Phase 5 tagline below) puts it here.
+  "Phase 5": [640146, 447365, 609681, 533535, 822119, 986056],
+  "Phase 6": [617126, 969681, 1003596, 1003598]
 };
 
 // Cinematic lead + tagline per phase — drives the per-phase hero blocks.

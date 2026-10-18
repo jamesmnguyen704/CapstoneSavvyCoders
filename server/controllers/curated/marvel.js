@@ -49,14 +49,16 @@ const mcuMovies = [
   616037, // Thor: Love and Thunder
   505642, // Black Panther: Wakanda Forever
 
-  // Phase 5
+  // Phase 5 (Thunderbolts* belongs here, not Phase 6 — it's Phase 5's
+  // finale; Brave New World was missing from this list entirely)
   640146, // Ant-Man and the Wasp: Quantumania
   447365, // Guardians of the Galaxy Vol. 3
   609681, // The Marvels
   533535, // Deadpool & Wolverine
+  822119, // Captain America: Brave New World (2025)
+  986056, // Thunderbolts* (2025)
 
   // Phase 6 — upcoming
-  986056, // Thunderbolts (2025)
   617126, // Fantastic Four: First Steps (2025)
   969681, // Spider-Man: Brand New Day (2026)
   1003596, // Avengers: Doomsday (2026)
