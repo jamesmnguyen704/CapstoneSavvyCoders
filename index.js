@@ -263,6 +263,7 @@ async function render(st = state.Home) {
   attachTvHandlers();
   attachPersonClickHandler();
   attachMyListTabs();
+  attachHotTakesTabs();
   attachDoomsdayCountdown();
   attachHeroSlideshows();
   syncBookmarkButtons();
@@ -808,6 +809,32 @@ function attachMyListTabs() {
       else url.searchParams.set("tab", next);
       window.history.replaceState({}, "", url.toString());
       render(state.MyList);
+    });
+  });
+}
+
+// Hot Takes / Character Chaos tab switch — same URL-query pattern as My
+// List's tabs, so the two audiences are shareable/bookmarkable links
+// (?audience=character) rather than only reachable by clicking.
+function attachHotTakesTabs() {
+  if (location.pathname !== "/hot-takes") return;
+  const tabs = document.querySelectorAll(".hot-takes-tab");
+  if (!tabs.length) return;
+  tabs.forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const next = btn.dataset.audience === "character" ? "character" : "human";
+      if (state.HotTakes.audience === next) return;
+      const url = new URL(window.location.href);
+      if (next === "human") url.searchParams.delete("audience");
+      else url.searchParams.set("audience", next);
+      window.history.replaceState({}, "", url.toString());
+
+      state.HotTakes.audience = next;
+      state.HotTakes.loading = true;
+      render(state.HotTakes);
+      state.HotTakes.threads = await fetchTopThreads(next);
+      state.HotTakes.loading = false;
+      render(state.HotTakes);
     });
   });
 }
@@ -2067,11 +2094,14 @@ router.hooks({
       case "profile":
         break;
 
-      case "hotTakes":
+      case "hotTakes": {
+        const requestedAudience = new URLSearchParams(window.location.search).get("audience");
+        state.HotTakes.audience = requestedAudience === "character" ? "character" : "human";
         state.HotTakes.loading = true;
-        state.HotTakes.threads = await fetchTopThreads();
+        state.HotTakes.threads = await fetchTopThreads(state.HotTakes.audience);
         state.HotTakes.loading = false;
         break;
+      }
 
       case "myList": {
         // Pure-local watchlist data; render() reads it from localStorage.
