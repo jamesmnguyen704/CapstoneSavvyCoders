@@ -297,6 +297,47 @@ export async function fetchCommentCounts(movieIds) {
   }
 }
 
+// Cinemetrics' own rating/watched/watchlist state — separate from TMDB's
+// score. authHeaders() is defined further down (comment posting/voting use
+// it too); the declaration is hoisted so the call order here is fine.
+export async function fetchUserMedia(movieId) {
+  try {
+    const response = await axios.get(`${API_BASE}/user-media/${movieId}`, {
+      headers: authHeaders()
+    });
+    return response.data;
+  } catch (err) {
+    // Logged-out visitors hit this constantly (every modal open) — a 401
+    // here just means "no personal state to show," not a real error.
+    if (err.response?.status !== 401) console.error("FETCH USER MEDIA ERROR:", err);
+    return { rating: null, watched: false, watchlisted: false };
+  }
+}
+
+export async function saveUserMedia(movieId, updates) {
+  try {
+    const response = await axios.post(`${API_BASE}/user-media/${movieId}`, updates, {
+      headers: authHeaders()
+    });
+    return response.data;
+  } catch (err) {
+    console.error("SAVE USER MEDIA ERROR:", err);
+    return null;
+  }
+}
+
+// Aggregate "Cinemetrics users rated this" — shown alongside, not blended
+// with, TMDB's own score. No auth needed; this is a public number.
+export async function fetchCommunityRating(movieId) {
+  try {
+    const response = await axios.get(`${API_BASE}/user-media/meta/rating/${movieId}`);
+    return response.data;
+  } catch (err) {
+    console.error("FETCH COMMUNITY RATING ERROR:", err);
+    return { average: null, count: 0 };
+  }
+}
+
 // Bulk "where to watch" lookup, same batching idea as fetchCommentCounts.
 // Returns { [movieId]: { type, label, provider?, logo? } } — an id with no
 // known availability is simply absent from the response, not an error.

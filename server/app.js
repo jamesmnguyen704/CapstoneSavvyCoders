@@ -15,6 +15,7 @@ import newsRoutes from "./routes/news.js";
 import personRoutes from "./routes/person.js";
 import tvRoutes from "./routes/tv.js";
 import usersRoutes from "./routes/users.js";
+import userMediaRoutes from "./routes/userMedia.js";
 
 //importing my API endpoint routers
 const commentsRouter = (await import("./routes/comments.js")).default; // api request
@@ -83,6 +84,7 @@ app.use("/news", newsRoutes); // movie news (Guardian Film proxy)
 app.use("/person", personRoutes); // person/actor detail + filmography
 app.use("/tv", tvRoutes); // TV shows + streaming-service browse
 app.use("/users", requireDatabase, usersRoutes); // admin-only account directory
+app.use("/user-media", requireDatabase, userMediaRoutes); // native ratings + watched/watchlist
 
 // testing starts here
 // Root route to confirm backend is running

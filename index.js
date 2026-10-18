@@ -20,6 +20,9 @@ import {
   fetchTopThreads,
   fetchCommentCounts,
   fetchAvailability,
+  fetchUserMedia,
+  saveUserMedia,
+  fetchCommunityRating,
   fetchAllUsers,
   postComment,
   deleteComment,
@@ -1004,6 +1007,14 @@ async function openInfoModal(movieId) {
   const modalComments = await fetchComments(data.id);
   const modalCurrentUser = getCurrentUser();
 
+  // Cinemetrics' own rating/watched state, kept visibly separate from TMDB's
+  // score above — logged-out visitors just see the community number with no
+  // personal controls, rather than the fetch failing the whole modal.
+  const [myMedia, communityRating] = await Promise.all([
+    modalCurrentUser ? fetchUserMedia(data.id) : Promise.resolve({ rating: null, watched: false, watchlisted: false }),
+    fetchCommunityRating(data.id)
+  ]);
+
   body.innerHTML = `
     ${
       data.backdrop_path
@@ -1082,6 +1093,49 @@ async function openInfoModal(movieId) {
           }
         </div>
 
+        <!-- Cinemetrics' own community score + a signed-in user's personal
+             rating/watched state — deliberately separate from TMDB's score
+             above, not blended with it. -->
+        <div class="info-user-media">
+          <p class="info-community-rating">
+            ${
+              communityRating.count > 0
+                ? `<span class="info-community-score">★ ${communityRating.average}</span> <span class="info-community-count">Cinemetrics users (${communityRating.count})</span>`
+                : `<span class="info-community-empty">No Cinemetrics ratings yet — be the first</span>`
+            }
+          </p>
+          ${
+            modalCurrentUser
+              ? `
+            <div class="info-rate-row" data-movie-id="${data.id}">
+              <span class="info-rate-label">Your rating</span>
+              <div class="info-rate-stars" role="group" aria-label="Rate this movie">
+                ${Array.from({ length: 10 }, (_, i) => i + 1)
+                  .map(
+                    n => `
+                  <button
+                    type="button"
+                    class="info-rate-star auth-btn${myMedia.rating && n <= myMedia.rating ? " info-rate-star--active" : ""}"
+                    data-rate="${n}"
+                    aria-label="Rate ${n} out of 10"
+                  >${n}</button>`
+                  )
+                  .join("")}
+              </div>
+              <button
+                type="button"
+                class="auth-btn info-watched-btn${myMedia.watched ? " info-watched-btn--active" : ""}"
+                data-watched-toggle
+              >
+                <i class="fa-solid fa-eye"></i>
+                <span>${myMedia.watched ? "Watched" : "Mark Watched"}</span>
+              </button>
+            </div>
+          `
+              : `<p class="info-rate-login-hint">Log in to rate this movie and track what you've watched.</p>`
+          }
+        </div>
+
         ${providersHtml ? `<div class="info-providers"><h3>Where to Watch</h3>${providersHtml}</div>` : ""}
         ${reviewsHtml}
       </div>
@@ -1140,6 +1194,33 @@ async function openInfoModal(movieId) {
       if (id) openInfoModal(id);
     });
   });
+
+  // Cinemetrics' own rating (1-10) and watched toggle — only rendered when
+  // logged in, so these elements simply don't exist for a logged-out visitor.
+  const rateRow = body.querySelector(".info-rate-row");
+  if (rateRow) {
+    rateRow.querySelectorAll(".info-rate-star").forEach(star => {
+      star.addEventListener("click", async () => {
+        const rating = Number(star.dataset.rate);
+        rateRow.querySelectorAll(".info-rate-star").forEach(s => {
+          s.classList.toggle("info-rate-star--active", Number(s.dataset.rate) <= rating);
+        });
+        const saved = await saveUserMedia(data.id, { rating });
+        if (saved) showToast(`Rated ${rating}/10`, "success");
+      });
+    });
+
+    const watchedBtn = rateRow.querySelector("[data-watched-toggle]");
+    if (watchedBtn) {
+      watchedBtn.addEventListener("click", async () => {
+        const nextWatched = !watchedBtn.classList.contains("info-watched-btn--active");
+        watchedBtn.classList.toggle("info-watched-btn--active", nextWatched);
+        watchedBtn.querySelector("span").textContent = nextWatched ? "Watched" : "Mark Watched";
+        const saved = await saveUserMedia(data.id, { watched: nextWatched });
+        if (saved) showToast(nextWatched ? "Marked as watched" : "Removed from watched", "info");
+      });
+    }
+  }
 }
 
 // Comments embedded in the info modal — separate from attachCommentHandlers
