@@ -116,18 +116,20 @@ const EXPERIENCE = [
   }
 ];
 
+// Reverse-chronological by end date, newest first — keeps the timeline
+// readable instead of jumping 2025 → 2023 → 2024 → 2025 → 2012.
 const EDUCATION = [
+  {
+    program: "WorkKeys Silver — National Career Readiness",
+    school: "ACT",
+    dates: "Dec 2025",
+    detail: "National Career Readiness Certificate at the Silver level, validating applied math, workplace documents, and graphic literacy."
+  },
   {
     program: "Full Stack Web Development Certificate",
     school: "Savvy Coders",
     dates: "Sep 2025 — Dec 2025",
     detail: "12-week immersive full-stack bootcamp in a facilitated Scrum environment running two-week sprints. Built and deployed the Cinemetrics capstone to Netlify/Render."
-  },
-  {
-    program: "Data Science Certification",
-    school: "TripleTen",
-    dates: "Sep 2023 — May 2024",
-    detail: "16 end-to-end data science projects covering Python fundamentals, EDA, statistical testing, classical ML, tree ensembles, NLP, time series, and a CNN regression for computer vision."
   },
   {
     program: "Agile Fundamentals (ICP)",
@@ -136,10 +138,10 @@ const EDUCATION = [
     detail: "The lens now used for sprint planning and iterative delivery on internal tooling work."
   },
   {
-    program: "WorkKeys Silver — National Career Readiness",
-    school: "ACT",
-    dates: "Dec 2025",
-    detail: "National Career Readiness Certificate at the Silver level, validating applied math, workplace documents, and graphic literacy."
+    program: "Data Science Certification",
+    school: "TripleTen",
+    dates: "Sep 2023 — May 2024",
+    detail: "16 end-to-end data science projects covering Python fundamentals, EDA, statistical testing, classical ML, tree ensembles, NLP, time series, and a CNN regression for computer vision."
   },
   {
     program: "Bachelor's Degree in Accounting",
@@ -152,7 +154,7 @@ const EDUCATION = [
 const LEARNING = [
   { icon: "fa-robot", title: "AI agent workflows", detail: "Claude Code agents, MCP tools, and local models — run with explicit handoffs, recorded decisions, and evidence checks before anything acts." },
   { icon: "fa-brain", title: "Machine learning", detail: "16 applied projects through TripleTen — a CatBoost churn model (AUC-ROC 0.844) and a CNN age-regression model (~7yr MAE) among them." },
-  { icon: "fa-code", title: "Full-stack web development", detail: "Cinemetrics is the proof: a complete SPA, Express API, MongoDB, and real deployment pipeline, built from scratch." }
+  { icon: "fa-code", title: "Multi-agent development", detail: "Running several Claude Code sessions in parallel on Cinemetrics — named lanes, shared-file conflict rules, and a living project log instead of one thread doing everything in sequence." }
 ];
 
 function skillPills(skills) {
@@ -333,6 +335,11 @@ export default () => html`
         same precision and analytical mindset I bring from my background in
         finance and accounting.
       </p>
+      <div class="about-cta-row">
+        <a class="about-cta about-cta--primary" href="https://claude.ai/artifact/TNSVWei7DfiKPmp1jjFJrL" target="_blank" rel="noopener noreferrer">
+          <i class="fa-solid fa-timeline"></i> See My Build Journey
+        </a>
+      </div>
     </div>
 
     <div class="about-other-project">
@@ -391,18 +398,7 @@ export default () => html`
     </div>
 
     <div class="about-closing">
-      <p>Thanks for exploring my work — I'm excited to keep building, scaling Cinemetrics, and growing as a developer.</p>
-      <div class="about-cta-row">
-        <a class="about-cta about-cta--primary" href="https://capstonesavvycoders.netlify.app/" target="_blank" rel="noopener noreferrer">
-          <i class="fa-solid fa-film"></i> Explore Cinemetrics
-        </a>
-        <a class="about-cta" href="https://www.linkedin.com/in/jamesmnguyen704/" target="_blank" rel="noopener noreferrer">
-          <i class="fa-brands fa-linkedin"></i> Connect on LinkedIn
-        </a>
-        <a class="about-cta" href="https://github.com/jamesmnguyen704" target="_blank" rel="noopener noreferrer">
-          <i class="fa-brands fa-github"></i> View GitHub
-        </a>
-      </div>
+      <p>Thanks for exploring my work — I'm excited to keep building, scaling Cinemetrics, and growing as a developer. LinkedIn, GitHub, and my portfolio are up top if you'd like to connect.</p>
     </div>
   </section>
 `;

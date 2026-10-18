@@ -8,18 +8,7 @@
 import html from "html-literal";
 import { listWatchlist } from "../services/watchlist.js";
 import aboutMe from "./aboutMe.js";
-
-// Escapes for both attribute and text contexts — saved titles originate from
-// TMDB's community-edited data and land in innerHTML. `&` must go first or it
-// would double-escape the entities added after it.
-function escapeAttr(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeAttr } from "./_cards";
 
 function card(item) {
   const rating =
@@ -76,15 +65,6 @@ function tabBar(active, showAdmin) {
       <button
         role="tab"
         type="button"
-        class="mylist-tab ${active === "list" ? "mylist-tab--active" : ""}"
-        data-tab="list"
-        aria-selected="${active === "list"}"
-      >
-        <i class="fa-solid fa-bookmark"></i> My List
-      </button>
-      <button
-        role="tab"
-        type="button"
         class="mylist-tab ${active === "about" ? "mylist-tab--active" : ""}"
         data-tab="about"
         aria-selected="${active === "about"}"
@@ -96,23 +76,32 @@ function tabBar(active, showAdmin) {
           ? `<button
               role="tab"
               type="button"
-              class="mylist-tab ${active === "users" ? "mylist-tab--active" : ""}"
-              data-tab="users"
-              aria-selected="${active === "users"}"
-            >
-              <i class="fa-solid fa-lock"></i> Users
-            </button>
-            <button
-              role="tab"
-              type="button"
               class="mylist-tab ${active === "bots" ? "mylist-tab--active" : ""}"
               data-tab="bots"
               aria-selected="${active === "bots"}"
             >
               <i class="fa-solid fa-robot"></i> Bots
+            </button>
+            <button
+              role="tab"
+              type="button"
+              class="mylist-tab ${active === "users" ? "mylist-tab--active" : ""}"
+              data-tab="users"
+              aria-selected="${active === "users"}"
+            >
+              <i class="fa-solid fa-lock"></i> Users
             </button>`
           : ""
       }
+      <button
+        role="tab"
+        type="button"
+        class="mylist-tab ${active === "list" ? "mylist-tab--active" : ""}"
+        data-tab="list"
+        aria-selected="${active === "list"}"
+      >
+        <i class="fa-solid fa-bookmark"></i> My List
+      </button>
     </nav>
   `;
 }

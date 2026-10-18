@@ -7,6 +7,7 @@ import html from "html-literal";
 import { escapeAttr, movieCard, skeletonCards } from "./_cards";
 
 const SORT_OPTIONS = [
+  { value: "trending",                  label: "Trending now" },
   { value: "popularity.desc",           label: "Most popular" },
   { value: "vote_average.desc",         label: "Highest rated" },
   { value: "primary_release_date.desc", label: "Newest" },

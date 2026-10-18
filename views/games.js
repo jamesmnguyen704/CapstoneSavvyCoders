@@ -8,15 +8,7 @@
 import html from "html-literal";
 import { GAMES, PLATFORMS, RIGS, UPCOMING } from "./_gamesData";
 import { gameCoverUrl, assetUrl } from "../services/api";
-
-function escapeAttr(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeAttr } from "./_cards";
 
 // Games in the library that have a film or TV adaptation on TMDB. The value is
 // the search term the adaptation is most findable under.

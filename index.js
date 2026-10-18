@@ -1423,9 +1423,15 @@ function attachSearchHandlers() {
 // -------- Movies filters (live, debounced) --------
 let moviesDebounceId = null;
 
-async function refreshMovies() {
-  state.Movies.loading = true;
-  renderMoviesResults(state.Movies);
+// "Trending now" reuses Home's already-fetched trending list instead of a
+// discover call — it's a fixed TMDB feed, not something genre/year/rating
+// filters apply to, so picking it just swaps the grid to that list.
+async function loadMoviesResults() {
+  if (state.Movies.sort === "trending") {
+    state.Movies.results = state.Home.trending || [];
+    state.Movies.total_results = state.Movies.results.length;
+    return;
+  }
   const data = await discoverMovies({
     genres: state.Movies.selectedGenres,
     year: state.Movies.year,
@@ -1434,6 +1440,12 @@ async function refreshMovies() {
   });
   state.Movies.results = data.results || [];
   state.Movies.total_results = data.total_results || 0;
+}
+
+async function refreshMovies() {
+  state.Movies.loading = true;
+  renderMoviesResults(state.Movies);
+  await loadMoviesResults();
   state.Movies.loading = false;
   renderMoviesResults(state.Movies);
   syncBookmarkButtons();
@@ -1466,7 +1478,7 @@ function attachMoviesFilterHandlers() {
       state.Movies.selectedGenres = [];
       state.Movies.year = "";
       state.Movies.minRating = 0;
-      state.Movies.sort = "popularity.desc";
+      state.Movies.sort = "trending";
       state.Movies.loading = true;
       // Re-render Home (the "Browse All" grid now lives there, not on its
       // own page) so chip UI resets cleanly, THEN refetch — render() only
@@ -1903,14 +1915,7 @@ router.hooks({
             state.Movies.genres = await fetchGenres();
           }
           state.Movies.loading = true;
-          const data = await discoverMovies({
-            genres: state.Movies.selectedGenres,
-            year: state.Movies.year,
-            minRating: state.Movies.minRating,
-            sort: state.Movies.sort
-          });
-          state.Movies.results = data.results || [];
-          state.Movies.total_results = data.total_results || 0;
+          await loadMoviesResults();
           state.Movies.loading = false;
         } catch {
           state.Movies.results = [];
