@@ -1737,24 +1737,21 @@ router.hooks({
         }
         break;
 
-      case "marvel":
-        try {
-          // The hub needs all three, but none should be able to blank the page:
-          // a failed news wire still leaves the timeline and Doomsday standing.
-          const [data, doomsday, marvelNews] = await Promise.all([
-            fetchMarvelMovies(),
-            fetchDoomsday(),
-            fetchNewsTab("marvel")
-          ]);
-          state.Marvel.marvel = Array.isArray(data) ? data : [];
-          state.Marvel.doomsday = doomsday || null;
-          state.Marvel.news = Array.isArray(marvelNews) ? marvelNews : [];
-        } catch {
-          state.Marvel.marvel = [];
-          state.Marvel.doomsday = null;
-          state.Marvel.news = [];
-        }
+      case "marvel": {
+        // allSettled, not all: fetchNewsTab now rejects on a real failure
+        // (fixed below), and Promise.all would let that one rejection wipe
+        // the timeline and Doomsday hero too — the opposite of the comment
+        // this block already had. Each piece now fails on its own.
+        const [movies, doomsday, marvelNews] = await Promise.allSettled([
+          fetchMarvelMovies(),
+          fetchDoomsday(),
+          fetchNewsTab("marvel")
+        ]);
+        state.Marvel.marvel = movies.status === "fulfilled" && Array.isArray(movies.value) ? movies.value : [];
+        state.Marvel.doomsday = doomsday.status === "fulfilled" ? doomsday.value || null : null;
+        state.Marvel.news = marvelNews.status === "fulfilled" && Array.isArray(marvelNews.value) ? marvelNews.value : [];
         break;
+      }
 
       case "releases":
         try {
@@ -1827,18 +1824,21 @@ router.hooks({
       }
 
       case "tv": {
-        // Shows and the combined TV + streaming wire, in parallel.
-        const [shows, news] = await Promise.all([
+        // allSettled: nothing wraps this switch, so a rejection here (the
+        // news wire can now reject on a real failure) would otherwise escape
+        // uncaught and leave the route hung on its skeleton forever — Navigo
+        // never gets its done() call.
+        const [shows, news] = await Promise.allSettled([
           state.Tv.popular.length ? null : fetchTvShows(),
           state.Tv.news.length ? null : fetchNewsTab("tv-streaming")
         ]);
-        if (shows) {
-          state.Tv.providers = shows.providers || [];
-          state.Tv.popular = shows.popular || [];
-          state.Tv.topRated = shows.topRated || [];
-          state.Tv.onTheAir = shows.onTheAir || [];
+        if (shows.status === "fulfilled" && shows.value) {
+          state.Tv.providers = shows.value.providers || [];
+          state.Tv.popular = shows.value.popular || [];
+          state.Tv.topRated = shows.value.topRated || [];
+          state.Tv.onTheAir = shows.value.onTheAir || [];
         }
-        if (news) state.Tv.news = news;
+        if (news.status === "fulfilled" && news.value) state.Tv.news = news.value;
         break;
       }
 

@@ -242,6 +242,10 @@ export async function fetchGamingNews() {
 }
 
 // Shared fetcher for every non-movie news tab. `movies` lives at /news.
+// Rethrows on failure rather than swallowing to `[]` — a genuine outage and
+// "nothing matched" were otherwise indistinguishable to the caller, which is
+// what left the news page stuck on "Loading the wire…" forever during a
+// real outage instead of showing an error.
 export async function fetchNewsTab(tab) {
   const path = tab === "movies" ? "/news" : `/news/${tab}`;
   try {
@@ -249,7 +253,7 @@ export async function fetchNewsTab(tab) {
     return Array.isArray(response.data?.results) ? response.data.results : [];
   } catch (err) {
     console.error(`${String(tab).toUpperCase()} NEWS ERROR:`, err);
-    return [];
+    throw err;
   }
 }
 
