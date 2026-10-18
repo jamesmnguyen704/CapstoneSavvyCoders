@@ -184,7 +184,7 @@ export default () => html`
         </p>
         <p class="about-location"><i class="fa-solid fa-location-dot"></i> St. Louis, MO</p>
         <div class="about-cta-row">
-          <a class="about-cta about-cta--primary" href="https://claude.ai/artifact/TNSVWei7DfiKPmp1jjFJrL" target="_blank" rel="noopener noreferrer">
+          <a class="about-cta about-cta--primary" href="/cinemetrics-journey.html">
             <i class="fa-solid fa-timeline"></i> Build Journey
           </a>
           <a class="about-cta" href="https://jamesnguyen.netlify.app/" target="_blank" rel="noopener noreferrer">
@@ -338,11 +338,6 @@ export default () => html`
         same precision and analytical mindset I bring from my background in
         finance and accounting.
       </p>
-      <div class="about-cta-row">
-        <a class="about-cta about-cta--primary" href="https://claude.ai/artifact/TNSVWei7DfiKPmp1jjFJrL" target="_blank" rel="noopener noreferrer">
-          <i class="fa-solid fa-timeline"></i> See My Build Journey
-        </a>
-      </div>
     </div>
 
     <div class="about-other-project">
