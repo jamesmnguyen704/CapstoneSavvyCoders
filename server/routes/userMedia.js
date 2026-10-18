@@ -9,19 +9,27 @@ import { requireNumericId } from "../middleware/requireNumericId.js";
 
 const router = express.Router();
 
+// Minimum real ratings before showing a community average — one or two
+// ratings aren't a meaningful crowd number, and showing one anyway invites
+// exactly the false-social-proof problem Hot Takes has with bot volume.
+const MIN_RATINGS_FOR_AVERAGE = 3;
+
 // Aggregate community rating for a movie — registered before "/:movieId" so
 // Express doesn't swallow this path as a literal movieId (same pattern as
-// comments' /meta/top and /meta/counts).
+// comments' /meta/top and /meta/counts). Character-bot accounts are
+// excluded by construction (isCharacter: { $ne: true }) — this number must
+// only ever reflect real visitors, never synthetic activity.
 router.get("/meta/rating/:movieId", requireNumericId("movieId"), async (req, res) => {
   try {
     const movieId = Number(req.params.movieId);
     const [agg] = await UserMedia.aggregate([
-      { $match: { movieId, rating: { $ne: null } } },
+      { $match: { movieId, rating: { $ne: null }, isCharacter: { $ne: true } } },
       { $group: { _id: null, average: { $avg: "$rating" }, count: { $sum: 1 } } }
     ]);
+    const count = agg ? agg.count : 0;
     res.json({
-      average: agg ? Math.round(agg.average * 10) / 10 : null,
-      count: agg ? agg.count : 0
+      average: count >= MIN_RATINGS_FOR_AVERAGE ? Math.round(agg.average * 10) / 10 : null,
+      count
     });
   } catch (err) {
     console.error("USER MEDIA RATING AGGREGATE ERROR:", err.message);
@@ -54,7 +62,7 @@ router.post("/:movieId", requireAuth, requireNumericId("movieId"), async (req, r
     const movieId = Number(req.params.movieId);
     const { rating, watched, watchlisted } = req.body;
 
-    const update = { updatedAt: new Date() };
+    const update = { updatedAt: new Date(), isCharacter: Boolean(req.user.isCharacter) };
     if (rating !== undefined) {
       if (rating !== null && (typeof rating !== "number" || rating < 1 || rating > 10)) {
         return res.status(400).json({ message: "Rating must be 1-10" });

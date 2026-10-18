@@ -11,6 +11,12 @@ const userMediaSchema = new mongoose.Schema({
   rating: { type: Number, min: 1, max: 10, default: null },
   watched: { type: Boolean, default: false },
   watchlisted: { type: Boolean, default: false },
+  // Denormalized from the account at write time (same pattern as
+  // Comment.isCharacter) so the aggregate "Cinemetrics users rated this"
+  // query can exclude character-bot accounts without a $lookup join. A
+  // real-user feature's credibility depends on it never being contaminated
+  // by synthetic activity, the same integrity problem Hot Takes has.
+  isCharacter: { type: Boolean, default: false },
   updatedAt: { type: Date, default: Date.now }
 });
 

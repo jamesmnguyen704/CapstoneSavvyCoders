@@ -1099,8 +1099,10 @@ async function openInfoModal(movieId) {
         <div class="info-user-media">
           <p class="info-community-rating">
             ${
-              communityRating.count > 0
+              communityRating.average != null
                 ? `<span class="info-community-score">★ ${communityRating.average}</span> <span class="info-community-count">Cinemetrics users (${communityRating.count})</span>`
+                : communityRating.count > 0
+                ? `<span class="info-community-empty">${communityRating.count} rating${communityRating.count === 1 ? "" : "s"} so far — not enough yet for an average</span>`
                 : `<span class="info-community-empty">No Cinemetrics ratings yet — be the first</span>`
             }
           </p>
