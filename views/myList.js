@@ -8,46 +8,17 @@
 import html from "html-literal";
 import { listWatchlist } from "../services/watchlist.js";
 import aboutMe from "./aboutMe.js";
-import { escapeAttr } from "./_cards";
+import { movieCard } from "./_cards";
 
-function card(item) {
-  const rating =
-    typeof item.vote_average === "number" && item.vote_average > 0
-      ? item.vote_average.toFixed(1)
-      : null;
-  const year = item.year || "";
-
-  return `
-    <div class="movie-card" data-movie-id="${item.id}">
-      <div class="movie-poster-wrap">
-        ${
-          item.poster_path
-            ? `<img src="https://image.tmdb.org/t/p/w300${item.poster_path}" alt="${escapeAttr(item.title)}" loading="lazy" />`
-            : `<div class="movie-poster-placeholder" aria-hidden="true">🎬</div>`
-        }
-        <div class="card-badges">
-          ${year ? `<span class="card-badge card-badge--year">${year}</span>` : ""}
-          ${rating ? `<span class="card-badge card-badge--rating">★ ${rating}</span>` : ""}
-        </div>
-        <button
-          class="card-bookmark card-bookmark--active"
-          type="button"
-          aria-label="Remove from My List"
-          data-movie='${escapeAttr(JSON.stringify({ id: item.id, title: item.title, poster_path: item.poster_path }))}'
-          data-action="remove"
-        >
-          <i class="fa-solid fa-bookmark"></i>
-        </button>
-      </div>
-      <h3>${escapeAttr(item.title)}</h3>
-      <div class="card-actions">
-        <button class="trailer-btn" data-id="${item.id}">▶</button>
-        <button class="info-btn" type="button" data-id="${item.id}" aria-label="More info">
-          <i class="fa-solid fa-circle-info"></i>
-        </button>
-      </div>
-    </div>
-  `;
+// Watchlist items are a compact localStorage projection (id, title,
+// poster_path, year, vote_average) — reshape to the {release_date} field
+// movieCard() expects so this list renders the same card everyone else sees.
+// The bookmark button itself needs no special "remove" variant: the click
+// handler in index.js toggles on actual watchlist membership and
+// syncBookmarkButtons() re-syncs the filled/outline state after every
+// render, so the default movieCard() markup already ends up correct here.
+function toCardMovie(item) {
+  return { ...item, release_date: item.year ? `${item.year}-01-01` : "" };
 }
 
 function getActiveTab() {
@@ -160,7 +131,7 @@ function listPanel() {
 
     ${
       count
-        ? `<section class="movies-grid mylist-grid">${items.map(card).join("")}</section>`
+        ? `<section class="movies-grid mylist-grid">${items.map(item => movieCard(toCardMovie(item))).join("")}</section>`
         : `
           <div class="mylist-empty">
             <div class="mylist-empty-icon" aria-hidden="true">

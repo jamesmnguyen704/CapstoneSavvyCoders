@@ -16,7 +16,6 @@ Three sessions run against this same working tree at once. Address each by name:
 
 ## Open items carried forward (top of file so they don't get buried)
 
-- **myList.js `card()` vs `_cards.js` `movieCard()`**: `views/myList.js` has its own local `card()` reimplementing the poster-tile markup instead of reusing `movieCard()`, because the watchlist card needs a "remove" bookmark state (filled icon, `data-action="remove"`) that `movieCard()` doesn't support yet. Fix: add a `bookmarked`/variant option to `movieCard()`, then delete `myList.js`'s local copy. Not done yet — flagged during the escapeAttr dedup pass, didn't want to rush a behavior change in under a cleanup commit.
 - UI is running a design-system audit on `style.css`: adding a spacing/radius/motion token scale, merging ~handful of genuinely-duplicated selectors (`.info-cast-card`, `.info-similar-card`, `.radar-card`, etc. — most of the ~50 multi-defined selectors turned out to be legitimate responsive/override layers, not debt), then building a shared base card class for the highest-traffic cards.
 - **Bot's comment-posting script isn't idempotent on rerun** — hitting the `/auth` rate limit mid-batch and restarting the backend (the standard workaround) can duplicate comments if the script re-posts ones that actually went through before the restart. Fix: a MongoDB unique index on (username, movieId, text) or similar, plus a real reusable posting script that checks what's already there before posting. Not blocking today's work, logged by Bot + UI as backlog.
 
