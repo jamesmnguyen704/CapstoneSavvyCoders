@@ -184,7 +184,10 @@ export default () => html`
         </p>
         <p class="about-location"><i class="fa-solid fa-location-dot"></i> St. Louis, MO</p>
         <div class="about-cta-row">
-          <a class="about-cta about-cta--primary" href="https://jamesnguyen.netlify.app/" target="_blank" rel="noopener noreferrer">
+          <a class="about-cta about-cta--primary" href="https://claude.ai/artifact/TNSVWei7DfiKPmp1jjFJrL" target="_blank" rel="noopener noreferrer">
+            <i class="fa-solid fa-timeline"></i> Build Journey
+          </a>
+          <a class="about-cta" href="https://jamesnguyen.netlify.app/" target="_blank" rel="noopener noreferrer">
             <i class="fa-solid fa-user"></i> Portfolio
           </a>
           <a class="about-cta" href="https://www.linkedin.com/in/jamesmnguyen704/" target="_blank" rel="noopener noreferrer">

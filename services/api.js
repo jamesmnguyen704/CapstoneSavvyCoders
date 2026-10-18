@@ -353,6 +353,21 @@ export async function fetchAvailability(movieIds) {
   }
 }
 
+// Same idea, TV's own namespace — show IDs aren't movie IDs, so this hits a
+// separate endpoint/cache rather than reusing fetchAvailability. Flatrate
+// (subscription) only, never rent/buy pricing.
+export async function fetchTvAvailability(showIds) {
+  const ids = Array.isArray(showIds) ? [...new Set(showIds)].filter(id => id != null) : [];
+  if (!ids.length) return {};
+  try {
+    const response = await axios.post(`${API_BASE}/tv/meta/availability`, { showIds: ids });
+    return response.data && typeof response.data === "object" ? response.data : {};
+  } catch (err) {
+    console.error("FETCH TV AVAILABILITY ERROR:", err);
+    return {};
+  }
+}
+
 // Posting/deleting now require login — the server trusts the token for who
 // you are, not anything the client sends, so the Authorization header is
 // what actually lets these through.
@@ -428,9 +443,13 @@ export async function fetchAllUsers() {
 }
 
 // Busiest comment threads site-wide, ranked by distinct voices then volume.
-export async function fetchTopThreads() {
+// audience: "human" (real users, the default — this is what "Hot Takes"
+// should mean) or "character" (the Marvel bot accounts' own threads, meant
+// to be surfaced as its own clearly-labeled "Character Chaos"-style feature,
+// never blended into the same list as real activity).
+export async function fetchTopThreads(audience = "human") {
   try {
-    const response = await axios.get(`${API_BASE}/comments/meta/top`);
+    const response = await axios.get(`${API_BASE}/comments/meta/top`, { params: { audience } });
     return Array.isArray(response.data) ? response.data : [];
   } catch (err) {
     console.error("TOP THREADS ERROR:", err);

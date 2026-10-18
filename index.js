@@ -20,6 +20,7 @@ import {
   fetchTopThreads,
   fetchCommentCounts,
   fetchAvailability,
+  fetchTvAvailability,
   fetchUserMedia,
   saveUserMedia,
   fetchCommunityRating,
@@ -1536,6 +1537,17 @@ async function attachAvailability(items) {
   });
 }
 
+// Same pattern, TV's own endpoint/namespace.
+async function attachTvAvailability(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const ids = items.map(m => m?.id).filter(id => typeof id === "number" && !Number.isNaN(id));
+  if (!ids.length) return;
+  const availability = await fetchTvAvailability(ids);
+  items.forEach(m => {
+    if (m && typeof m.id === "number" && availability[m.id]) m.availability = availability[m.id];
+  });
+}
+
 async function loadMoviesResults() {
   if (state.Movies.sort === "trending") {
     state.Movies.results = state.Home.trending || [];
@@ -2143,7 +2155,8 @@ router.hooks({
           state.Tv.popular = shows.value.popular || [];
           state.Tv.topRated = shows.value.topRated || [];
           state.Tv.onTheAir = shows.value.onTheAir || [];
-          await attachCommentCounts([...state.Tv.popular, ...state.Tv.topRated, ...state.Tv.onTheAir]);
+          const tvShows = [...state.Tv.popular, ...state.Tv.topRated, ...state.Tv.onTheAir];
+          await Promise.all([attachCommentCounts(tvShows), attachTvAvailability(tvShows)]);
         }
         if (news.status === "fulfilled" && news.value) state.Tv.news = news.value;
         break;
