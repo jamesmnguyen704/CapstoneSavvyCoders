@@ -195,21 +195,34 @@ function titleKey(title) {
     .join(" ");
 }
 
+// The frontend drops this straight into style="background-image:url('...')".
+// HTML-escaping on render isn't enough there: the browser decodes &#39; back
+// to a literal ' before CSS ever sees the attribute, so an unescaped quote
+// baked into the URL itself breaks out of url('...') and injects arbitrary
+// CSS. This is the server-side gate — only a well-formed http(s) URL with no
+// quote/paren/whitespace characters makes it through, so every caller gets a
+// value that's already safe to embed, not just one view that remembered to
+// re-check it.
+function isSafeImageUrl(url) {
+  return typeof url === "string" && /^https?:\/\/[^\s'"()]+$/.test(url);
+}
+
 function extractImage(item) {
   // Try several common RSS image locations in priority order.
+  let candidate = null;
   if (item.enclosure?.url && /^image\//i.test(item.enclosure.type || "image/")) {
-    return item.enclosure.url;
+    candidate = item.enclosure.url;
+  } else if (Array.isArray(item.mediaContent) && item.mediaContent[0]?.$.url) {
+    candidate = item.mediaContent[0].$.url;
+  } else if (Array.isArray(item.mediaThumbnail) && item.mediaThumbnail[0]?.$.url) {
+    candidate = item.mediaThumbnail[0].$.url;
+  } else {
+    // Fall back to the first <img> in the content/description.
+    const hay = item.contentEncoded || item.content || item.description || "";
+    const match = String(hay).match(/<img[^>]+src=["']([^"']+)["']/i);
+    candidate = match ? match[1] : null;
   }
-  if (Array.isArray(item.mediaContent) && item.mediaContent[0]?.$.url) {
-    return item.mediaContent[0].$.url;
-  }
-  if (Array.isArray(item.mediaThumbnail) && item.mediaThumbnail[0]?.$.url) {
-    return item.mediaThumbnail[0].$.url;
-  }
-  // Fall back to the first <img> in the content/description.
-  const hay = item.contentEncoded || item.content || item.description || "";
-  const match = String(hay).match(/<img[^>]+src=["']([^"']+)["']/i);
-  return match ? match[1] : null;
+  return isSafeImageUrl(candidate) ? candidate : null;
 }
 
 function truncate(s, n) {
