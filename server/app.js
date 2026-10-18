@@ -16,6 +16,7 @@ import personRoutes from "./routes/person.js";
 import tvRoutes from "./routes/tv.js";
 import usersRoutes from "./routes/users.js";
 import userMediaRoutes from "./routes/userMedia.js";
+import researchCacheRoutes from "./routes/researchCache.js";
 
 //importing my API endpoint routers
 const commentsRouter = (await import("./routes/comments.js")).default; // api request
@@ -85,6 +86,7 @@ app.use("/person", personRoutes); // person/actor detail + filmography
 app.use("/tv", tvRoutes); // TV shows + streaming-service browse
 app.use("/users", requireDatabase, usersRoutes); // admin-only account directory
 app.use("/user-media", requireDatabase, userMediaRoutes); // native ratings + watched/watchlist
+app.use("/research-cache", requireDatabase, researchCacheRoutes); // bot-comment research fact cache, internal tooling only
 
 // testing starts here
 // Root route to confirm backend is running

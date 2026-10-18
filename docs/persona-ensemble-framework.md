@@ -4,6 +4,8 @@ A project-agnostic methodology for making multiple AI-written personas comment/c
 
 This doc is Layer 1 of three: this methodology, a Claude Skill that packages it into an invokable pipeline, and a reusable code template (schema + idempotent posting script) for the technical plumbing. Built 2026-10-18.
 
+In the Cinemetrics implementation specifically, this doc is one of four meant to be used together, not separately — see `docs/bot-comments-handoff.md`'s "Required reading" section for how they connect (that doc for rules/pipeline, `docs/mcu-storyline.md` for plot/continuity, `docs/character-voices.md` for voice).
+
 ## Why this exists
 
 The naive version of "AI characters commenting on the same thing" reliably fails in the same few ways regardless of platform: every character ends up making the same point in a different voice, nobody actually responds to what the previous speaker said, and the thread reads as a pile of isolated one-liners instead of a conversation. This was diagnosed independently by two separate deep-research passes (ChatGPT and Gemini, both October 2026) against real academic and industry sources, and confirmed by hands-on fixes applied to a live 150-account comment-bot system. The fixes below are not theoretical — every rule here caused a specific, visible, measured improvement to a real feature.
@@ -63,3 +65,16 @@ Paid comment-farm operations (astroturfing services, state-run troll farms) are 
 - IRA account lifecycle and pacing — [arxiv.org/pdf/2204.01790](https://arxiv.org/pdf/2204.01790) ("Leaders or Followers? A Temporal Analysis of Tweets from IRA Trolls") · [NBER working paper on holiday/weather effects](https://nber.org/system/files/working_papers/w28035/w28035.pdf)
 - "Character drift" in long AI conversations — [blog.meganova.ai/why-your-ai-character-breaks-after-10-messages](https://blog.meganova.ai/why-your-ai-character-breaks-after-10-messages) · [blog.meganova.ai/character-drift-why-ai-characters-break-over-time](https://blog.meganova.ai/character-drift-why-ai-characters-break-over-time/)
 - Original two AI-assisted research syntheses (ChatGPT + Gemini, full text) that kicked this off — saved in this conversation's history 2026-10-18; worth copying into this repo verbatim if they need to survive a context reset (not yet done — flag if wanted).
+
+## Known constraints / scaling problems (logged 2026-10-18, for a future research pass)
+
+This system works, but it has real throughput limits worth researching better solutions for before scaling further. Logged here specifically so a future session doesn't have to rediscover these the hard way:
+
+1. **`/auth` rate limiting (10 req/15min) forces a backend restart for every ~10 comments posted.** The single biggest friction point in any large posting batch — 11+ manual restarts in one session for a ~112-comment batch. Worth researching: a dev-only bypass, a separate unauthenticated bulk-insert path for bot content, or a proper rate-limit library with a localhost/internal-script allowlist.
+2. **No shared "already-verified facts" cache across research passes — until the one described below exists.** Every new research agent re-verifies a movie's box office/reception/cast-to-roster mapping from scratch via WebSearch + TMDB, even when a previous pass minutes earlier already found and verified the same thing.
+3. **Large ensemble cast-pulls are expensive and repeated per agent.** Checking a 100+ person cast (Endgame, Infinity War) against the 72-account roster is a lot of individual lookups, redone fresh every time instead of computed once and reused.
+4. **Parallel agents can't see each other's in-flight research**, risking duplicate WebSearches for the same fact when two agents work on adjacent movies at once.
+5. **Every batch requires human review before posting** — deliberate, not a bug (it's what catches real mistakes like the Doomsday X-Men-only skew), but it's the actual ceiling on throughput, not the AI steps.
+6. **The feedback loop (using real like/vote data to steer future research) still isn't wired up** — every batch is still a cold start with no signal from what already landed well.
+
+**Fix in progress for #2 and #3:** `server/models/movieResearchCache.js` (see below) — a persistent, DB-backed cache of verified facts and roster-to-cast mappings per movie, so a research agent checks this first and only hits TMDB/WebSearch for what's actually missing, then writes back what it found for the next pass to reuse.

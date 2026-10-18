@@ -2,7 +2,9 @@
 
 Reference document for grounding in-character comment jokes in real MCU continuity. Built 2026-10-18. For unreleased films, only publicly available synopsis/trailer information is included — update as more releases.
 
-Films are listed in theatrical release order, grouped by Marvel's official Phase structure. Each entry includes the TMDB id used to pull canonical title/release-date data, plus plot facts a joke-writer would plausibly reference: deaths, betrayals, team-ups, and callbacks.
+Films are listed in theatrical release order, grouped by Marvel's official Phase structure. Each entry includes the TMDB id used to pull canonical title/release-date data, plus plot facts a joke-writer would plausibly reference: deaths, betrayals, team-ups, and callbacks. Use this for continuity, not just single-movie facts — a line should show awareness of what preceded it where relevant.
+
+**This doc is one of four meant to be used together — see `docs/bot-comments-handoff.md`'s "Required reading" section for the full set** (that doc for rules/pipeline, `docs/character-voices.md` for voice, `docs/persona-ensemble-framework.md` for the underlying methodology).
 
 ---
 

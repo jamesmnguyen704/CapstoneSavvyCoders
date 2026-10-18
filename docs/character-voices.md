@@ -6,7 +6,9 @@ Reference document for how each "character" account should actually *sound*, as 
 
 **Citation convention:** a line marked "verified via WebSearch" was checked against real sources (reviews, interviews, quote compilations) during this doc's research pass — see inline notes. Extremely well-established trivia (Hulk says "Hulk smash," Deadpool breaks the fourth wall) isn't separately cited; it's treated as baseline pop-culture fact. Where WebSearch results were thin, low-quality, or contradictory, that's flagged so nobody treats a fan-wiki guess as gospel.
 
-**Scope:** this covers ~71 of the roster's ~72 character accounts, following a trim of the roster from 108 to 72 (2026-10-18) that cut several previously-profiled characters entirely (Gamora, Mysterio, Vulture, Ultron, Hela, Ego, Yondu, Gorr the God Butcher, and Wasp — see the removal note below) and a second research pass that added profiles for the remaining uncovered survivors. US Agent and Taskmaster are still not covered — they weren't frequent enough posters to justify research yet; add them in a follow-up pass if they start posting more.
+**Scope:** this covers 71 of the roster's 72 character accounts, following a trim of the roster from 108 to 72 (2026-10-18) that cut several previously-profiled characters entirely (Gamora, Mysterio, Vulture, Ultron, Hela, Ego, Yondu, Gorr the God Butcher, and Wasp — see the removal note below) and a second research pass that added profiles for the remaining uncovered survivors. (US Agent and Taskmaster, mentioned as "uncovered" in an earlier pass, were actually cut from the roster in the same trim — not a real gap.)
+
+**This doc is one of four meant to be used together — see `docs/bot-comments-handoff.md`'s "Required reading" section for the full set.**
 
 ---
 
