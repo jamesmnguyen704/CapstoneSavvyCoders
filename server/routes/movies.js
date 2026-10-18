@@ -40,7 +40,7 @@ router.get("/doomsday", async (req, res) => {
   try {
     const [detail, credits, videos, images] = await Promise.all([
       axios.get(`https://api.themoviedb.org/3/movie/${DOOMSDAY_ID}`, {
-        params: { api_key: key, language: "en-US" },
+        params: { api_key: key, language: "en-US", append_to_response: "release_dates" },
         timeout: 8000
       }),
       axios.get(`https://api.themoviedb.org/3/movie/${DOOMSDAY_ID}/credits`, {
@@ -58,6 +58,18 @@ router.get("/doomsday", async (req, res) => {
     ]);
 
     const d = detail.data;
+
+    // `release_date` at the top level is TMDB's "primary" date, which is often
+    // the earliest release anywhere in the world (a festival premiere, a day-1
+    // market) rather than the US theatrical date a countdown should target.
+    // For Doomsday specifically this was Dec 16 vs. the real US date of Dec 18.
+    const usReleases =
+      (d.release_dates?.results || []).find(r => r.iso_3166_1 === "US")?.release_dates || [];
+    const releaseDate =
+      usReleases.find(r => r.type === 3)?.release_date?.slice(0, 10) || // Theatrical (wide)
+      usReleases.find(r => r.type === 2)?.release_date?.slice(0, 10) || // Theatrical (limited)
+      d.release_date;
+
     const cast = (credits.data.cast || [])
       .filter(c => c.profile_path)
       .slice(0, 40)
@@ -97,7 +109,7 @@ router.get("/doomsday", async (req, res) => {
       backdrop_path: d.backdrop_path,
       backdrops,
       poster_path: d.poster_path,
-      release_date: d.release_date,
+      release_date: releaseDate,
       runtime: d.runtime,
       status: d.status,
       vote_average: d.vote_average,
