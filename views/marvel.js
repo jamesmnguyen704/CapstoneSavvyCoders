@@ -56,6 +56,14 @@ const phaseMeta = {
     kicker: "Phase 5 · Variants & Vows",
     tagline:
       "Deadpool crashes the MCU, Thunderbolts* assembles, and the Multiverse war heats up ahead of Doomsday."
+  },
+  // `theme: "doom"` pulls the Doomsday hero's Latverian grade onto this banner.
+  "Phase 6": {
+    leadId: 1003596,
+    kicker: "Phase 6 · Doom Rises",
+    tagline:
+      "The First Family arrives, Spider-Man comes home, and Victor von Doom steps out of the Multiverse to end the saga on his terms.",
+    theme: "doom"
   }
 };
 
@@ -74,13 +82,17 @@ function phaseTiles(phaseMovies) {
         `;
       }
       const year = (movie.release_date || "").slice(0, 4);
-      const movieJson = JSON.stringify({
-        id: movie.id,
-        title: movie.title,
-        poster_path: movie.poster_path || null,
-        release_date: movie.release_date || null,
-        vote_average: movie.vote_average || null
-      }).replace(/"/g, "&quot;");
+      // Full escape, not just `"`: the value sits in a single-quoted attribute,
+      // so a title with an apostrophe would otherwise terminate it early.
+      const movieJson = escapeAttr(
+        JSON.stringify({
+          id: movie.id,
+          title: movie.title,
+          poster_path: movie.poster_path || null,
+          release_date: movie.release_date || null,
+          vote_average: movie.vote_average || null
+        })
+      );
       const artPath = movie.backdrop_path || movie.poster_path;
       return `
         <div class="marvel-phase-thumb" data-movie-id="${movie.id}">
@@ -128,7 +140,7 @@ function renderPhaseHero(phase, phaseMovies) {
   const first = slides[0];
 
   return `
-    <section class="marvel-hero-cinematic marvel-phase-hero">
+    <section class="marvel-hero-cinematic marvel-phase-hero${meta.theme === "doom" ? " marvel-phase-hero--doom" : ""}">
       <div class="doom-hero-slides" data-slideshow aria-hidden="true">
         ${slides
           .map(
@@ -394,15 +406,14 @@ export default state => {
           ([phase, phaseMovies]) =>
             html`
               ${
-                // Phases 1-5 carry their own banner with the films pinned
-                // inside it. Phase 6 has no banner, so it keeps a plain
-                // heading and grid.
-                phase === "Phase 6"
-                  ? html`
-                      <h2 class="marvel-phase-title" style="margin-left: 1rem;">${phase}</h2>
-                      <div class="marvel-phase-grid">${phaseTiles(phaseMovies)}</div>
-                    `
-                  : renderPhaseHero(phase, phaseMovies)
+                // Every phase gets a cycling banner with its films pinned
+                // inside. A phase with no lead art falls back to a plain
+                // heading and grid rather than rendering nothing.
+                renderPhaseHero(phase, phaseMovies) ||
+                  html`
+                    <h2 class="marvel-phase-title" style="margin-left: 1rem;">${phase}</h2>
+                    <div class="marvel-phase-grid">${phaseTiles(phaseMovies)}</div>
+                  `
               }
             `
         )

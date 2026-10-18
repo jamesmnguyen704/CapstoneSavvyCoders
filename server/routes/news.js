@@ -148,6 +148,9 @@ const GAMING_GUARDIAN = {
 // Checked and deliberately not used — keep this list so a dead feed doesn't
 // get re-added later. (Same reason /Film's TV URL was dropped previously.)
 export const REJECTED_FEEDS = {
+  "https://www.marvel.com/rss/news": "403 — Marvel.com blocks non-browser clients",
+  "https://www.slashfilm.com/category/marvel/feed/": "404",
+  "https://thedirect.com/feed": "200 but zero parseable items",
   "https://www.engadget.com/gaming/rss.xml": "404 — Engadget has no gaming-only feed",
   "https://www.empireonline.com/movies/news/feed/": "404",
   "https://www.vulture.com/rss/index.xml": "404",
@@ -321,25 +324,38 @@ const TV_STREAMING_FEEDS = [
 // Marvel reuses the movie wire and narrows it by keyword. Titles and characters
 // are listed explicitly rather than relying on "marvel" alone, because most
 // coverage names the film or the actor without ever saying the studio.
+// Every alternative is wrapped in \b: without it "thor" matched inside
+// "Author" and "loki" would match "Lokian", pulling unrelated stories onto
+// the Marvel page. Each term is grouped so the boundary applies per term,
+// not just to the first and last of the list.
+const MARVEL_TERMS = [
+  "marvel", "mcu", "avengers", "doomsday", "secret wars",
+  "x-?men", "fantastic four", "spider-?man", "doctor doom", "dr\\.? doom",
+  "thunderbolts", "deadpool", "wolverine", "loki", "thor", "iron man",
+  "captain america", "black panther", "daredevil", "multiverse",
+  "ant-?man", "doctor strange", "guardians of the galaxy", "hulk",
+  "kevin feige", "disney\\+ marvel"
+];
 const MARVEL_MATCH = new RegExp(
-  [
-    "marvel", "mcu", "avengers", "doomsday", "secret wars",
-    "x-?men", "fantastic four", "spider-?man", "doctor doom", "dr\\.? doom",
-    "thunderbolts", "deadpool", "wolverine", "loki", "thor", "iron man",
-    "captain america", "black panther", "daredevil", "multiverse",
-    "ant-?man", "doctor strange", "guardians of the galaxy", "hulk",
-    "kevin feige", "disney\\+ marvel"
-  ].join("|"),
+  MARVEL_TERMS.map(t => `\\b(?:${t})\\b`).join("|"),
   "i"
 );
 const MARVEL_GUARDIAN = {
   section: "film",
   query: ["marvel", "MCU", "avengers", "superhero", '"doctor doom"', "x-men"].join(" OR ")
 };
+// The general movie wire only yields a handful of Marvel stories on a given
+// day, so the Marvel tab adds two superhero-beat outlets on top of it. Both
+// verified live: parse, return items, carry Marvel coverage.
+const MARVEL_FEEDS = [
+  ...MOVIE_FEEDS,
+  { source: "ComicBook.com",  url: "https://comicbook.com/feed/" },
+  { source: "SuperHeroHype",  url: "https://www.superherohype.com/feed" }
+];
 
 const TABS = {
   movies:      { path: "/",             label: "movie",     rssFeeds: MOVIE_FEEDS,         guardian: MOVIE_GUARDIAN },
-  marvel:      { path: "/marvel",       label: "Marvel",    rssFeeds: MOVIE_FEEDS,         guardian: MARVEL_GUARDIAN, match: MARVEL_MATCH },
+  marvel:      { path: "/marvel",       label: "Marvel",    rssFeeds: MARVEL_FEEDS,        guardian: MARVEL_GUARDIAN, match: MARVEL_MATCH },
   tv:          { path: "/tv",           label: "TV",        rssFeeds: TV_FEEDS,            guardian: TV_GUARDIAN },
   streaming:   { path: "/streaming",    label: "streaming", rssFeeds: STREAMING_FEEDS,     guardian: STREAMING_GUARDIAN },
   gaming:      { path: "/gaming",       label: "gaming",    rssFeeds: GAMING_FEEDS,        guardian: GAMING_GUARDIAN },

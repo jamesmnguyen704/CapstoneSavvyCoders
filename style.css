@@ -6441,6 +6441,28 @@ img, video, iframe { max-width: 100%; }
   filter: saturate(0.72) contrast(1.08) brightness(0.68) hue-rotate(-8deg);
 }
 
+/* Phase 6 wears the same grade as the Doomsday hero, so the saga's final
+   phase reads as Doom's rather than as just another banner. */
+.marvel-phase-hero--doom .doom-hero-slide {
+  filter: saturate(0.72) contrast(1.08) brightness(0.68) hue-rotate(-8deg);
+}
+.marvel-phase-hero--doom .marvel-hero-scrim {
+  background:
+    radial-gradient(120% 90% at 18% 85%, rgba(29, 64, 48, 0.82) 0%, rgba(29, 64, 48, 0) 62%),
+    linear-gradient(to top, var(--doom-void) 4%, rgba(6, 8, 10, 0.86) 34%, rgba(6, 8, 10, 0.25) 72%, rgba(6, 8, 10, 0.5) 100%);
+}
+.marvel-phase-hero--doom .marvel-hero-kicker {
+  color: var(--doom-gold-lit);
+  border-color: rgba(201, 162, 39, 0.4);
+  background: rgba(6, 8, 10, 0.55);
+}
+.marvel-phase-hero--doom .marvel-hero-title {
+  background: linear-gradient(180deg, #fff 18%, var(--doom-gold-lit) 62%, var(--doom-gold) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 /* ---------- Phase film strip, inside each phase banner ----------
    Mirrors the Doomsday roster: pinned to the banner's bottom edge, over the
    art, so each phase shows its films without a grid underneath. */
