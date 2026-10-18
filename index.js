@@ -19,6 +19,7 @@ import {
   fetchComments,
   fetchTopThreads,
   fetchCommentCounts,
+  fetchAvailability,
   fetchAllUsers,
   postComment,
   deleteComment,
@@ -1411,11 +1412,28 @@ async function attachCommentCounts(items) {
   });
 }
 
+// Same batching pattern as attachCommentCounts, for the "where to watch"
+// badge — writes `.availability` onto each item (same shape the hero badge
+// already reads: {type, label, provider?, logo?}), left untouched when
+// nothing is known rather than set to a falsy placeholder.
+async function attachAvailability(items) {
+  if (!Array.isArray(items) || !items.length) return;
+  const ids = items.map(m => m?.id).filter(id => typeof id === "number" && !Number.isNaN(id));
+  if (!ids.length) return;
+  const availability = await fetchAvailability(ids);
+  items.forEach(m => {
+    if (m && typeof m.id === "number" && availability[m.id]) m.availability = availability[m.id];
+  });
+}
+
 async function loadMoviesResults() {
   if (state.Movies.sort === "trending") {
     state.Movies.results = state.Home.trending || [];
     state.Movies.total_results = state.Movies.results.length;
-    await attachCommentCounts(state.Movies.results);
+    await Promise.all([
+      attachCommentCounts(state.Movies.results),
+      attachAvailability(state.Movies.results)
+    ]);
     return;
   }
   const data = await discoverMovies({
@@ -1426,7 +1444,10 @@ async function loadMoviesResults() {
   });
   state.Movies.results = data.results || [];
   state.Movies.total_results = data.total_results || 0;
-  await attachCommentCounts(state.Movies.results);
+  await Promise.all([
+    attachCommentCounts(state.Movies.results),
+    attachAvailability(state.Movies.results)
+  ]);
 }
 
 async function refreshMovies() {

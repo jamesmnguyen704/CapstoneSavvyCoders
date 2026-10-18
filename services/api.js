@@ -297,6 +297,21 @@ export async function fetchCommentCounts(movieIds) {
   }
 }
 
+// Bulk "where to watch" lookup, same batching idea as fetchCommentCounts.
+// Returns { [movieId]: { type, label, provider?, logo? } } — an id with no
+// known availability is simply absent from the response, not an error.
+export async function fetchAvailability(movieIds) {
+  const ids = Array.isArray(movieIds) ? [...new Set(movieIds)].filter(id => id != null) : [];
+  if (!ids.length) return {};
+  try {
+    const response = await axios.post(`${API_BASE}/movies/meta/availability`, { movieIds: ids });
+    return response.data && typeof response.data === "object" ? response.data : {};
+  } catch (err) {
+    console.error("FETCH AVAILABILITY ERROR:", err);
+    return {};
+  }
+}
+
 // Posting/deleting now require login — the server trusts the token for who
 // you are, not anything the client sends, so the Authorization header is
 // what actually lets these through.

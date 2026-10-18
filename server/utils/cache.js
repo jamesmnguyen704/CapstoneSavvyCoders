@@ -73,6 +73,28 @@ setInterval(() => {
   }
 }, SWEEP_INTERVAL_MS).unref();
 
+// Generic get/set for handlers that cache per-item (e.g. one entry per movie
+// ID inside a batch POST) rather than one entry per full GET response — the
+// middleware above only keys by request URL, which doesn't fit a POST body.
+// Shares the same store/eviction/sweep, so there's one cache to reason
+// about instead of every route growing its own ad hoc Map.
+export function getCached(key) {
+  const hit = store.get(key);
+  if (!hit) return undefined;
+  if (Date.now() >= hit.expires) {
+    store.delete(key);
+    return undefined;
+  }
+  return hit.body;
+}
+
+export function setCached(key, value, ttl) {
+  if (store.size >= MAX_ENTRIES) {
+    store.delete(store.keys().next().value);
+  }
+  store.set(key, { body: value, status: 200, expires: Date.now() + ttl });
+}
+
 // Escape hatch for a manual refresh, and used by the tests/warm-up path.
 export function clearCache(prefix) {
   if (!prefix) return store.clear();
