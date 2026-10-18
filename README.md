@@ -2,7 +2,7 @@
 
 # 🎬 Cinemetrics
 
-**A cinematic movie, TV, and gaming discovery app — built from scratch with vanilla JavaScript.**
+**Browse what's trending, track what you've watched, and read Marvel characters argue about it — a movie/TV/games discovery app built from scratch with vanilla JavaScript.**
 
 No React. No framework. Native ES modules, a hand-rolled component layer, and an Express API.
 
@@ -26,18 +26,32 @@ No React. No framework. Native ES modules, a hand-rolled component layer, and an
 
 ## What it does
 
-Cinemetrics pulls live data from **TMDB**, a dozen-plus news outlets per category, and **OpenStreetMap** into one place — what's trending, what's in theaters near you, what's on Netflix, and what's worth playing.
+Cinemetrics pulls live data from **TMDB**, a dozen-plus news outlets per category, and **OpenStreetMap** into one place, then adds two things a plain TMDB client doesn't have: a personal record of what you've watched, and a cast of fictional Marvel characters with opinions about it.
+
+**Discover**
 
 |  | |
 |---|---|
 | 🎞️ **Movies** | Trending, popular and top-rated, with genre / year / rating / sort filters, plus a movie-news wire (12 RSS sources + The Guardian) right on the home page |
 | 📺 **TV & Streaming** | Browse by service — Netflix, HBO Max, Prime, Disney+, Apple TV+, Hulu, Peacock — with its own news rail alongside |
 | 🎟️ **In Theaters** | Enter a ZIP → what's playing + the closest cinemas within 25 miles |
-| 🦸 **Marvel** | A live countdown to *Avengers: Doomsday*, its 35-strong cast, and the full MCU by phase |
 | 🎮 **Games** | What's on the radar, a 16-feed gaming wire, and a personal library with cover art |
+| 📍 **Where to watch** | A streaming-provider badge (or a theater icon) right on the poster, batched and cached so it doesn't cost a TMDB call per card |
+
+**Track**
+
+|  | |
+|---|---|
 | 🔖 **My List** | Watchlist saved to `localStorage`, no account required |
 | ⭐ **Ratings & Watched** | A native 1-10 rating and "Mark Watched" per movie for signed-in users — Cinemetrics' own community score, kept visibly separate from TMDB's |
-| 🎭 **Marvel Comments** | 72 fan-made Marvel character accounts post in-character, fact-grounded comments on real movies; a "Hot Takes" leaderboard splits real human discussion from the character threads so neither is mistaken for the other |
+
+**Discuss**
+
+|  | |
+|---|---|
+| 🦸 **Marvel** | A live countdown to *Avengers: Doomsday*, its 35-strong cast, and the full MCU by phase |
+| 🎭 **Marvel Comments** | 72 fan-made Marvel character accounts post in-character, fact-grounded comments on real movies — each voice researched and kept distinct, not interchangeable one-liners |
+| 🔥 **Hot Takes** | Two separate leaderboards: real human discussion, and the character threads — never blended, so one can't be mistaken for the other |
 
 ---
 
@@ -93,7 +107,7 @@ Cinemetrics pulls live data from **TMDB**, a dozen-plus news outlets per categor
 
 **Backend** — Node + Express · Mongoose/MongoDB Atlas · JWT auth · `rss-parser` · in-memory TTL cache
 
-**Data** — [TMDB](https://www.themoviedb.org/) · [The Guardian](https://open-platform.theguardian.com/) · 11 RSS feeds · [Zippopotam](https://zippopotam.us/) · [OpenStreetMap Overpass](https://overpass-api.de/)
+**Data** — [TMDB](https://www.themoviedb.org/) · [The Guardian](https://open-platform.theguardian.com/) · 40+ curated RSS feeds across movies/TV/streaming/gaming · [Zippopotam](https://zippopotam.us/) · [OpenStreetMap Overpass](https://overpass-api.de/)
 
 ```
 ├── index.js          # router, state wiring, modals, event delegation
@@ -101,10 +115,13 @@ Cinemetrics pulls live data from **TMDB**, a dozen-plus news outlets per categor
 ├── store/            # per-view state objects
 ├── components/       # header, nav, main, footer
 ├── services/api.js   # every backend call in one place
+├── docs/             # living project status, AI research findings, bot-content handoff docs
 └── server/
     ├── app.js        # express app + middleware
-    ├── routes/       # movies, tv, news, person, comments, auth
+    ├── models/       # user, comments, userMedia (ratings/watched), movieResearchCache
+    ├── routes/       # movies, tv, news, person, comments, user-media, research-cache, auth, users
     ├── controllers/  # curated Marvel / upcoming data
+    ├── scripts/      # seed data, idempotent bot-comment posting
     └── utils/cache.js
 ```
 
@@ -185,7 +202,8 @@ Frontend on **Netlify**, API on **Render**, both from `master`.
 
 `VITE_BACKEND_URL` must be set in Netlify's environment — Parcel inlines it at
 **build time**, so a build without it bakes in `localhost:3000` and every page
-comes up empty.
+comes up empty. (The name is misleading — nothing in this app uses Vite, Parcel
+is the only bundler — but it's the actual variable name the build reads.)
 
 ---
 
