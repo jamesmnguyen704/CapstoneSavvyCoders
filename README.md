@@ -26,19 +26,18 @@ No React. No framework. Native ES modules, a hand-rolled component layer, and an
 
 ## What it does
 
-Cinemetrics pulls live data from **TMDB**, **12 news outlets**, and **OpenStreetMap** into one place — what's trending, what's in theaters near you, what's on Netflix, and what's worth playing.
+Cinemetrics pulls live data from **TMDB**, a dozen-plus news outlets per category, and **OpenStreetMap** into one place — what's trending, what's in theaters near you, what's on Netflix, and what's worth playing.
 
 |  | |
 |---|---|
-| 🎞️ **Movies** | Trending, popular and top-rated, with genre / year / rating / sort filters |
-| 📺 **TV & Streaming** | Browse by service — Netflix, HBO Max, Prime, Disney+, Apple TV+, Hulu, Peacock |
+| 🎞️ **Movies** | Trending, popular and top-rated, with genre / year / rating / sort filters, plus a movie-news wire (12 RSS sources + The Guardian) right on the home page |
+| 📺 **TV & Streaming** | Browse by service — Netflix, HBO Max, Prime, Disney+, Apple TV+, Hulu, Peacock — with its own news rail alongside |
 | 🎟️ **In Theaters** | Enter a ZIP → what's playing + the closest cinemas within 25 miles |
 | 🦸 **Marvel** | A live countdown to *Avengers: Doomsday*, its 35-strong cast, and the full MCU by phase |
-| 📰 **News** | 19 outlets, deduped and balanced so no single wire dominates |
-| 🎮 **Games** | What's on the radar, the gaming wire, and a personal library with cover art |
+| 🎮 **Games** | What's on the radar, a 16-feed gaming wire, and a personal library with cover art |
 | 🔖 **My List** | Watchlist saved to `localStorage`, no account required |
 | ⭐ **Ratings & Watched** | A native 1-10 rating and "Mark Watched" per movie for signed-in users — Cinemetrics' own community score, kept visibly separate from TMDB's |
-| 🎭 **Marvel Comments** | ~70 fan-made Marvel character accounts post in-character, fact-grounded comments on real movies; a "Hot Takes" leaderboard splits real human discussion from the character threads so neither is mistaken for the other |
+| 🎭 **Marvel Comments** | 72 fan-made Marvel character accounts post in-character, fact-grounded comments on real movies; a "Hot Takes" leaderboard splits real human discussion from the character threads so neither is mistaken for the other |
 
 ---
 
@@ -51,7 +50,7 @@ Cinemetrics pulls live data from **TMDB**, **12 news outlets**, and **OpenStreet
 </tr>
 <tr>
 <td width="50%"><img src="docs/screenshots/games.jpg" alt="Games library" /><br /><sub><b>The Library</b> — game collection with per-console rigs</sub></td>
-<td width="50%"><img src="docs/screenshots/news.jpg" alt="News" /><br /><sub><b>News</b> — magazine layout across 12 sources</sub></td>
+<td width="50%"><img src="docs/screenshots/news.jpg" alt="News" /><br /><sub><b>Movie News</b> — magazine layout across 12 sources, now a section on the home page rather than its own route</sub></td>
 </tr>
 <tr>
 <td colspan="2"><img src="docs/screenshots/detail-modal.jpg" alt="Movie detail modal" /><br /><sub><b>Detail modal</b> — certification, cast, crew, where to watch, and scored reviews</sub></td>
@@ -203,7 +202,7 @@ comes up empty.
 - **Week 6 — Dev ergonomics.** Port management and env vars; added `BACKEND_PORT` so Parcel (`1234`) and the API (`3000`) stop competing.
 - **Week 7 — Polish & docs.** This README, plus CSS and auth fixes.
 - **Week 8 — Performance & scale.** Response caching, route skeletons, expanded news aggregation, and three new sections (TV, In Theaters, Games).
-- **Week 9 — Security, the Marvel comment system, and an AI research audit.** A full security pass (rate limiting, input validation, XSS fixes, ten PRs in one morning); a fan-made Marvel character comment system (~70 accounts, each grounded in real reviews or confirmed plot facts, with a voice/personality reference so they don't read generic); native 1-10 ratings and a "Watched" toggle; and an independent Gemini + ChatGPT research pass against the live codebase that caught a real integrity problem (Hot Takes ranking synthetic bot activity as community buzz) and a real SEO defect (every URL, even broken ones, returned HTTP 200) — both fixed the same day. Built across three Claude Code sessions running in parallel.
+- **Week 9 — Security, the Marvel comment system, and an AI research audit.** A full security pass (rate limiting, input validation, XSS fixes, ten PRs in one morning); a fan-made Marvel character comment system (72 accounts after a roster trim from 108, each grounded in real reviews or confirmed plot facts, with a voice/personality reference so they don't read generic); native 1-10 ratings and a "Watched" toggle; and an independent Gemini + ChatGPT research pass against the live codebase that caught a real integrity problem (Hot Takes ranking synthetic bot activity as community buzz) and a real SEO defect (every URL, even broken ones, returned HTTP 200) — both fixed the same day. Built across three Claude Code sessions running in parallel.
 
 </details>
 
