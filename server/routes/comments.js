@@ -12,7 +12,14 @@ const router = express.Router(); // creates express router for comments
 router.get("/meta/top", async (req, res) => {
   try {
     const requestedLimit = Number(req.query.limit);
+    // Default to real users only — without this, "busiest conversations"
+    // was 100% synthetic (109 character accounts vs. 1 real user) while
+    // presenting itself as organic community activity. Pass
+    // ?audience=character for the bot threads instead, surfaced as its own
+    // explicit "Character Chaos"-style feature, never blended with this one.
+    const audience = req.query.audience === "character" ? "character" : "human";
     const top = await Comment.aggregate([
+      { $match: { isCharacter: audience === "character" } },
       {
         $group: {
           _id: "$movieId",
@@ -52,6 +59,30 @@ router.get("/meta/top", async (req, res) => {
   } catch (err) {
     console.error("TOP THREADS ERROR:", err.message);
     res.status(500).json({ error: "Could not load top threads" });
+  }
+});
+
+// Bulk comment counts for a card grid — { movieIds: [...] } in, { [movieId]: count } out.
+// POST (not GET) because a full grid can easily send 20-50 ids, past what's
+// comfortable in a query string. Registered before "/:movieId" for the same
+// reason /meta/top is — Express would otherwise treat "meta" as a movieId.
+router.post("/meta/counts", async (req, res) => {
+  try {
+    const { movieIds } = req.body;
+    if (!Array.isArray(movieIds) || movieIds.length === 0) {
+      return res.json({});
+    }
+    const numericIds = movieIds.map(Number).filter(id => !Number.isNaN(id));
+    const counts = await Comment.aggregate([
+      { $match: { movieId: { $in: numericIds } } },
+      { $group: { _id: "$movieId", count: { $sum: 1 } } }
+    ]);
+    const result = {};
+    counts.forEach(c => { result[c._id] = c.count; });
+    res.json(result);
+  } catch (err) {
+    console.error("COMMENT COUNTS ERROR:", err.message);
+    res.status(500).json({ error: "Could not load comment counts" });
   }
 });
 

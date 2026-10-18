@@ -14,4 +14,13 @@ const commentSchema = new mongoose.Schema({
   dislikedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }]
 });
 
+// Guards against the same user posting the exact same text on the same movie
+// twice (e.g. a bot-posting script rerun after a rate-limit restart) without
+// blocking a real user who legitimately comments on a movie more than once.
+commentSchema.index({ userId: 1, movieId: 1, text: 1 }, { unique: true });
+
+// Every card-grid render hits POST /comments/meta/counts with a batch of
+// movieIds — a plain index keeps that $match cheap as comment volume grows.
+commentSchema.index({ movieId: 1 });
+
 export default mongoose.model("Comment", commentSchema);

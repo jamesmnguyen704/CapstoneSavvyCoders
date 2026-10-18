@@ -34,19 +34,20 @@ All three lanes reached a clean stopping point today. Summary, newest first:
 - Styled the new ratings/watched widget (real star glyphs over the 1-10 buttons, community score + Watched toggle, matching panel styling)
 - **Backlog, not started, deliberately deprioritized:** dead `.release-card`/`.release-poster` CSS, a hardcoded `#fff`/`#111`/`#000` color-token audit
 
-**Bot — done for today, one item in progress:**
+**Bot — done, clean stop:**
 - Hot Takes backend integrity split (human-default, `?audience=character` for the bot leaderboard)
 - Idempotent posting script + unique Mongo index (`server/scripts/bot-comments.js`, `npm run bot-comments -- path/to/batch.json`)
 - Full MCU-credits sweep (97 comments across 34 previously-uncovered films) + a QA audit that found and fixed cast-accuracy violations at scale (46 bad comments removed, see `docs/bot-comments-handoff.md` rule #8 and its refinement)
 - `docs/character-voices.md` (voice/personality profiles) and `docs/persona-ensemble-framework.md` (a project-agnostic methodology for multi-persona AI comment systems — Layer 1 of a planned doc → Skill → code-template progression; sources include the Stanford Generative Agents paper and real brand-voice case studies)
-- **In progress:** trimming the bot roster from ~109 character accounts down to roughly half, keeping the ones that actually get used — James's call, in line with both AI reports saying "don't add more, deepen what's there"
+- **Bot-roster trim: done.** 108 character accounts down to 72, James-directed, prioritizing real multi-movie recurring characters (verified via TMDB credits, not just how many movies our own site happened to have comments on — an early draft miscounted Tony Stark as 6 films when the real number is 10). Removed the 36 cut accounts, their 47 comments, and stale vote references. `docs/character-voices.md` reconciled to match: 9 dead profiles removed, 38 new ones added for previously-uncovered survivors.
 
 **Untouched today (pre-existing, belongs to whichever session owns the Nielsen Top 10 feature):**
 - `server/routes/news.js`, `views/_gamesData.js`, untracked `server/services/`, new game-cover images
 
 ## Open items for next session
 
-- **The bot-roster trim** (Bot, in progress — not done as of this entry)
+- **Hot Takes ranking algorithm** (Bot) — currently sorts by distinct-voices-then-raw-count, which has the same "early mover permanently wins" flaw as ranking by raw vote count instead of a confidence-adjusted ratio. Plan: once real human comment activity exists (right now there's exactly 1 real user, so this isn't urgent), move the human-audience ranking to a Wilson-score-style confidence interval — the same method Reddit's "Best" sort uses — so a thread with a handful of comments from a handful of distinct real users isn't permanently outranked by an older thread that just had more time to accumulate activity. Two separate concerns worth keeping distinct: (1) human-vs-character provenance (already fixed), (2) ranking quality within each list (this item). Not urgent, don't block on it.
+- **Feedback loop for bot content** (Bot) — `Comment.likedBy`/`dislikedBy` exist but nothing uses them to steer future research/writing passes yet. Idea from `docs/persona-ensemble-framework.md`: before a new batch, check which existing jokes/characters/styles got the strongest real reaction and weight new content toward what's working, Duolingo-style ("the comment section is our social brief"). Not urgent, no one's picked it up.
 - **CSS cleanup backlog** (UI): dead `.release-card` CSS, hardcoded color tokens — real debt, zero user impact, fine to leave
 - **`docs/lessons-for-future-projects.md`** — offered to James (transferable patterns from this build: the multi-session AI workflow itself, the persona-ensemble methodology, batch-and-cache API patterns, synthetic-vs-real data provenance). Not yet confirmed he wants it written.
 - **Journey page doesn't load under `npm start`** — only resolves on a production build. Low priority; fixing it means either making it a second Parcel entry for dev (attempted, reverted — untested risk to the shared dev server) or a small dev-only static middleware. Nobody's picked this up.
