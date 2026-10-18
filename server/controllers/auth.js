@@ -14,6 +14,17 @@ export const signup = async (req, res) => {
       return res.status(400).json({ message: "All fields required" });
     }
 
+    // The frontend already checks these, but that's bypassable by anyone
+    // talking to the API directly — the server has to be the real gate.
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ message: "Enter a valid email address" });
+    }
+    if (password.length < 6) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
+    }
+
     // check if user already exists by username or email
     const exists = await User.findOne({
       $or: [{ email }, { username }]
@@ -63,7 +74,10 @@ export const signup = async (req, res) => {
     // tell frontend that signup worked
     res.json({ message: "User registered successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    // Logged server-side, not returned — a mongoose validation error can
+    // echo back schema/field details nobody outside this server needs to see.
+    console.error("SIGNUP ERROR:", err.message);
+    res.status(500).json({ message: "Signup failed. Please try again." });
   }
 };
 
@@ -80,15 +94,12 @@ export const login = async (req, res) => {
       $or: [{ username: lookup }, { email: lookup }]
     });
 
-    if (!user) {
-      return res.status(400).json({ message: "User not found" });
-    }
-
-    // compare entered password to the hashed password in DB
-    const isMatch = await user.comparePassword(password);
-
-    if (!isMatch) {
-      return res.status(400).json({ message: "Incorrect password" });
+    // One message for both failure cases. "User not found" vs "Incorrect
+    // password" told an attacker which half of their guess was right —
+    // exactly what lets a username list turn into a confirmed-accounts list
+    // before the password-guessing even starts.
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(400).json({ message: "Invalid username/email or password" });
     }
 
     // create a signed JWT token so the frontend knows this user is authenticated
@@ -105,6 +116,7 @@ export const login = async (req, res) => {
     // send token back to the frontend
     res.json({ token });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("LOGIN ERROR:", err.message);
+    res.status(500).json({ message: "Login failed. Please try again." });
   }
 };
