@@ -11,6 +11,7 @@
 import express from "express";
 import axios from "axios";
 import { cacheJson } from "../utils/cache.js";
+import { requireNumericId } from "../middleware/requireNumericId.js";
 
 const router = express.Router();
 
@@ -90,7 +91,7 @@ router.get("/providers", async (req, res) => {
   }
 });
 
-router.get("/:id/details", async (req, res) => {
+router.get("/:id/details", requireNumericId(), async (req, res) => {
   try {
     const r = await axios.get(`${TMDB}/tv/${req.params.id}`, {
       params: {

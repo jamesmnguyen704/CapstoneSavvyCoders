@@ -2,6 +2,7 @@
 import express from "express";
 import axios from "axios";
 import { cacheJson } from "../utils/cache.js";
+import { requireNumericId } from "../middleware/requireNumericId.js";
 
 // import curated data
 import { curated2026, curated2027 } from "../controllers/curated/upcoming.js";
@@ -507,7 +508,7 @@ router.get("/top_rated", async (req, res) => {
 
 // Movie detail — title, runtime, genres, tagline, cast, similar, and
 // "where to watch" (JustWatch data via TMDB) in a single payload.
-router.get("/:id/details", async (req, res) => {
+router.get("/:id/details", requireNumericId(), async (req, res) => {
   const movieId = req.params.id;
   const key = process.env.TMDB_API_KEY;
   try {
@@ -661,7 +662,7 @@ router.get("/:id/details", async (req, res) => {
 });
 
 // for trailers
-router.get("/:id/videos", async (req, res) => {
+router.get("/:id/videos", requireNumericId(), async (req, res) => {
   const movieId = req.params.id;
   try {
     const response = await axios.get(
@@ -766,7 +767,7 @@ router.get("/upcoming-curated", async (req, res) => {
 });
 
 // fallback for getting single movie
-router.get("/:id", async (req, res) => {
+router.get("/:id", requireNumericId(), async (req, res) => {
   try {
     const response = await axios.get(
       `https://api.themoviedb.org/3/movie/${req.params.id}?api_key=${process.env.TMDB_API_KEY}&language=en-US`

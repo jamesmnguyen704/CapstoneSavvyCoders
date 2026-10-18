@@ -4,11 +4,12 @@
 
 import express from "express";
 import axios from "axios";
+import { requireNumericId } from "../middleware/requireNumericId.js";
 
 const router = express.Router();
 
 // GET /person/:id/details — combined detail + movie_credits payload.
-router.get("/:id/details", async (req, res) => {
+router.get("/:id/details", requireNumericId(), async (req, res) => {
   const key = process.env.TMDB_API_KEY;
   const id = req.params.id;
   try {
