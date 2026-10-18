@@ -293,10 +293,19 @@ router.get("/theaters-near", async (req, res) => {
     }
 
     const spot = place.places?.[0] || {};
-    const theaters = await nearbyTheaters({
+    const { theaters, failed } = await nearbyTheaters({
       lat: Number(spot.latitude),
       lng: Number(spot.longitude)
     });
+
+    // A genuine Overpass outage returns 503 instead of 200 so the response
+    // cache (2xx-only) never stores it — a transient failure must not look
+    // like "no theaters here" for the next 24 hours of visitors to this ZIP.
+    if (failed) {
+      return res
+        .status(503)
+        .json({ message: "Could not check for nearby theaters", radius: MILES_RADIUS, theaters: [] });
+    }
 
     res.json({ radius: MILES_RADIUS, theaters });
   } catch (err) {
@@ -323,8 +332,13 @@ function milesBetween(lat1, lon1, lat2, lon2) {
   return 2 * R * Math.asin(Math.sqrt(a));
 }
 
+// Returns { theaters, failed }. `failed` distinguishes "Overpass was down"
+// from "genuinely no cinemas within range" — both used to collapse to the
+// same empty array, which meant a transient outage got cached for 24 hours
+// as if it were a real answer. A rural ZIP with no nearby theaters stays
+// cacheable; an outage should not be.
 async function nearbyTheaters({ lat, lng }) {
-  if (lat == null || lng == null) return [];
+  if (lat == null || lng == null) return { theaters: [], failed: false };
 
   const query =
     `[out:json][timeout:25];` +
@@ -366,10 +380,11 @@ async function nearbyTheaters({ lat, lng }) {
       console.warn(`OVERPASS ${new URL(endpoint).host} failed:`, err.message);
     }
   }
-  if (!r) return [];
+  // Both mirrors failed or timed out — a real outage, not "no cinemas here".
+  if (!r) return { theaters: [], failed: true };
 
   try {
-    return (r.data.elements || [])
+    const theaters = (r.data.elements || [])
       .map(e => {
         const eLat = e.lat ?? e.center?.lat;
         const eLng = e.lon ?? e.center?.lon;
@@ -392,9 +407,10 @@ async function nearbyTheaters({ lat, lng }) {
       .filter(Boolean)
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 15);
+    return { theaters, failed: false };
   } catch (err) {
     console.warn("OVERPASS parse failed:", err.message);
-    return [];
+    return { theaters: [], failed: true };
   }
 }
 

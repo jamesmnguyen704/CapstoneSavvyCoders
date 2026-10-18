@@ -337,6 +337,11 @@ export async function fetchMarvelMovies() {
     return response.data.movies;
   } catch (err) {
     console.error("MARVEL API ERROR:", err);
-    return [];
+    // A 503 here means the fetch was too incomplete to cache (see
+    // server/controllers/curated/marvel.js), not that it returned nothing —
+    // the response body still carries whatever did come back. Falling
+    // straight to [] would show an empty timeline to this visitor even
+    // though most of it actually loaded.
+    return err.response?.data?.movies || [];
   }
 }
