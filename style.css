@@ -1923,7 +1923,48 @@ footer {
 
 .hot-takes-subtitle {
   color: var(--cm-muted, rgba(255, 255, 255, 0.6));
-  margin: -0.5rem 0 1.5rem;
+  margin: -0.5rem 0 1rem;
+}
+
+/* Same pill-tab look as .mylist-tab — unstyled before this, just rendering
+   as plain default browser buttons. */
+.hot-takes-tabs {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0 0 1.5rem;
+}
+
+.hot-takes-tab {
+  appearance: none;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cm-text);
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.hot-takes-tab i {
+  opacity: 0.85;
+}
+
+.hot-takes-tab:hover {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.hot-takes-tab--active {
+  background: var(--cm-accent-grad);
+  color: #111;
+  border-color: transparent;
+  box-shadow: 0 4px 16px -4px rgba(255, 180, 0, 0.55);
 }
 
 .hot-takes-grid {
