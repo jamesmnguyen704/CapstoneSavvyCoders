@@ -3,6 +3,7 @@
 // Notes: Attaches auth handlers, intro/trailer modal logic, and router hooks to populate state.
 
 import { Header, Nav, Main, Footer } from "./components";
+import CommentsComponent from "./components/Comments";
 import * as state from "./store";
 import Navigo from "navigo";
 import { camelCase } from "lodash";
@@ -16,6 +17,8 @@ import {
   fetchMarvelMovies,
   fetchMovieVideos,
   fetchComments,
+  fetchTopThreads,
+  fetchAllUsers,
   postComment,
   deleteComment,
   fetchNewsTab,
@@ -276,6 +279,7 @@ async function render(st = state.Home) {
   attachSearchHandlers();
   attachWatchlistHandler();
   attachInfoButtonHandler();
+  attachCommentButtonHandler();
   attachMoviesFilterHandlers();
   attachGamesHandlers();
   attachGameAdaptationHandler();
@@ -472,8 +476,23 @@ function attachSignupHandler() {
         return;
       }
 
-      setAuthMsg("Account created! Redirecting to login…", "success");
-      setTimeout(() => router.navigate("/login"), 900);
+      // Auto-login right after signup instead of making someone type the
+      // same password twice in a row — the extra manual login step was
+      // confusing, unexplained friction for no real benefit.
+      const loginRes = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ loginId: username, password })
+      });
+      const loginData = await loginRes.json();
+      if (loginRes.ok) {
+        localStorage.setItem("token", loginData.token);
+        setAuthMsg("Account created! Welcome to Cinemetrics.", "success");
+        setTimeout(() => router.navigate("/"), 800);
+      } else {
+        setAuthMsg("Account created! Please log in.", "success");
+        setTimeout(() => router.navigate("/login"), 900);
+      }
     } catch (err) {
       console.error("SIGNUP ERROR:", err);
       setAuthMsg("Network error. Please try again.");
@@ -534,7 +553,12 @@ function attachLogout() {
 
   btn.addEventListener("click", () => {
     localStorage.removeItem("token");
+    // navigate() alone doesn't re-render the header when the route doesn't
+    // change (e.g. logging out while already on "/") — the nav kept
+    // showing "Welcome, <user>! / Logout" until a manual refresh, making
+    // logout look like it silently failed.
     router.navigate("/");
+    render(state.Home);
   });
 }
 
@@ -787,10 +811,10 @@ function attachMyListTabs() {
   if (!tabs.length) return;
   tabs.forEach(btn => {
     btn.addEventListener("click", () => {
-      const next = btn.dataset.tab === "about" ? "about" : "list";
+      const next = ["about", "users"].includes(btn.dataset.tab) ? btn.dataset.tab : "list";
       const url = new URL(window.location.href);
       if (next === "list") url.searchParams.delete("tab");
-      else url.searchParams.set("tab", "about");
+      else url.searchParams.set("tab", next);
       window.history.replaceState({}, "", url.toString());
       render(state.MyList);
     });
@@ -989,6 +1013,9 @@ async function openInfoModal(movieId) {
     })
     .join("");
 
+  const modalComments = await fetchComments(data.id);
+  const modalCurrentUser = getCurrentUser();
+
   body.innerHTML = `
     ${
       data.backdrop_path
@@ -1075,7 +1102,13 @@ async function openInfoModal(movieId) {
     ${cast ? `<div class="info-section"><h3>Top Cast</h3><div class="info-cast">${cast}</div></div>` : ""}
     ${crew ? `<div class="info-section"><h3>Director, Writers &amp; Producers</h3><div class="info-cast">${crew}</div></div>` : ""}
     ${similar ? `<div class="info-section"><h3>If you liked this</h3><div class="info-similar">${similar}</div></div>` : ""}
+
+    <div class="info-section info-comments" data-movie-id="${data.id}">
+      ${CommentsComponent({ comments: modalComments, currentUser: modalCurrentUser })}
+    </div>
   `;
+
+  attachModalCommentHandlers(body, data.id);
 
   // Wire the "Add to My List" inside the modal.
   const saveBtn = body.querySelector(".info-save-btn");
@@ -1121,6 +1154,67 @@ async function openInfoModal(movieId) {
   });
 }
 
+// Comments embedded in the info modal — separate from attachCommentHandlers
+// (the standalone /comments/:id page), which calls the global render() on
+// success. Doing that here would blow away the whole #root tree and close
+// the modal out from under the user, so this re-renders only the modal's
+// own comment section instead.
+function attachModalCommentHandlers(body, movieId) {
+  const container = body.querySelector(".info-comments");
+  if (!container) return;
+
+  const refresh = async () => {
+    const comments = await fetchComments(movieId);
+    container.innerHTML = CommentsComponent({ comments, currentUser: getCurrentUser() });
+    attachModalCommentHandlers(body, movieId);
+  };
+
+  const form = container.querySelector("#commentForm");
+  if (form) {
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+      const msg = form.querySelector("#commentMsg");
+      const text = form.querySelector("#text").value.trim();
+      if (!text) {
+        if (msg) {
+          msg.textContent = "Comment can't be empty.";
+          msg.classList.add("auth-msg--error");
+        }
+        return;
+      }
+      try {
+        await postComment({ movieId: Number(movieId), text });
+        await refresh();
+      } catch (err) {
+        if (msg) {
+          msg.textContent =
+            err?.response?.status === 401
+              ? "Your session expired — please log in again."
+              : "Couldn't post comment. Please try again.";
+          msg.classList.add("auth-msg--error");
+        }
+      }
+    });
+  }
+
+  const list = container.querySelector(".comment-list");
+  if (list) {
+    list.addEventListener("click", async event => {
+      const btn = event.target.closest(".delete-comment");
+      if (!btn) return;
+      const id = btn.dataset.id;
+      if (!id) return;
+      btn.disabled = true;
+      try {
+        await deleteComment(id);
+        await refresh();
+      } catch {
+        btn.disabled = false;
+      }
+    });
+  }
+}
+
 // Opens the same #infoModal shell with game content instead of movie content.
 // No fetch: every game's matching headlines come from state.Games.news,
 // already loaded on the page, so this is synchronous.
@@ -1155,7 +1249,7 @@ function attachInfoButtonHandler() {
       return;
     }
     const posterHit = e.target.closest("[data-info-id]");
-    if (posterHit && !e.target.closest(".card-bookmark, .trailer-btn, .info-btn")) {
+    if (posterHit && !e.target.closest(".card-bookmark, .trailer-btn, .info-btn, .comment-btn")) {
       e.preventDefault();
       e.stopPropagation();
       const id = posterHit.dataset.infoId;
@@ -1169,6 +1263,21 @@ function attachInfoButtonHandler() {
     e.preventDefault();
     const id = el.dataset.infoId;
     if (id) openInfoModal(id);
+  });
+}
+
+// Comment button on movie cards — opens that movie's comments page. Was
+// pure dead markup before: nothing in the codebase ever listened for it.
+function attachCommentButtonHandler() {
+  if (document.__commentBtnBound) return;
+  document.__commentBtnBound = true;
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".comment-btn");
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const id = btn.dataset.movieid;
+    if (id) router.navigate(`/comments/${id}`);
   });
 }
 
@@ -1730,7 +1839,12 @@ function attachPersonClickHandler() {
 router.hooks({
   before: async (done, match) => {
     const path = match?.url || "/";
-    const view = path === "/" || path === "" ? "home" : camelCase(path.replace("/", ""));
+    // Only the first segment names the view — a param route like
+    // "/comments/969681" has to resolve to "comments", not get camelCased
+    // whole (which lodash turns into "comments969681", matching no case
+    // below and silently falling through to the 404 page).
+    const firstSegment = path.split("/").filter(Boolean)[0] || "";
+    const view = path === "/" || path === "" ? "home" : camelCase(firstSegment);
 
     console.log("Router resolved view:", view);
 
@@ -1803,7 +1917,12 @@ router.hooks({
       case "comments": {
         const movieId = match.data.movieId;
         state.Comments.movieId = movieId;
-        state.Comments.comments = await fetchComments(movieId);
+        const [comments, details] = await Promise.all([
+          fetchComments(movieId),
+          fetchMovieDetails(movieId)
+        ]);
+        state.Comments.comments = comments;
+        state.Comments.movieTitle = details?.title || null;
         state.Comments.currentUser = getCurrentUser();
         break;
       }
@@ -1811,6 +1930,12 @@ router.hooks({
       case "login":
       case "signup":
       case "profile":
+        break;
+
+      case "hotTakes":
+        state.HotTakes.loading = true;
+        state.HotTakes.threads = await fetchTopThreads();
+        state.HotTakes.loading = false;
         break;
 
       case "news": {
@@ -1836,9 +1961,14 @@ router.hooks({
         break;
       }
 
-      case "myList":
-        // Pure-local data; render() reads it from localStorage on its own.
+      case "myList": {
+        // Pure-local watchlist data; render() reads it from localStorage.
+        // The admin user directory is the one exception — only fetched (and
+        // only shown) for the site owner's own account.
+        const current = getCurrentUser();
+        state.MyList.adminUsers = current?.username === "aznjames704" ? await fetchAllUsers() : [];
         break;
+      }
 
       case "games": {
         // The library is static; only the news rail needs fetching. Refetch
@@ -1927,6 +2057,7 @@ router
     "/games": () => render(state.Games),
     "/theaters": () => render(state.Theaters),
     "/tv": () => render(state.Tv),
+    "/hot-takes": () => render(state.HotTakes),
     "/discover": () => router.navigate("/movies")
   })
   .notFound(() => render(state.ViewNotFound))

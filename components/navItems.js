@@ -23,7 +23,8 @@ export const navItemsData = [
   { url: "/marvel", text: "Marvel" },
   { url: "/news", text: "News" },
   { url: "/games", text: "Games" },
-  { url: "/my-list", text: "My List" }
+  { url: "/my-list", text: "My List" },
+  { url: "/hot-takes", text: "Hot Takes" }
 ];
 
 export const logo = {

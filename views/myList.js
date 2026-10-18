@@ -64,10 +64,13 @@ function card(item) {
 function getActiveTab() {
   if (typeof window === "undefined") return "list";
   const tab = new URLSearchParams(window.location.search).get("tab");
-  return tab === "about" ? "about" : "list";
+  if (tab === "list" || tab === "users") return tab;
+  // Default (no ?tab= param, i.e. clicking "My List" in the nav) lands on
+  // About first — the watchlist and admin panel are still one click away.
+  return "about";
 }
 
-function tabBar(active) {
+function tabBar(active, showAdmin) {
   return `
     <nav class="mylist-tabs" role="tablist" aria-label="My List sections">
       <button
@@ -88,7 +91,53 @@ function tabBar(active) {
       >
         <i class="fa-solid fa-user"></i> About
       </button>
+      ${
+        showAdmin
+          ? `<button
+              role="tab"
+              type="button"
+              class="mylist-tab ${active === "users" ? "mylist-tab--active" : ""}"
+              data-tab="users"
+              aria-selected="${active === "users"}"
+            >
+              <i class="fa-solid fa-lock"></i> Users
+            </button>`
+          : ""
+      }
     </nav>
+  `;
+}
+
+function usersPanel(users) {
+  const rows = users.length
+    ? users
+        .map(
+          u => `
+          <li class="admin-user-row">
+            ${
+              u.avatar
+                ? `<img src="${u.avatar}" alt="${u.username}" loading="lazy" />`
+                : `<span class="admin-user-avatar-fallback">${u.username.charAt(0).toUpperCase()}</span>`
+            }
+            <span class="admin-user-name">${u.username}</span>
+            <span class="admin-user-moviecount" title="Movies commented on">🎬 ${u.movieCount || 0}</span>
+            ${u.isCharacter ? `<span class="comment-character-badge">🎭 Character</span>` : `<span class="admin-user-real">Real user</span>`}
+            <span class="admin-user-date">${new Date(u.createdAt).toLocaleDateString()}</span>
+          </li>
+        `
+        )
+        .join("")
+    : `<li class="admin-user-row">No users found.</li>`;
+
+  return `
+    <header class="mylist-header">
+      <div>
+        <span class="news-kicker">Admin — Visible Only To You</span>
+        <h1>All Signed-Up Users</h1>
+        <p class="mylist-sub">${users.length} account${users.length === 1 ? "" : "s"} total.</p>
+      </div>
+    </header>
+    <ul class="admin-user-list">${rows}</ul>
   `;
 }
 
@@ -128,14 +177,20 @@ function listPanel() {
   `;
 }
 
-export default () => {
-  const active = getActiveTab();
+export default state => {
+  const adminUsers = Array.isArray(state.adminUsers) ? state.adminUsers : [];
+  const showAdmin = adminUsers.length > 0;
+  const requested = getActiveTab();
+  const active = requested === "users" && !showAdmin ? "list" : requested;
+
+  const panel =
+    active === "about" ? aboutMe() : active === "users" ? usersPanel(adminUsers) : listPanel();
 
   return html`
     <section class="mylist-page">
-      ${tabBar(active)}
+      ${tabBar(active, showAdmin)}
       <div class="mylist-panel" data-panel="${active}">
-        ${active === "about" ? aboutMe() : listPanel()}
+        ${panel}
       </div>
     </section>
   `;

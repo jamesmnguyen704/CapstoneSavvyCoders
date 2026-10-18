@@ -14,8 +14,23 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function timeAgo(dateString) {
+  if (!dateString) return "";
+  const diffMs = Date.now() - new Date(dateString).getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(dateString).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export default function Comments(state) {
-  const comments = Array.isArray(state.comments) ? state.comments : [];
+  const comments = Array.isArray(state.comments)
+    ? [...state.comments].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+    : [];
   const currentUser = state.currentUser || null;
 
   const list = comments.length
@@ -24,13 +39,24 @@ export default function Comments(state) {
           const name = escapeHtml(c.username || c.author || "Anonymous");
           const text = escapeHtml(c.text || "");
           const id = escapeHtml(c._id || "");
+          const avatar = c.avatar ? escapeHtml(c.avatar) : null;
+          const characterBadge = c.isCharacter
+            ? `<span class="comment-character-badge" title="Fan-made character account, not a real Cinemetrics user">🎭 Character</span>`
+            : "";
           // Server enforces real ownership on delete; this just hides the
           // button for comments that would be rejected anyway.
           const isOwn = currentUser && c.username === currentUser.username;
           return `
             <li class="comment-item">
+              ${
+                avatar
+                  ? `<img class="comment-avatar" src="${avatar}" alt="${name}" loading="lazy" />`
+                  : `<span class="comment-avatar comment-avatar--fallback">${name.charAt(0).toUpperCase()}</span>`
+              }
               <div class="comment-body">
                 <strong class="comment-author">${name}</strong>
+                ${characterBadge}
+                <span class="comment-time">${timeAgo(c.createdAt)}</span>
                 <p class="comment-text">${text}</p>
               </div>
               ${

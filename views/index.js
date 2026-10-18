@@ -14,4 +14,6 @@ export { default as MyList } from "./myList";
 export { default as Games } from "./games";
 export { default as Theaters } from "./theaters";
 export { default as Tv } from "./tv";
+export { default as Comments } from "./Comments";
+export { default as HotTakes } from "./hotTakes";
 export { default as ViewNotFound } from "./viewNotFound";

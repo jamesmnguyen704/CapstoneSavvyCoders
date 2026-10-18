@@ -8,9 +8,12 @@ import axios from "axios";
 // Fallback to localhost for local development.
 const API_BASE = process.env.VITE_BACKEND_URL || "http://localhost:3000";
 
-// Game cover art lives in Assets/game-covers and is served by the API's
-// express.static of the repo root, so it works locally and on Render without
-// needing the bundler to fingerprint 50 images.
+// Game cover art lives in Assets/game-covers and is served by narrowly-scoped
+// express.static routes mounted in server/app.js (just that one folder, plus
+// Assets/console-logos below) — not the repo-root catch-all that was removed
+// for leaking the whole tree. Dynamic, dozens-of-files-by-runtime-name, so
+// Parcel can't fingerprint them the way it does the handful of imported
+// Assets/images/* files.
 export function gameCoverUrl(file) {
   return file ? `${API_BASE}/Assets/game-covers/${file}` : null;
 }
@@ -328,6 +331,28 @@ export async function fetchDoomsday() {
   } catch (err) {
     console.error("DOOMSDAY API ERROR:", err);
     return null;
+  }
+}
+
+// Admin-only account directory — the backend rejects anyone but the site
+// owner, so a non-owner request here comes back empty rather than erroring.
+export async function fetchAllUsers() {
+  try {
+    const response = await axios.get(`${API_BASE}/users`, { headers: authHeaders() });
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+// Busiest comment threads site-wide, ranked by distinct voices then volume.
+export async function fetchTopThreads() {
+  try {
+    const response = await axios.get(`${API_BASE}/comments/meta/top`);
+    return Array.isArray(response.data) ? response.data : [];
+  } catch (err) {
+    console.error("TOP THREADS ERROR:", err);
+    return [];
   }
 }
 

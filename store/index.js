@@ -20,6 +20,7 @@ import MyList from "./myList";
 import Games from "./games";
 import Theaters from "./theaters";
 import Tv from "./tv";
+import HotTakes from "./hotTakes";
 
 export {
   Home,
@@ -37,7 +38,8 @@ export {
   MyList,
   Games,
   Theaters,
-  Tv
+  Tv,
+  HotTakes
 };
 
 export default {
@@ -56,5 +58,6 @@ export default {
   MyList,
   Games,
   Theaters,
-  Tv
+  Tv,
+  HotTakes
 };

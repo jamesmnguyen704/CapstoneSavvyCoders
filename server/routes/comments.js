@@ -1,10 +1,60 @@
 // this file provides API endpoints for getting, creating, and deleting comments
 
 import express from "express"; // imported to create route
+import axios from "axios";
 import Comment from "../models/comments.js"; // imported from mongoose
 import { requireAuth } from "../middleware/requireAuth.js";
 
 const router = express.Router(); // creates express router for comments
+
+// Busiest threads across the whole site — registered before "/:movieId" so
+// Express doesn't swallow this path as a literal movieId.
+router.get("/meta/top", async (req, res) => {
+  try {
+    const limit = Math.min(Number(req.query.limit) || 8, 20);
+    const top = await Comment.aggregate([
+      {
+        $group: {
+          _id: "$movieId",
+          count: { $sum: 1 },
+          voices: { $addToSet: "$username" }
+        }
+      },
+      { $addFields: { voiceCount: { $size: "$voices" } } },
+      // Ranked by distinct voices first, then raw count — a thread with five
+      // different characters talking feels "busier" than one person posting
+      // five times in a row, even if the totals match.
+      { $sort: { voiceCount: -1, count: -1 } },
+      { $limit: limit }
+    ]);
+
+    const key = process.env.TMDB_API_KEY;
+    const withTitles = await Promise.all(
+      top.map(async t => {
+        try {
+          const { data } = await axios.get(`https://api.themoviedb.org/3/movie/${t._id}`, {
+            params: { api_key: key }
+          });
+          return {
+            movieId: t._id,
+            title: data.title,
+            posterPath: data.poster_path,
+            commentCount: t.count,
+            voiceCount: t.voiceCount
+          };
+        } catch {
+          return { movieId: t._id, title: null, posterPath: null, commentCount: t.count, voiceCount: t.voiceCount };
+        }
+      })
+    );
+
+    res.json(withTitles.filter(m => m.title));
+  } catch (err) {
+    console.error("TOP THREADS ERROR:", err.message);
+    res.status(500).json({ error: "Could not load top threads" });
+  }
+});
+
 // find all my comments relating to the movieId from url to return as JSON, if error than 500
 // Reading comments stays public — only posting/deleting requires login.
 router.get("/:movieId", async (req, res) => {
@@ -26,7 +76,9 @@ router.post("/", requireAuth, async (req, res) => {
       movieId,
       text,
       userId: req.user.id,
-      username: req.user.username
+      username: req.user.username,
+      avatar: req.user.avatar || null,
+      isCharacter: req.user.isCharacter || false
     });
     const saved = await newComment.save();
     res.status(201).json(saved);
