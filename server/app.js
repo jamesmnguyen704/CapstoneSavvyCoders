@@ -5,6 +5,7 @@ import express from "express"; // Framework to create servers and routes
 import axios from "axios"; // used to prime the response cache at boot
 import cors from "cors"; // Allows my frontend (Netlify) or Render to say whats up to my backend API
 import mongoose from "mongoose"; // MongoDB library that connects and interacts
+import rateLimit from "express-rate-limit";
 import { cacheStats } from "./utils/cache.js";
 import authRoutes from "./routes/auth.js";
 import newsRoutes from "./routes/news.js";
@@ -66,10 +67,22 @@ const requireDatabase = (req, res, next) => {
   next();
 };
 
+// Nothing throttled login/signup before this — a password list against a
+// known username had nothing to slow it down. 10 attempts / 15 min per IP is
+// generous for a real user who fat-fingers a password a few times, tight
+// enough to make guessing impractical.
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: "Too many attempts. Try again in a few minutes." }
+});
+
 // mounting the router
 app.use("/comments", requireDatabase, commentsRouter); // Forward /comments requests
 app.use("/movies", moviesRouter); // Forward /movies requests
-app.use("/auth", requireDatabase, authRoutes); // user auth routes
+app.use("/auth", authLimiter, requireDatabase, authRoutes); // user auth routes
 app.use("/news", newsRoutes); // movie news (Guardian Film proxy)
 app.use("/person", personRoutes); // person/actor detail + filmography
 app.use("/tv", tvRoutes); // TV shows + streaming-service browse
