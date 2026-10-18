@@ -1372,7 +1372,12 @@ function attachInfoButtonHandler() {
   if (document.__infoBound) return;
   document.__infoBound = true;
   document.addEventListener("click", e => {
-    const btn = e.target.closest(".info-btn");
+    // .theater-info (views/theaters.js) renders the same data-id="<movieId>"
+    // shape as .info-btn everywhere else, but was never wired to anything —
+    // clicking it did nothing. Added here rather than giving it the
+    // .info-btn class, since that carries !important sizing/background
+    // rules that would have overridden its own distinct circular style.
+    const btn = e.target.closest(".info-btn, .theater-info");
     if (btn) {
       e.preventDefault();
       e.stopPropagation();
@@ -1381,7 +1386,7 @@ function attachInfoButtonHandler() {
       return;
     }
     const posterHit = e.target.closest("[data-info-id]");
-    if (posterHit && !e.target.closest(".card-bookmark, .trailer-btn, .info-btn, .comment-btn")) {
+    if (posterHit && !e.target.closest(".card-bookmark, .trailer-btn, .info-btn, .theater-info, .comment-btn")) {
       e.preventDefault();
       e.stopPropagation();
       const id = posterHit.dataset.infoId;
