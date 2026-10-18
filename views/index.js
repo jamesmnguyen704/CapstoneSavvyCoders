@@ -4,14 +4,15 @@
 export { default as Home } from "./home";
 export { default as AboutMe } from "./aboutMe";
 export { default as marvel } from "./marvel";
-export { default as Movies } from "./movies";
-export { default as Releases } from "./releases";
+export { upcomingSection } from "./releases";
 export { default as login } from "./login";
 export { default as signup } from "./signup";
 export { default as Profile } from "./profile";
-export { default as News } from "./news";
+export { movieNewsSection } from "./news";
 export { default as MyList } from "./myList";
 export { default as Games } from "./games";
 export { default as Theaters } from "./theaters";
 export { default as Tv } from "./tv";
+export { default as Comments } from "./Comments";
+export { default as HotTakes } from "./hotTakes";
 export { default as ViewNotFound } from "./viewNotFound";

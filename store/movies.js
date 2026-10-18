@@ -7,7 +7,7 @@ export default {
   selectedGenres: [],   // active genre ids
   year: "",             // "" means any
   minRating: 0,
-  sort: "popularity.desc",
+  sort: "trending",
   results: [],          // hero uses results[0..5]; grid uses the full list
   total_results: 0,
   loading: false

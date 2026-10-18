@@ -6,12 +6,19 @@ import CommentsComponent from "../components/Comments";
 
 export default state => html`
   <section class="comments-page">
-    <h1>Comments for Movie ID: ${state.movieId}</h1>
+    <div class="comments-page-header">
+      ${
+        state.moviePoster
+          ? `<img class="comments-page-poster" src="https://image.tmdb.org/t/p/w200${state.moviePoster}" alt="${state.movieTitle || ""}" />`
+          : ""
+      }
+      <h1>Comments for ${state.movieTitle || `Movie ID: ${state.movieId}`}</h1>
+    </div>
 
     <div class="comments-wrapper">
       ${CommentsComponent(state)}
     </div>
 
-    <button class="back-btn" data-navigo href="/movies">⬅ Back to Movies</button>
+    <button class="back-btn" data-navigo href="/">⬅ Back to Movies</button>
   </section>
 `;

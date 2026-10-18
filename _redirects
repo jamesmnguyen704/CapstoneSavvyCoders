@@ -1,1 +1,24 @@
-/*    /index.html   200
+# Each real app route gets an explicit rewrite to the SPA shell so a direct
+# load/refresh works. Deliberately NOT a blanket "/*" catch-all: that was
+# serving every URL, including typos and dead links, as HTTP 200 — a soft
+# 404 that tells search engines a broken page is a real one. Routes below
+# must be kept in sync with index.js's router.on({...}) table.
+/                /index.html   200
+/marvel          /index.html   200
+/about           /index.html   200
+/comments/*      /index.html   200
+/login           /index.html   200
+/signup          /index.html   200
+/profile         /index.html   200
+/my-list         /index.html   200
+/games           /index.html   200
+/theaters        /index.html   200
+/tv              /index.html   200
+/hot-takes       /index.html   200
+/discover        /index.html   200
+/movies          /index.html   200
+/releases        /index.html   200
+/news            /index.html   200
+
+# Anything else (typos, old dead links, bot-probed paths) falls through to
+# Netlify's real 404 instead of being disguised as a valid page.

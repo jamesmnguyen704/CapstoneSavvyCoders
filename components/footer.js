@@ -12,6 +12,10 @@ export default () => html`
       <nav class="site-footer-nav" aria-label="Footer">
         <a href="/about" data-navigo>About</a>
       </nav>
+      <p class="site-footer-attribution">
+        This product uses the TMDB API but is not endorsed or certified by
+        <a href="https://www.themoviedb.org/" target="_blank" rel="noopener noreferrer">TMDB</a>.
+      </p>
     </div>
   </footer>
 `;

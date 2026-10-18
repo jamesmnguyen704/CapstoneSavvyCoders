@@ -1,8 +1,11 @@
 // File: views/news.js
-// Purpose: Movie News page — editorial layout inspired by IGN / MovieWeb /
-//          JoBlo: a full-bleed hero with text overlaid on the backdrop, a
+// Purpose: Movie News — editorial layout inspired by IGN / MovieWeb / JoBlo:
+//          a full-bleed hero with text overlaid on the backdrop, a
 //          magazine-style grid of image-first cards with category pills, and
 //          a vertical "Latest" rail running down the right side.
+//          Folded into Home as a section (see `movieNewsSection` below) —
+//          no standalone /news page anymore, matching TV and Games, which
+//          already distribute their own news instead of sharing one page.
 // Notes:
 //   - All upstream text is HTML-escaped to guard against injection.
 //   - Categories are inferred from the article title/tags with a simple
@@ -85,7 +88,7 @@ function renderFeatured(article, fallbackCat, failed = false) {
         <div class="news-hero-body">
           <h2>The wire is down</h2>
           <p>Couldn't reach the news sources just now. Refresh in a minute, or
-             browse <a href="/movies" data-navigo>Movies</a> in the meantime.</p>
+             browse <a href="/" data-navigo>Movies</a> in the meantime.</p>
         </div>
       </div>
     `
@@ -112,7 +115,7 @@ function renderFeatured(article, fallbackCat, failed = false) {
     <a class="news-hero" href="${url}" target="_blank" rel="noopener noreferrer">
       ${
         image
-          ? `<div class="news-hero-bg" style="background-image: url('${image}')"></div>`
+          ? `<div class="news-hero-bg" style="background-image: url('${image}')"><img src="${image}" alt="" aria-hidden="true" style="display:none" onerror="this.parentElement.style.backgroundImage='';this.parentElement.classList.add('news-hero-bg--placeholder')" /></div>`
           : `<div class="news-hero-bg news-hero-bg--placeholder"></div>`
       }
       <div class="news-hero-overlay"></div>
@@ -148,9 +151,10 @@ function renderGridCard(article, { large = false, fallbackCat } = {}) {
       <div class="news-card-media">
         ${
           image
-            ? `<img src="${image}" alt="" loading="lazy" />`
-            : `<div class="news-card-media--placeholder" aria-hidden="true">🎬</div>`
+            ? `<img src="${image}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />`
+            : ""
         }
+        <div class="news-card-media--placeholder" aria-hidden="true" style="${image ? "display:none" : ""}">🎬</div>
         ${categoryPill(cat)}
       </div>
       <div class="news-card-body">
@@ -178,9 +182,10 @@ function renderRailItem(article, fallbackCat) {
     <a class="news-item" href="${url}" target="_blank" rel="noopener noreferrer">
       ${
         image
-          ? `<img class="news-item-thumb" src="${image}" alt="" loading="lazy" />`
-          : `<div class="news-item-thumb news-item-thumb--placeholder" aria-hidden="true">🎬</div>`
+          ? `<img class="news-item-thumb" src="${image}" alt="" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />`
+          : ""
       }
+      <div class="news-item-thumb news-item-thumb--placeholder" aria-hidden="true" style="${image ? "display:none" : ""}">🎬</div>
       <div class="news-item-body">
         <div class="news-item-meta">
           ${categoryPill(cat)}
@@ -194,6 +199,11 @@ function renderRailItem(article, fallbackCat) {
   `;
 }
 
+// TV, Streaming, and Gaming each got their own dedicated page with its own
+// news rail (/tv, /games) — this page is the movie wire only now. The old
+// tv/streaming/gaming tab configs lived here unreferenced (NEWS_TABS in
+// index.js has only ever included "movies"), so they're gone rather than
+// kept as copy nothing could reach.
 const TAB_CONFIG = {
   movies: {
     title: "Movie News",
@@ -201,36 +211,12 @@ const TAB_CONFIG = {
     gridHead: "Top Stories",
     gridSub: "Blockbusters, superheroes &amp; sequels",
     railLabel: "Latest movie news"
-  },
-  tv: {
-    title: "TV News",
-    subtitle: "Streaming prestige, adult animation, reality & genre series — updated daily.",
-    gridHead: "Top Stories",
-    gridSub: "Boys, Invincible, Daredevil &amp; streaming prestige",
-    railLabel: "Latest TV news"
-  },
-  streaming: {
-    title: "Streaming",
-    subtitle: "What just dropped on Netflix, HBO Max, Prime, Disney+ and Apple TV.",
-    gridHead: "Now Streaming",
-    gridSub: "New arrivals, schedules &amp; platform news",
-    railLabel: "Latest streaming news"
-  },
-  gaming: {
-    title: "Gaming",
-    subtitle: "PlayStation, Xbox, Switch and PC — reviews, reveals and release dates.",
-    gridHead: "Top Stories",
-    gridSub: "Consoles, PC &amp; the games worth your time",
-    railLabel: "Latest gaming news"
   }
 };
 
 // Fallback pill label per tab, used when no CATEGORY_RULES entry matches.
 const TAB_FALLBACK_CATEGORY = {
-  movies:    { label: "Film",      key: "film" },
-  tv:        { label: "TV",        key: "tv" },
-  streaming: { label: "Streaming", key: "streaming" },
-  gaming:    { label: "Gaming",    key: "gaming" }
+  movies: { label: "Film", key: "film" }
 };
 
 function renderTabs(activeTab) {
@@ -256,7 +242,12 @@ function renderTabs(activeTab) {
   `;
 }
 
-export default state => {
+// Exported for Home, which embeds this as its own section (see
+// shared/store linking: Home.news === News, same pattern as
+// Home.movies/Theaters.releases) — Movie News no longer has a standalone
+// page of its own, matching TV and Games, which already distribute their
+// news into their own pages instead of a shared /news route.
+export function movieNewsSection(state) {
   const activeTab = TAB_CONFIG[state.activeTab] ? state.activeTab : "movies";
   const cfg = TAB_CONFIG[activeTab];
   const fallbackCat = TAB_FALLBACK_CATEGORY[activeTab];
@@ -322,4 +313,4 @@ export default state => {
       </div>
     </section>
   `;
-};
+}

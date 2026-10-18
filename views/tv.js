@@ -4,15 +4,7 @@
 // Notes: Mirrors the Games page layout (65/35). Provider chips call
 //        /tv/providers, which is TMDB discover/tv filtered by watch provider.
 import html from "html-literal";
-
-function escapeAttr(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
+import { escapeAttr, availabilityIcon } from "./_cards";
 
 function relativeTime(iso) {
   const t = new Date(iso).getTime();
@@ -43,8 +35,12 @@ function showCard(show) {
             : `<div class="show-poster show-poster--placeholder" aria-hidden="true">📺</div>`
         }
         <div class="show-badges">
+          ${show.measured ? `<span class="show-badge show-badge--measured" title="Real measured viewing minutes this week (Nielsen)">#${show.rank} this week</span>` : ""}
           ${year ? `<span class="show-badge">${year}</span>` : ""}
-          ${rating ? `<span class="show-badge show-badge--rating">★ ${rating}</span>` : ""}
+          <div class="show-badge-row">
+            ${rating ? `<span class="show-badge show-badge--rating">★ ${rating}</span>` : ""}
+            ${availabilityIcon(show)}
+          </div>
         </div>
       </div>
       <h3 class="show-title">${escapeAttr(show.name)}</h3>
@@ -144,11 +140,10 @@ function showsMarkup(state) {
     if (!state.results.length) {
       return `<p class="tv-empty">No shows found for that service.</p>`;
     }
-    return showRow(
-      `Most Watched on ${svc ? svc.name : "this service"}`,
-      state.results,
-      `${state.totalResults.toLocaleString()} shows`
-    );
+    const measuredNote = state.measuredCount
+      ? `${state.measuredCount} from this week's real Nielsen chart, rest estimated`
+      : "Estimated — no Nielsen chart data for this service this week";
+    return showRow(`Most Watched on ${svc ? svc.name : "this service"}`, state.results, measuredNote);
   }
 
   return showRow("Most Popular Right Now", state.popular, "Across every service");

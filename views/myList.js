@@ -8,77 +8,31 @@
 import html from "html-literal";
 import { listWatchlist } from "../services/watchlist.js";
 import aboutMe from "./aboutMe.js";
+import { movieCard } from "./_cards";
 
-// Escapes for both attribute and text contexts — saved titles originate from
-// TMDB's community-edited data and land in innerHTML. `&` must go first or it
-// would double-escape the entities added after it.
-function escapeAttr(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function card(item) {
-  const rating =
-    typeof item.vote_average === "number" && item.vote_average > 0
-      ? item.vote_average.toFixed(1)
-      : null;
-  const year = item.year || "";
-
-  return `
-    <div class="movie-card" data-movie-id="${item.id}">
-      <div class="movie-poster-wrap">
-        ${
-          item.poster_path
-            ? `<img src="https://image.tmdb.org/t/p/w300${item.poster_path}" alt="${escapeAttr(item.title)}" loading="lazy" />`
-            : `<div class="movie-poster-placeholder" aria-hidden="true">🎬</div>`
-        }
-        <div class="card-badges">
-          ${year ? `<span class="card-badge card-badge--year">${year}</span>` : ""}
-          ${rating ? `<span class="card-badge card-badge--rating">★ ${rating}</span>` : ""}
-        </div>
-        <button
-          class="card-bookmark card-bookmark--active"
-          type="button"
-          aria-label="Remove from My List"
-          data-movie='${escapeAttr(JSON.stringify({ id: item.id, title: item.title, poster_path: item.poster_path }))}'
-          data-action="remove"
-        >
-          <i class="fa-solid fa-bookmark"></i>
-        </button>
-      </div>
-      <h3>${escapeAttr(item.title)}</h3>
-      <div class="card-actions">
-        <button class="trailer-btn" data-id="${item.id}">▶ Trailer</button>
-        <button class="info-btn" type="button" data-id="${item.id}" aria-label="More info">
-          <i class="fa-solid fa-circle-info"></i>
-        </button>
-      </div>
-    </div>
-  `;
+// Watchlist items are a compact localStorage projection (id, title,
+// poster_path, year, vote_average) — reshape to the {release_date} field
+// movieCard() expects so this list renders the same card everyone else sees.
+// The bookmark button itself needs no special "remove" variant: the click
+// handler in index.js toggles on actual watchlist membership and
+// syncBookmarkButtons() re-syncs the filled/outline state after every
+// render, so the default movieCard() markup already ends up correct here.
+function toCardMovie(item) {
+  return { ...item, release_date: item.year ? `${item.year}-01-01` : "" };
 }
 
 function getActiveTab() {
   if (typeof window === "undefined") return "list";
   const tab = new URLSearchParams(window.location.search).get("tab");
-  return tab === "about" ? "about" : "list";
+  if (tab === "list" || tab === "users" || tab === "bots") return tab;
+  // Default (no ?tab= param, i.e. clicking "My List" in the nav) lands on
+  // About first — the watchlist and admin panel are still one click away.
+  return "about";
 }
 
-function tabBar(active) {
+function tabBar(active, showAdmin) {
   return `
     <nav class="mylist-tabs" role="tablist" aria-label="My List sections">
-      <button
-        role="tab"
-        type="button"
-        class="mylist-tab ${active === "list" ? "mylist-tab--active" : ""}"
-        data-tab="list"
-        aria-selected="${active === "list"}"
-      >
-        <i class="fa-solid fa-bookmark"></i> My List
-      </button>
       <button
         role="tab"
         type="button"
@@ -88,7 +42,71 @@ function tabBar(active) {
       >
         <i class="fa-solid fa-user"></i> About
       </button>
+      ${
+        showAdmin
+          ? `<button
+              role="tab"
+              type="button"
+              class="mylist-tab ${active === "bots" ? "mylist-tab--active" : ""}"
+              data-tab="bots"
+              aria-selected="${active === "bots"}"
+            >
+              <i class="fa-solid fa-robot"></i> Bots
+            </button>
+            <button
+              role="tab"
+              type="button"
+              class="mylist-tab ${active === "users" ? "mylist-tab--active" : ""}"
+              data-tab="users"
+              aria-selected="${active === "users"}"
+            >
+              <i class="fa-solid fa-lock"></i> Users
+            </button>`
+          : ""
+      }
+      <button
+        role="tab"
+        type="button"
+        class="mylist-tab ${active === "list" ? "mylist-tab--active" : ""}"
+        data-tab="list"
+        aria-selected="${active === "list"}"
+      >
+        <i class="fa-solid fa-bookmark"></i> My List
+      </button>
     </nav>
+  `;
+}
+
+function usersPanel(users, { title, emptyLabel }) {
+  const rows = users.length
+    ? users
+        .map(
+          u => `
+          <li class="admin-user-row">
+            ${
+              u.avatar
+                ? `<img src="${u.avatar}" alt="${u.username}" loading="lazy" />`
+                : `<span class="admin-user-avatar-fallback">${u.username.charAt(0).toUpperCase()}</span>`
+            }
+            <span class="admin-user-name">${u.username}</span>
+            <span class="admin-user-moviecount" title="Movies commented on">🎬 ${u.movieCount || 0}</span>
+            ${u.isCharacter ? `<span class="comment-character-badge">🎭 Character</span>` : `<span class="admin-user-real">Real user</span>`}
+            <span class="admin-user-date">${new Date(u.createdAt).toLocaleDateString()}</span>
+          </li>
+        `
+        )
+        .join("")
+    : `<li class="admin-user-row">${emptyLabel}</li>`;
+
+  return `
+    <header class="mylist-header">
+      <div>
+        <span class="news-kicker">Admin — Visible Only To You</span>
+        <h1>${title}</h1>
+        <p class="mylist-sub">${users.length} account${users.length === 1 ? "" : "s"} total.</p>
+      </div>
+    </header>
+    <ul class="admin-user-list">${rows}</ul>
   `;
 }
 
@@ -113,7 +131,7 @@ function listPanel() {
 
     ${
       count
-        ? `<section class="movies-grid mylist-grid">${items.map(card).join("")}</section>`
+        ? `<section class="movies-grid mylist-grid">${items.map(item => movieCard(toCardMovie(item))).join("")}</section>`
         : `
           <div class="mylist-empty">
             <div class="mylist-empty-icon" aria-hidden="true">
@@ -128,14 +146,28 @@ function listPanel() {
   `;
 }
 
-export default () => {
-  const active = getActiveTab();
+export default state => {
+  const adminUsers = Array.isArray(state.adminUsers) ? state.adminUsers : [];
+  const realUsers = adminUsers.filter(u => !u.isCharacter);
+  const botUsers = adminUsers.filter(u => u.isCharacter);
+  const showAdmin = adminUsers.length > 0;
+  const requested = getActiveTab();
+  const active = (requested === "users" || requested === "bots") && !showAdmin ? "list" : requested;
+
+  const panel =
+    active === "about"
+      ? aboutMe()
+      : active === "users"
+      ? usersPanel(realUsers, { title: "Real Users", emptyLabel: "No real users yet." })
+      : active === "bots"
+      ? usersPanel(botUsers, { title: "Character Bots", emptyLabel: "No bot accounts yet." })
+      : listPanel();
 
   return html`
     <section class="mylist-page">
-      ${tabBar(active)}
+      ${tabBar(active, showAdmin)}
       <div class="mylist-panel" data-panel="${active}">
-        ${active === "about" ? aboutMe() : listPanel()}
+        ${panel}
       </div>
     </section>
   `;

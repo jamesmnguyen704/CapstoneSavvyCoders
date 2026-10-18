@@ -3,5 +3,6 @@
 //          localStorage via services/watchlist.js; the view reads it directly.
 export default {
   header: "My List",
-  view: "MyList"
+  view: "MyList",
+  adminUsers: []
 };

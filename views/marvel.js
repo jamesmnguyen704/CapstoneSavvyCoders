@@ -5,6 +5,7 @@
 import html from "html-literal";
 import placeholderPoster from "url:../Assets/images/placeholder-poster.jpg";
 import { phaseIDs } from "../shared/mcuPhases.js";
+import { escapeAttr } from "./_cards";
 
 // Cinematic lead + tagline per phase — drives the per-phase hero blocks.
 const phaseMeta = {
@@ -172,15 +173,6 @@ const DOOMSDAY_ID = 1003596;
 // Must escape angle brackets, not just quotes: these values are TMDB titles and
 // overviews (community-editable) and land in innerHTML via html-literal, which
 // does no escaping of its own.
-function escapeAttr(s) {
-  return String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 // "Victor von Doom  / Doctor Doom" → "Doctor Doom". TMDB doubles the spaces
 // and lists the civilian name first; the hero name is what fans scan for.
 function heroName(character) {

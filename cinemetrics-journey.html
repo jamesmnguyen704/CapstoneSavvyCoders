@@ -1,0 +1,609 @@
+<title>Cinemetrics Journey</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout concept: a vertical film-strip spine runs down the left edge of a
+   dark marquee page; sprocket holes mark months, a gold fill races up the
+   strip to show elapsed time, and each month unspools as its own frame. */
+:root {
+  --bg: #0a0908;
+  --bg-raised: #141211;
+  --ink: #f5efe3;
+  --ink-dim: #b8ada0;
+  --gold: #ffd700;
+  --amber: #ff8a00;
+  --rule: #2a2622;
+  --display: "Bebas Neue", "Oswald", sans-serif;
+  --body: "Inter", -apple-system, sans-serif;
+  --mono: "IBM Plex Mono", "Courier New", monospace;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #f3ede1; --bg-raised: #ffffff; --ink: #1c1712; --ink-dim: #6b5f52;
+    --rule: #ddd3c2; color-scheme: light;
+  }
+}
+:root[data-theme="light"] {
+  --bg: #f3ede1; --bg-raised: #ffffff; --ink: #1c1712; --ink-dim: #6b5f52;
+  --rule: #ddd3c2; color-scheme: light;
+}
+:root, :root[data-theme="dark"] { color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  overflow-x: hidden;
+}
+
+/* ---------- Scroll progress rail (the "progress bar") ---------- */
+#rail {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: var(--rule);
+  z-index: 50;
+}
+#rail-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--amber), var(--gold));
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.6);
+  transition: width 0.08s linear;
+}
+
+.wrap { max-width: 920px; margin: 0 auto; padding-block: 3rem; }
+
+/* ---------- Hero ---------- */
+.hero { padding-block: 2.5rem 2rem; border-bottom: 1px solid var(--rule); }
+.hero .kicker {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--amber);
+  display: block;
+  margin-bottom: 0.9rem;
+}
+.hero h1 {
+  font-family: var(--display);
+  font-size: clamp(3rem, 11vw, 6rem);
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  margin: 0 0 1rem;
+  color: var(--gold);
+  text-wrap: balance;
+}
+.hero p {
+  max-width: 54ch;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--ink-dim);
+  margin: 0 0 2rem;
+}
+
+.statline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2.5rem;
+}
+.statline .stat .num {
+  font-family: var(--display);
+  font-size: 2.4rem;
+  color: var(--ink);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.statline .stat .label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  margin-top: 0.35rem;
+}
+
+/* ---------- Journey progress bar ---------- */
+.journey {
+  padding-block: 2.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+.journey .section-label {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 1.25rem;
+  display: block;
+}
+.journey-track {
+  position: relative;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--rule);
+  margin: 2.5rem 0 0.75rem;
+}
+.journey-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border-radius: 999px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--amber) 0px, var(--amber) 14px,
+    var(--gold) 14px, var(--gold) 28px
+  );
+}
+.journey-marks {
+  position: relative;
+  height: 0;
+}
+.mark {
+  position: absolute;
+  top: -2.1rem;
+  transform: translateX(-50%);
+  text-align: center;
+  width: 70px;
+}
+.mark .dot {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--bg-raised);
+  border: 3px solid var(--gold);
+  margin: 0.4rem auto 0;
+  position: relative;
+  top: 1.95rem;
+}
+.mark .when {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--ink-dim);
+  white-space: nowrap;
+}
+.mark .count {
+  font-family: var(--display);
+  font-size: 1.1rem;
+  color: var(--ink);
+}
+.journey-caption {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+  margin-top: 1.5rem;
+}
+
+/* ---------- Timeline frames ---------- */
+.timeline { padding-block: 1rem; position: relative; }
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: repeating-linear-gradient(
+    180deg, var(--rule) 0 6px, transparent 6px 12px
+  );
+}
+.frame {
+  position: relative;
+  padding: 2rem 0 2rem 2.75rem;
+  border-bottom: 1px solid var(--rule);
+}
+.frame:last-child { border-bottom: none; }
+.frame::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 2.15rem;
+  width: 16px; height: 16px;
+  border-radius: 3px;
+  background: var(--gold);
+  box-shadow: 0 0 0 4px var(--bg);
+}
+.frame-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+.frame-date {
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  color: var(--amber);
+  text-transform: uppercase;
+}
+.frame h2 {
+  font-family: var(--display);
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  letter-spacing: 0.01em;
+  margin: 0;
+  color: var(--ink);
+}
+.frame-count {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink-dim);
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 0.15rem 0.65rem;
+}
+.frame ul {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+.frame li {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--ink-dim);
+  padding-left: 1.1rem;
+  position: relative;
+}
+.frame li::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: var(--amber);
+}
+.frame.quiet { opacity: 0.72; }
+.frame.quiet h2 { color: var(--ink-dim); }
+
+.tag-groups { margin-top: 1.1rem; display: grid; gap: 0.6rem; }
+.tag-group { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; }
+.tag-group .tag-group-label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+  flex: 0 0 auto;
+  width: 5.2rem;
+}
+.tag-row { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.tag {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--ink);
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+  padding: 0.2rem 0.55rem;
+}
+.tag.concept { border-color: rgba(255, 215, 0, 0.35); }
+.tag.tool { border-color: rgba(255, 138, 0, 0.35); }
+
+.learn-callout {
+  margin-top: 1.25rem;
+  padding: 1.1rem 1.25rem;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--gold);
+  border-radius: 4px;
+}
+.learn-callout .learn-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: block;
+  margin-bottom: 0.6rem;
+}
+.learn-callout ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
+.learn-callout li {
+  font-size: 0.92rem;
+  color: var(--ink-dim);
+  padding-left: 1.1rem;
+  position: relative;
+  line-height: 1.5;
+}
+.learn-callout li::before { content: "▸"; position: absolute; left: 0; color: var(--gold); }
+
+/* ---------- Plans & Ideas roadmap ---------- */
+.roadmap { padding-block: 2.5rem; border-bottom: 1px solid var(--rule); }
+.roadmap .section-label { font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); margin-bottom: 0.5rem; display: block; }
+.roadmap > p { color: var(--ink-dim); font-size: 0.95rem; max-width: 60ch; margin: 0 0 2rem; }
+.roadmap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+@media (max-width: 760px) { .roadmap-grid { grid-template-columns: 1fr; } }
+.roadmap-col { background: var(--bg-raised); border: 1px solid var(--rule); border-radius: 6px; padding: 1.25rem; }
+.roadmap-col h3 { font-family: var(--display); font-size: 1.3rem; margin: 0 0 1rem; display: flex; align-items: center; gap: 0.5rem; }
+.roadmap-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+.roadmap-col--shipped .roadmap-dot { background: #4caf50; }
+.roadmap-col--active .roadmap-dot { background: var(--gold); }
+.roadmap-col--idea .roadmap-dot { background: var(--ink-dim); }
+.roadmap-col ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.65rem; }
+.roadmap-col li { font-size: 0.88rem; line-height: 1.5; color: var(--ink-dim); padding-left: 1rem; position: relative; }
+.roadmap-col li::before { content: "—"; position: absolute; left: 0; color: var(--rule); }
+.roadmap-updated { font-family: var(--mono); font-size: 0.7rem; color: var(--ink-dim); margin-top: 1.5rem; }
+
+/* ---------- Footer ---------- */
+.foot {
+  padding-block: 2.5rem 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+.foot .brand {
+  font-family: var(--display);
+  font-size: 1.3rem;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+}
+.foot a {
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+  text-decoration: none;
+  border-bottom: 1px solid var(--rule);
+}
+.foot a:hover { color: var(--gold); border-color: var(--gold); }
+
+@media (max-width: 640px) {
+  .mark { width: 54px; }
+  .mark .when, .mark .count { font-size: 0.62rem; }
+  .journey-marks { display: none; }
+  .journey-track { margin-top: 1rem; }
+}
+</style>
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<div id="rail"><div id="rail-fill"></div></div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <span class="kicker">Savvy Coders Capstone · github.com/jamesmnguyen704/CapstoneSavvyCoders</span>
+    <h1>Cinemetrics<br>Journey</h1>
+    <p>One repo, thirteen months, a movie/TV/games discovery app built from an empty folder to a live site with its own comment system, a fan-made Marvel bot roster, and more security hardening than most student projects ever see.</p>
+    <div class="statline">
+      <div class="stat"><div class="num">174</div><div class="label">Commits</div></div>
+      <div class="stat"><div class="num">60</div><div class="label">Pull requests</div></div>
+      <div class="stat"><div class="num">7</div><div class="label">Active months</div></div>
+      <div class="stat"><div class="num">374</div><div class="label">Days since day one</div></div>
+    </div>
+  </header>
+
+  <section class="journey">
+    <span class="section-label">The build, start to today</span>
+    <div class="journey-track">
+      <div class="journey-fill"></div>
+    </div>
+    <div class="journey-marks">
+      <div class="mark" style="left:2%"><div class="when">Oct '25</div><div class="count">11</div><div class="dot"></div></div>
+      <div class="mark" style="left:18%"><div class="when">Nov '25</div><div class="count">20</div><div class="dot"></div></div>
+      <div class="mark" style="left:34%"><div class="when">Dec '25</div><div class="count">30</div><div class="dot"></div></div>
+      <div class="mark" style="left:52%"><div class="when">Mar '26</div><div class="count">2</div><div class="dot"></div></div>
+      <div class="mark" style="left:66%"><div class="when">Apr '26</div><div class="count">30</div><div class="dot"></div></div>
+      <div class="mark" style="left:82%"><div class="when">Aug '26</div><div class="count">11</div><div class="dot"></div></div>
+      <div class="mark" style="left:98%"><div class="when">Oct '26</div><div class="count">63</div><div class="dot"></div></div>
+    </div>
+    <p class="journey-caption">Oct 9, 2025 — Initial commit &nbsp;→&nbsp; Oct 18, 2026 — today. Dot height along the strip isn't to scale; the numbers are the real monthly commit counts.</p>
+  </section>
+
+  <section class="timeline">
+
+    <article class="frame">
+      <div class="frame-head">
+        <span class="frame-date">October 2025</span>
+        <h2>Day One</h2>
+        <span class="frame-count">11 commits</span>
+      </div>
+      <ul>
+        <li>Initial commit — the repo exists</li>
+        <li>Development mode wired up, docs folder started</li>
+        <li>Still mostly README passes and project scaffolding</li>
+      </ul>
+      <div class="learn-callout">
+        <span class="learn-label">What I was learning at Savvy Coders</span>
+        <ul>
+          <li>HTML, CSS, and vanilla JavaScript fundamentals — before any framework</li>
+          <li>Git and GitHub as a real workflow: commits, branches, and pull requests, not just a save button</li>
+          <li>Reading and extending a starter template (<code>savvy-starter</code>) instead of building tooling from zero</li>
+          <li>Basic DOM manipulation — selecting elements, updating content, handling clicks</li>
+        </ul>
+      </div>
+      <div class="tag-groups">
+        <div class="tag-group"><span class="tag-group-label">Tools</span><div class="tag-row"><span class="tag tool">Git / GitHub</span><span class="tag tool">VS Code</span><span class="tag tool">Parcel</span></div></div>
+      </div>
+    </article>
+
+    <article class="frame">
+      <div class="frame-head">
+        <span class="frame-date">November 2025</span>
+        <h2>Finding the Architecture</h2>
+        <span class="frame-count">20 commits</span>
+      </div>
+      <ul>
+        <li>Backed up before rebuilding as a real single-page app</li>
+        <li>Routing broken, then fixed — "next step is getting home information updated"</li>
+        <li>First working TMDB call lands on the home page</li>
+        <li>services/api.js takes shape as the one place API calls live</li>
+      </ul>
+      <div class="tag-groups">
+        <div class="tag-group"><span class="tag-group-label">Concepts</span><div class="tag-row"><span class="tag concept">SPA architecture</span><span class="tag concept">Client-side routing</span><span class="tag concept">Fetch &amp; async/await</span><span class="tag concept">Separation of concerns</span></div></div>
+        <div class="tag-group"><span class="tag-group-label">Tools</span><div class="tag-row"><span class="tag tool">Navigo</span><span class="tag tool">Axios</span><span class="tag tool">TMDB API</span></div></div>
+      </div>
+    </article>
+
+    <article class="frame">
+      <div class="frame-head">
+        <span class="frame-date">December 2025</span>
+        <h2>Backend Comes Alive</h2>
+        <span class="frame-count">30 commits</span>
+      </div>
+      <ul>
+        <li>Port conflicts sorted, dev environment stabilizes</li>
+        <li>Movie and comment routes built and tested end to end</li>
+        <li>Trailer buttons wired up — the site starts feeling like a product</li>
+      </ul>
+      <div class="tag-groups">
+        <div class="tag-group"><span class="tag-group-label">Concepts</span><div class="tag-row"><span class="tag concept">REST API design</span><span class="tag concept">Express middleware</span><span class="tag concept">MongoDB schema design</span><span class="tag concept">Connecting front end to a real DB</span></div></div>
+        <div class="tag-group"><span class="tag-group-label">Tools</span><div class="tag-row"><span class="tag tool">Node.js</span><span class="tag tool">Express</span><span class="tag tool">MongoDB</span><span class="tag tool">Mongoose</span></div></div>
+      </div>
+    </article>
+
+    <article class="frame quiet">
+      <div class="frame-head">
+        <span class="frame-date">March 2026</span>
+        <h2>The Quiet Month</h2>
+        <span class="frame-count">2 commits</span>
+      </div>
+      <ul>
+        <li>Capstone life happens — barely a check-in, then back at it next month</li>
+      </ul>
+    </article>
+
+    <article class="frame">
+      <div class="frame-head">
+        <span class="frame-date">April 2026</span>
+        <h2>The Big Feature Push</h2>
+        <span class="frame-count">30 commits</span>
+      </div>
+      <ul>
+        <li>Auth UX polished — inline messages, styled login/signup</li>
+        <li>Real user profiles, streaming-service filters, a Movie News page</li>
+        <li>Search, watchlist, Awards, and the movie detail modal all land together</li>
+      </ul>
+      <div class="tag-groups">
+        <div class="tag-group"><span class="tag-group-label">Concepts</span><div class="tag-row"><span class="tag concept">Password hashing</span><span class="tag concept">JWT sessions</span><span class="tag concept">Form validation &amp; UX</span><span class="tag concept">Reusable UI components</span><span class="tag concept">localStorage persistence</span></div></div>
+        <div class="tag-group"><span class="tag-group-label">Tools</span><div class="tag-row"><span class="tag tool">bcryptjs</span><span class="tag tool">jsonwebtoken</span><span class="tag tool">html-literal</span></div></div>
+      </div>
+    </article>
+
+    <article class="frame">
+      <div class="frame-head">
+        <span class="frame-date">August 2026</span>
+        <h2>Hardening &amp; Expansion</h2>
+        <span class="frame-count">11 commits</span>
+      </div>
+      <ul>
+        <li>TMDB and RSS responses cached, slow routes warmed at boot</li>
+        <li>TV, In Theaters, and Games pages added</li>
+        <li>Live credentials scrubbed from the repo; README rebuilt as a portfolio page</li>
+      </ul>
+      <div class="tag-groups">
+        <div class="tag-group"><span class="tag-group-label">Concepts</span><div class="tag-row"><span class="tag concept">Caching &amp; cache warmup</span><span class="tag concept">Aggregating multiple external APIs</span><span class="tag concept">Secrets management</span><span class="tag concept">Performance tuning</span></div></div>
+        <div class="tag-group"><span class="tag-group-label">Tools</span><div class="tag-row"><span class="tag tool">rss-parser</span><span class="tag tool">dotenv</span><span class="tag tool">Resend</span></div></div>
+      </div>
+    </article>
+
+    <article class="frame">
+      <div class="frame-head">
+        <span class="frame-date">October 2026</span>
+        <h2>The Final Sprint</h2>
+        <span class="frame-count">41 commits</span>
+      </div>
+      <ul>
+        <li>A full security pass — rate limiting, ID validation, cache bounds, XSS fixes, ten PRs in one morning</li>
+        <li>The Marvel Doomsday hub, a fan-made comment system, and ~100+ in-character bot accounts</li>
+        <li>Home/Movies and Theaters/Upcoming merged; comment voting and Hot Takes shipped today</li>
+      </ul>
+      <div class="tag-groups">
+        <div class="tag-group"><span class="tag-group-label">Concepts</span><div class="tag-row"><span class="tag concept">Rate limiting</span><span class="tag concept">Input validation</span><span class="tag concept">XSS prevention</span><span class="tag concept">MongoDB aggregation pipelines</span><span class="tag concept">Multi-branch code review</span></div></div>
+        <div class="tag-group"><span class="tag-group-label">Tools</span><div class="tag-row"><span class="tag tool">express-rate-limit</span><span class="tag tool">lodash</span><span class="tag tool">GitHub PRs</span></div></div>
+      </div>
+    </article>
+
+    <article class="frame">
+      <div class="frame-head">
+        <span class="frame-date">October 2026</span>
+        <h2>The AI Research Pass</h2>
+        <span class="frame-count">3 parallel sessions</span>
+      </div>
+      <ul>
+        <li>Ran an independent Gemini + ChatGPT research pass against the live codebase, cross-checked every claim against real files/data before acting on it</li>
+        <li>Shipped native 1-10 ratings + "Mark Watched" — the #1 feature both AIs independently flagged as missing — kept visibly separate from TMDB's own score, with bot accounts excluded from the aggregate by construction</li>
+        <li>Fixed a real integrity problem both AIs caught: Hot Takes was ranking 109 bot accounts against 1 real user as if it were "community activity" — split into Community vs. Character Chaos</li>
+        <li>Fixed the soft-404 problem (every URL, even broken ones, was returning HTTP 200) and a full SEO pass (meta tags, sitemap, per-page titles, TMDB attribution)</li>
+        <li>Batched + cached watch-provider badges for both movies and TV, comment-count badges site-wide</li>
+        <li>Bot roster trimmed from 108 to 72 characters, voice profiles reconciled, then scaled up 8 major threads (Doomsday, Endgame, Infinity War, Street Fighter, Supergirl, Dune: Part Three, Brand New Day, The Avengers) to ~20 comments each — 130 new comments, zero posting failures across 12 rate-limit restarts</li>
+        <li>Three Claude Code sessions ran in parallel the whole time — named lanes, a shared living status doc, explicit file ownership — coordinating through direct messages instead of one thread doing everything in sequence</li>
+      </ul>
+      <div class="tag-groups">
+        <div class="tag-group"><span class="tag-group-label">Concepts</span><div class="tag-row"><span class="tag concept">Multi-agent coordination</span><span class="tag concept">Data provenance / integrity</span><span class="tag concept">Batch-and-cache API patterns</span><span class="tag concept">SEO for SPAs</span><span class="tag concept">Persona-voice consistency</span></div></div>
+        <div class="tag-group"><span class="tag-group-label">Tools</span><div class="tag-row"><span class="tag tool">Gemini</span><span class="tag tool">ChatGPT</span><span class="tag tool">MongoDB aggregation</span></div></div>
+      </div>
+    </article>
+
+  </section>
+
+  <section class="roadmap">
+    <span class="section-label">Where this goes next</span>
+    <p>Not a snapshot of the past — this is the live backlog. Pulled from two independent AI research passes (Gemini + ChatGPT) run against the real codebase, cross-checked against what's actually already built.</p>
+    <div class="roadmap-grid">
+
+      <div class="roadmap-col roadmap-col--shipped">
+        <h3><span class="roadmap-dot"></span>Just Shipped</h3>
+        <ul>
+          <li>Native 1-10 ratings + "Mark Watched," kept separate from TMDB's score — the #1 thing both AI reports independently flagged as the biggest missing feature</li>
+          <li>Hot Takes integrity fix — split into "Community" (real visitors only) and "Character Chaos" (the bot threads), so neither is mistaken for the other</li>
+          <li>Soft-404 fix — every URL used to return HTTP 200 even when broken; real routes now 404 properly, dead entities get a client-side noindex signal</li>
+          <li>Batched, cached watch-provider badges on both movies and TV, comment-count badges site-wide</li>
+          <li>Real SEO basics — meta tags, favicon, sitemap, per-page titles, TMDB attribution</li>
+          <li>Bot roster trimmed 108 → 72, voice profiles reconciled, then 8 major threads scaled to ~20 comments each (130 new comments, zero failures)</li>
+          <li>A persistent research cache for the bot-comment pipeline, so repeated research passes stop re-verifying the same facts from scratch</li>
+        </ul>
+      </div>
+
+      <div class="roadmap-col roadmap-col--active">
+        <h3><span class="roadmap-dot"></span>Building Now</h3>
+        <ul>
+          <li>Styling pass on the new ratings/watched widget (done — real star glyphs, matching panel styling)</li>
+          <li><code>docs/persona-ensemble-framework.md</code> — turning this session's bot-comment methodology into a project-agnostic, reusable reference (Layer 1 of a planned doc → Skill → code-template progression)</li>
+          <li>Reddit-style Wilson-score ranking under consideration for Hot Takes, now that the human/bot split exists</li>
+          <li>Using the unused <code>likedBy</code>/<code>dislikedBy</code> vote data as a feedback signal for which bot comment styles actually land</li>
+        </ul>
+      </div>
+
+      <div class="roadmap-col roadmap-col--idea">
+        <h3><span class="roadmap-dot"></span>Ideas &amp; Backlog</h3>
+        <ul>
+          <li>Real person/cast pages via TMDB's combined-credits endpoint — clicking an actor currently dead-ends</li>
+          <li>Franchise/collection pages (TMDB already has this data — Alien, John Wick, etc. — MCU stays hand-curated since it's richer)</li>
+          <li>"On my services" personalized filtering, once watch-provider data has a reason to be personal instead of just a badge</li>
+          <li><code>append_to_response</code> consolidation on the main movie-detail route (4 TMDB calls → 1) — real but low-urgency engineering cleanup</li>
+          <li>Box-office $ amounts on cards — needs a one-time-extraction-plus-permanent-cache approach, since TMDB's list endpoints don't include revenue</li>
+          <li>A standalone "lessons for future projects" doc — the transferable patterns from this build (multi-session AI workflow, batch-and-cache, synthetic-vs-real data provenance), written so they outlive this specific app</li>
+        </ul>
+      </div>
+
+    </div>
+    <p class="roadmap-updated">Last updated alongside the live project — ask for a refresh any time the backlog moves.</p>
+  </section>
+
+  <footer class="foot">
+    <span class="brand">CINEMETRICS</span>
+    <a href="https://github.com/jamesmnguyen704/CapstoneSavvyCoders" target="_blank" rel="noopener">View the repo on GitHub →</a>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var fill = document.getElementById("rail-fill");
+  function update() {
+    var doc = document.documentElement;
+    var scrollable = doc.scrollHeight - doc.clientHeight;
+    var pct = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
+    fill.style.width = Math.min(100, Math.max(0, pct)) + "%";
+  }
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
+  update();
+})();
+</script>

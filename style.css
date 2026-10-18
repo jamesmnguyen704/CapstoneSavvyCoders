@@ -18,7 +18,7 @@ h1 {
   font-size: 2.5rem;
   font-weight: 700;
   margin-bottom: 1rem;
-  color: #ffd700;
+  color: var(--cm-accent);
 }
 
 h2 {
@@ -46,20 +46,24 @@ h3 {
   backdrop-filter: blur(10px);
 }
 
-/* Play Intro button — eye-catching CTA */
+/* Play Intro button — dark glass pill with a gold icon badge, matching the
+   cinema-dark + gold-accent language used elsewhere instead of a loud solid
+   gradient fill. */
 .play-intro-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.45rem 0.9rem;
-  background: linear-gradient(90deg, #ffd700 0%, #ffb400 50%, #ff8a00 100%);
-  color: #081018;
-  font-weight: 700;
+  gap: 0.65rem;
+  padding: 0.35rem 1rem 0.35rem 0.35rem;
+  background: rgba(255, 215, 0, 0.08);
+  color: #ffe9a8;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   border-radius: 999px;
-  border: none;
+  border: 1px solid rgba(255, 215, 0, 0.4);
   cursor: pointer;
-  box-shadow: 0 6px 18px rgba(255,166,0,0.22), 0 2px 6px rgba(0,0,0,0.45);
-  transition: transform 180ms ease, box-shadow 180ms ease, opacity 150ms ease;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  transition: background 200ms ease, border-color 200ms ease,
+    box-shadow 200ms ease, transform 180ms ease;
   transform-origin: center;
 }
 
@@ -67,38 +71,54 @@ h3 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.05rem;
-  height: 1.05rem;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--cm-accent) 0%, var(--cm-accent-2) 100%);
+  color: #1a1206;
+  font-size: 0.8rem;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.08) inset;
+  transition: transform 200ms ease;
+}
+
+/* Optical centering for the play glyph inside its round badge */
+.play-intro-btn .play-icon i {
+  transform: translateX(1px);
 }
 
 .play-intro-btn:hover {
-  transform: translateY(-3px) scale(1.03);
-  box-shadow: 0 10px 28px rgba(255,166,0,0.32), 0 4px 10px rgba(0,0,0,0.5);
+  background: rgba(255, 215, 0, 0.16);
+  border-color: rgba(255, 215, 0, 0.75);
+  box-shadow: 0 0 22px rgba(255, 198, 0, 0.35), 0 2px 10px rgba(0,0,0,0.4);
+  transform: translateY(-2px);
+}
+
+.play-intro-btn:hover .play-icon {
+  transform: scale(1.08);
 }
 
 .play-intro-btn:active {
-  transform: translateY(-1px) scale(0.995);
+  transform: translateY(0) scale(0.98);
 }
 
-.play-intro-btn:focus {
+.play-intro-btn:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(255,200,80,0.18), 0 8px 20px rgba(0,0,0,0.45);
+  box-shadow: 0 0 0 3px rgba(255,215,0,0.3), 0 2px 10px rgba(0,0,0,0.4);
 }
 
-/* Gentle pulse to draw attention */
+/* Gentle breathing glow to draw the eye without the old hard flash */
 .play-intro-btn.pulse {
-  animation: pulseGlow 2.2s infinite;
+  animation: pulseGlow 2.6s ease-in-out infinite;
 }
 
 @keyframes pulseGlow {
-  0% { box-shadow: 0 6px 18px rgba(255,166,0,0.22); }
-  50% { box-shadow: 0 14px 36px rgba(255,166,0,0.28); }
-  100% { box-shadow: 0 6px 18px rgba(255,166,0,0.22); }
+  0%, 100% { box-shadow: 0 0 0 rgba(255, 198, 0, 0), 0 2px 10px rgba(0,0,0,0.35); }
+  50% { box-shadow: 0 0 20px rgba(255, 198, 0, 0.3), 0 2px 10px rgba(0,0,0,0.35); }
 }
 
 /* Make the button compact on smaller screens */
 @media (max-width: 420px) {
-  .play-intro-btn { padding: 0.35rem 0.65rem; gap: 0.4rem; }
+  .play-intro-btn { padding: 0.3rem; gap: 0; }
   .play-intro-btn .play-text { display: none; }
 }
 
@@ -135,13 +155,13 @@ h3 {
 }
 
 .nav-links a:hover {
-  color: #ffd700;
+  color: var(--cm-accent);
 }
 
 .logo {
   font-size: 1.7rem;
   font-weight: 800;
-  color: #ffd700 !important;
+  color: var(--cm-accent) !important;
   text-decoration: none;
 }
 
@@ -154,22 +174,22 @@ h3 {
 
 .welcome {
   font-weight: 600;
-  color: #ffd700;
+  color: var(--cm-accent);
   white-space: nowrap;          /* keep “Welcome, username” on one line */
 }
 
 #logoutBtn {
   background: transparent;
-  border: 1px solid #ffd700;
+  border: 1px solid var(--cm-accent);
   padding: 0.4rem 0.8rem;
   border-radius: 6px;
-  color: #ffd700;
+  color: var(--cm-accent);
   cursor: pointer;
   transition: 0.2s ease;
 }
 
 #logoutBtn:hover {
-  background: #ffd700;
+  background: var(--cm-accent);
   color: #111;
 }
 
@@ -224,12 +244,17 @@ section {
 .hero-slide:nth-child(4) { animation-delay: 15s; }
 .hero-slide:nth-child(5) { animation-delay: 20s; }
 
+/* Fade-in is gradual (0%-4%, soft appear); fade-out is a near-instant cut
+   right at 20%, timed to land exactly when the next (5s-later) slide starts
+   its own fade-in. Before, fade-out ran 20%-24% while the next slide faded
+   in 0%-4% over the same real-time window, so both rendered at partial
+   opacity together and their text visibly overlapped/ghosted. */
 @keyframes heroFadeInOut {
-  0%   { opacity: 0; visibility: hidden; }
-  4%   { opacity: 1; visibility: visible; }
-  20%  { opacity: 1; visibility: visible; }
-  24%  { opacity: 0; visibility: hidden; }
-  100% { opacity: 0; visibility: hidden; }
+  0%     { opacity: 0; visibility: hidden; }
+  4%     { opacity: 1; visibility: visible; }
+  20%    { opacity: 1; visibility: visible; }
+  20.01% { opacity: 0; visibility: hidden; }
+  100%   { opacity: 0; visibility: hidden; }
 }
 
 .hero-backdrop {
@@ -256,7 +281,7 @@ section {
   font-size: 3rem;
   margin-bottom: 1rem;
   text-shadow: 2px 2px 8px rgba(0,0,0,0.8);
-  color: #ffd700;
+  color: var(--cm-accent);
 }
 
 .hero-content p {
@@ -300,41 +325,13 @@ section {
   scroll-snap-align: start;
 }
 
-.movie-card {
-  background: rgba(27, 27, 47, 0.6);
-  padding: 1rem;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
-}
-
-.movie-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 15px 35px rgba(255, 215, 0, 0.15);
-  border-color: rgba(255, 215, 0, 0.3);
-}
-
+/* .movie-card's own layout/box styling lives in the streaming-layer override
+   further down (search "the poster IS the card") — that block carries
+   !important and fully supersedes a chunkier glass-card look this used to
+   have. Only the cross-cutting bits stay here. */
 .movie-poster,
 .movie-card img {
-  width: 100%;
-  height: auto;                /* let aspect-ratio drive height so posters scale */
-  object-fit: cover;
-  border-radius: 10px;
-  display: block;
   flex: 0 0 auto;
-  background: #111;            /* placeholder background while loading */
-  aspect-ratio: 2/3;           /* consistent 2:3 poster ratio */
-}
-
-.movie-title {
-  margin: 0.5rem 0;
-  font-weight: bold;
-  color: #fff;
 }
 
 /* Titles (movie, marvel, releases) – clamp to max 2 lines */
@@ -380,7 +377,7 @@ section {
 .marvel-phase-title {
   font-size: 2rem;
   font-weight: 600;
-  color: #ffd700;
+  color: var(--cm-accent);
   margin: 2rem 0 1rem;
 }
 
@@ -393,39 +390,20 @@ section {
 
 /* Marvel trailer button full-width like movie cards */
 
-/* RELEASES PAGE – curated upcoming cards */
-.releases-grid {
-  display: grid !important;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
-  gap: 2rem !important;
-}
-
+/* Fixed width so release-card doesn't stretch inside the flex carousel row —
+   this is the one property the streaming-layer override below doesn't also
+   set, everything else there used to duplicate it. */
 .release-card {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  padding: 0.8rem;
-  border-radius: 12px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   flex: 0 0 250px;
   scroll-snap-align: start;
-  display: flex;
-  flex-direction: column;
 }
 
-.release-card:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 15px 35px rgba(255, 215, 0, 0.15);
-  border-color: rgba(255, 215, 0, 0.4);
-}
-
-.release-poster img {
-  width: 100%;
-  height: 360px;
-  aspect-ratio: 2/3;
-  object-fit: cover;
-  border-radius: 8px;
+/* Anchors .card-badges/.card-bookmark (position:absolute) to the poster
+   instead of the viewport — they were rendering in the page corner without
+   this. Poster sizing itself comes from the shared streaming-layer rule
+   further down (.release-poster img), not from here. */
+.release-poster {
+  position: relative;
 }
 
 /* TRAILER MODAL – full-screen overlay */
@@ -449,7 +427,7 @@ section {
 /* Global scrollbar styling – slim gold scrollbars */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #ffd700 rgba(0,0,0,0.25);
+  scrollbar-color: var(--cm-accent) rgba(0,0,0,0.25);
 }
 
 /* WebKit browsers (Chrome, Edge, Safari) */
@@ -463,7 +441,7 @@ section {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #ffd700, #ffb400);
+  background: linear-gradient(135deg, var(--cm-accent), #ffb400);
   border-radius: 999px;
   box-shadow: inset 0 0 0 2px rgba(0,0,0,0.16);
 }
@@ -531,7 +509,7 @@ section {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #ffd700, #ffb400);
+  background: linear-gradient(135deg, var(--cm-accent), #ffb400);
   color: #000;
   font-weight: 600;
   padding: 8px 16px;
@@ -676,36 +654,22 @@ footer {
 }
 
 /* Banner/Header */
-.about-banner {
-  text-align: center;
-  margin-bottom: 2.5rem;
-}
-
-.about-banner h1 {
-  font-size: 3rem;
-  font-weight: 800;
-  margin-bottom: 0.3rem;
-  color: #ffd700;
-}
-
-.about-banner h2 {
-  font-size: 1.5rem;
-  font-weight: 500;
-  color: #cfd7ff;
-}
-
-.about-banner p {
-  opacity: 0.85;
-  font-size: 1rem;
-}
-
-/* Profile Layout */
-.about-profile {
+.about-hero {
   display: flex;
   align-items: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
+  gap: 2.25rem;
   flex-wrap: wrap;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-radius: 18px;
+  background:
+    radial-gradient(900px 300px at 10% 0%, rgba(255, 215, 0, 0.1), transparent 60%),
+    rgba(15, 52, 96, 0.3);
+  border: 1px solid rgba(255, 215, 0, 0.18);
+}
+
+.about-hero-photo-wrap {
+  flex-shrink: 0;
 }
 
 .about-photo {
@@ -713,11 +677,10 @@ footer {
   height: 170px;
   border-radius: 50%;
   object-fit: cover;
-  border: 4px solid #ffd700;
-  box-shadow: 0 0 18px rgba(255,215,0,0.4);
+  border: 4px solid var(--cm-accent);
+  box-shadow: 0 0 24px rgba(255, 215, 0, 0.45);
 }
 
-/* Fallback initials if image fails to load */
 .about-photo-fallback {
   width: 170px;
   height: 170px;
@@ -725,19 +688,104 @@ footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(180deg,#0f1724,#0b1220);
-  color: #ffd700;
+  background: linear-gradient(180deg, #0f1724, #0b1220);
+  color: var(--cm-accent);
   font-weight: 800;
   font-size: 2.2rem;
-  border: 4px solid #ffd700;
-  box-shadow: 0 0 18px rgba(255,215,0,0.4);
+  border: 4px solid var(--cm-accent);
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.4);
 }
 
-/* Headline items */
-.about-headline p {
-  margin: 0.4rem 0;
-  font-size: 1.15rem;
-  opacity: 0.95;
+.about-hero-text h1 {
+  font-size: 2.6rem;
+  font-weight: 800;
+  margin: 0 0 0.2rem;
+  color: var(--cm-accent);
+}
+
+.about-hero-text h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: #cfd7ff;
+  margin: 0 0 0.6rem;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.about-tagline {
+  opacity: 0.85;
+  margin: 0 0 0.4rem;
+}
+
+.about-location {
+  opacity: 0.75;
+  font-size: 0.95rem;
+  margin: 0 0 1rem;
+}
+
+.about-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.about-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 215, 0, 0.35);
+  color: var(--cm-text, #eaeaea);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.about-cta:hover {
+  background: rgba(255, 215, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.about-cta--primary {
+  background: linear-gradient(90deg, var(--cm-accent), var(--cm-accent-2));
+  color: #111;
+  border-color: transparent;
+}
+
+.about-cta--primary:hover {
+  filter: brightness(1.05);
+  background: linear-gradient(90deg, var(--cm-accent), var(--cm-accent-2));
+}
+
+.about-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.about-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 1rem 1.25rem;
+  background: var(--cm-surface);
+  border: 1px solid var(--cm-border);
+  border-radius: 12px;
+}
+
+.about-fact-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cm-accent);
+  font-weight: 700;
+}
+
+.about-fact-value {
+  font-size: 1rem;
 }
 
 /* Section Headers Override Global h2 */
@@ -747,7 +795,7 @@ footer {
   padding-bottom: 0.3rem;
   border-bottom: 2px solid rgba(255,215,0,0.25);
   font-size: 1.8rem;
-  color: #ffd700 !important;
+  color: var(--cm-accent) !important;
 }
 
 /* Paragraphs */
@@ -757,49 +805,301 @@ footer {
   margin-bottom: 1rem;
 }
 
-/* Skills List */
-.about-skills ul {
-  list-style: none;
-  padding-left: 0;
+/* Skill pills */
+.skill-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
 }
 
-.about-skills ul li {
-  background: rgba(255,255,255,0.06);
-  padding: 0.6rem 1rem;
-  margin: 0.35rem 0;
-  border-radius: 8px;
-  border-left: 4px solid #ffd700;
-  transition: 0.2s ease-in-out;
+.skill-pill {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  font-size: 0.88rem;
+  transition: background 160ms ease, transform 160ms ease;
 }
 
-.about-skills ul li:hover {
-  background: rgba(255,255,255,0.15);
-  transform: translateX(4px);
+.skill-pill:hover {
+  background: rgba(255, 215, 0, 0.12);
+  transform: translateY(-1px);
 }
 
-/* Skill subheaders */
 .about-skills h3 {
-  font-size: 1.3rem;
-  margin: 1.5rem 0 0.5rem;
+  font-size: 1.15rem;
+  margin: 1.5rem 0 0.6rem;
   color: #cfd7ff;
 }
 
-/* Project accomplishments list */
-.about-project ul {
-  padding-left: 1rem;
+/* Project accomplishments checklist */
+.about-accomplishments {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.6rem;
+  margin: 1.25rem 0;
 }
 
-.about-project li {
-  margin-bottom: 0.6rem;
+.about-accomplishments li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
   line-height: 1.6;
 }
 
-.closing {
-  margin-top: 3rem;
-  font-size: 1.2rem;
-  text-align: center;
-  color: #ffd700;
+.about-accomplishments li i {
+  color: var(--cm-accent);
+  margin-top: 0.2rem;
+}
+
+.about-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+
+.about-highlight-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.1rem 1.25rem;
+  background: rgba(255, 215, 0, 0.05);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 12px;
+}
+
+.about-highlight-stat {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--cm-accent);
+}
+
+.about-highlight-label {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+.about-other-project {
+  margin-top: 2.5rem;
+}
+
+/* Surface-panel base shared with .education-card, .experience-card,
+   .learning-card and .news-card (further down) — same
+   background/border recipe, each with its own radius/padding. */
+.project-card,
+.education-card,
+.experience-card,
+.learning-card,
+.news-card {
+  background: var(--cm-surface);
+  border: 1px solid var(--cm-border);
+}
+
+.project-card {
+  overflow: hidden;
+  margin-bottom: 1rem;
+  border-radius: 14px;
+}
+
+.project-card-img {
+  display: block;
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  object-position: top;
+}
+
+.project-card-body {
+  padding: 1.5rem;
+}
+
+.about-project-hero-img {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 12px;
+  border: 1px solid var(--cm-border);
+  margin: 1rem 0 1.5rem;
+}
+
+.about-experience {
+  margin: 2rem 0;
+}
+
+.experience-timeline {
+  display: grid;
+  gap: 1rem;
+}
+
+.experience-card {
+  padding: 1.25rem 1.5rem;
+  border-left: 3px solid var(--cm-accent);
+  border-radius: var(--radius-md);
+}
+
+.experience-header {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.experience-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--cm-accent);
+}
+
+.experience-company {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.experience-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  font-size: 0.82rem;
+  opacity: 0.75;
+  text-align: right;
+}
+
+.experience-bullets {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.experience-bullets li {
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.about-education {
+  margin: 2rem 0;
+}
+
+.education-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.education-card {
+  padding: 1.1rem 1.25rem;
+  border-radius: 12px;
+}
+
+.education-card h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--cm-accent);
+}
+
+.education-school {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.education-dates {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--cm-accent);
+  margin: 0.3rem 0 0.5rem;
+}
+
+.education-detail {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: 0;
   opacity: 0.9;
+}
+
+.about-learning {
+  margin: 2rem 0;
+}
+
+.learning-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.learning-card {
+  padding: 1.25rem;
+  border-radius: 14px;
+}
+
+.learning-card i {
+  color: var(--cm-accent);
+  font-size: 1.3rem;
+  margin-bottom: 0.6rem;
+  display: block;
+}
+
+.learning-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  color: var(--cm-accent);
+}
+
+.learning-card p {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  margin: 0;
+}
+
+.project-card h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.15rem;
+  color: var(--cm-accent);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.project-private-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--cm-muted, rgba(255, 255, 255, 0.65));
+}
+
+.project-card p {
+  margin-bottom: 1rem;
+}
+
+.about-closing {
+  margin-top: 3rem;
+  padding: 2rem;
+  text-align: center;
+  background: rgba(255, 215, 0, 0.04);
+  border: 1px solid rgba(255, 215, 0, 0.15);
+  border-radius: 16px;
+}
+
+.about-closing p {
+  font-size: 1.1rem;
+  color: var(--cm-accent);
+  opacity: 0.9;
+  margin: 0 auto 1.25rem;
+}
+
+.about-closing .about-cta-row {
+  justify-content: center;
 }
 
 /* Responsive for mobile */
@@ -825,23 +1125,58 @@ footer {
 
 /* ============================================================
    Auth pages (Login / Signup) — matches Cinemetrics dark/gold theme
+
+   .auth-page is a <section>, and the global "kill the glass card on
+   every section" reset below (section { margin: 0 !important; ... })
+   was clobbering this card's background, border, shadow, blur, padding
+   AND its `margin: auto` centering — every property here needs
+   !important to win back against that reset. See issue #39: the form
+   wasn't just left-aligned, the whole card was invisible.
    ============================================================ */
 .auth-page {
+  width: min(440px, 100%);
   max-width: 440px;
-  margin: 3rem auto;
-  padding: 2.25rem 2rem 2rem;
-  background: rgba(15, 52, 96, 0.55);
-  border: 1px solid rgba(255, 215, 0, 0.25);
-  border-radius: 14px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  margin: auto !important;
+  padding: 2.5rem 2rem 2.25rem !important;
+  background:
+    linear-gradient(160deg, rgba(255, 215, 0, 0.06), transparent 55%),
+    rgba(15, 52, 96, 0.55) !important;
+  border: 1px solid rgba(255, 215, 0, 0.25) !important;
+  border-radius: 16px !important;
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 215, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
   color: #f5f5f5;
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  animation: authCardIn 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes authCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-page {
+    animation: none;
+  }
 }
 
 .auth-title {
   text-align: center;
   margin: 0 0 1.5rem;
-  color: #ffd700;
+  background: linear-gradient(90deg, var(--cm-accent), var(--cm-accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
   font-size: 1.9rem;
   letter-spacing: 0.5px;
 }
@@ -855,7 +1190,7 @@ footer {
 .auth-form label {
   margin-top: 0.75rem;
   font-size: 0.9rem;
-  color: #ffd700;
+  color: var(--cm-accent);
   font-weight: 600;
 }
 
@@ -875,7 +1210,7 @@ footer {
 
 .auth-form input:focus {
   outline: none;
-  border-color: #ffd700;
+  border-color: var(--cm-accent);
   box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.2);
 }
 
@@ -885,7 +1220,7 @@ footer {
   font-size: 1rem;
   font-weight: 700;
   color: #111;
-  background: linear-gradient(90deg, #ffd700 0%, #ffb400 50%, #ff8a00 100%);
+  background: var(--cm-accent-grad);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -925,7 +1260,7 @@ footer {
 }
 
 .auth-switch a {
-  color: #ffd700;
+  color: var(--cm-accent);
   text-decoration: none;
   font-weight: 600;
 }
@@ -969,7 +1304,7 @@ footer {
   height: 96px;
   margin: 0 auto 1rem;
   border-radius: 50%;
-  background: linear-gradient(135deg, #ffd700 0%, #ff8a00 100%);
+  background: linear-gradient(135deg, var(--cm-accent) 0%, var(--cm-accent-2) 100%);
   color: #111;
   font-size: 2.5rem;
   font-weight: 800;
@@ -981,7 +1316,7 @@ footer {
 
 .profile-name {
   margin: 0 0 0.25rem;
-  color: #ffd700;
+  color: var(--cm-accent);
   font-size: 1.8rem;
   letter-spacing: 0.3px;
 }
@@ -1046,8 +1381,67 @@ footer {
   --cm-muted: rgba(245, 245, 247, 0.65);
   --cm-accent: #ffd700;
   --cm-accent-2: #ff8a00;
-  --cm-accent-grad: linear-gradient(90deg, #ffd700 0%, #ffb400 50%, #ff8a00 100%);
+  --cm-accent-grad: linear-gradient(90deg, var(--cm-accent) 0%, #ffb400 50%, var(--cm-accent-2) 100%);
   --cm-row-gap: clamp(0.6rem, 1vw, 1rem);
+
+  /* Spacing scale — new code should reach for these instead of a one-off
+     rem value. Named t-shirt sizes rather than cm-space-1/2/3 so they read
+     at the call site (gap: var(--space-sm)) without checking a legend. */
+  --space-2xs: 0.25rem;
+  --space-xs: 0.4rem;
+  --space-sm: 0.6rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+
+  /* Radius scale — matches the most common existing values so adopting it
+     is a no-op visually; new components should pick one of these. */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Motion scale */
+  --ease-standard: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+}
+
+/* ============================================================
+   SHARED POSTER-TILE BASE
+   Theaters, TV Shows, and Games grids are visually the same
+   component (flex-column card, 2:3 poster in a rounded frame) that had
+   been hand-copied three times with tiny inconsistencies (8/9/10px
+   radius). Common layout lives here; each selector below only carries
+   what's actually different (gap, hover zoom, etc).
+   ============================================================ */
+.theater-card,
+.show-card,
+.game-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.theater-poster-wrap,
+.show-poster-wrap,
+.game-cover-wrap {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1px solid var(--cm-border);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.theater-poster,
+.show-poster,
+.game-cover {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
 }
 
 /* True-black background with a soft gold vignette behind everything. */
@@ -1080,6 +1474,9 @@ body::before {
 #root {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 /* Full-bleed main; kill the global "glass card" on every section. */
@@ -1105,8 +1502,7 @@ section {
 #now-playing,
 #popular,
 #top-rated,
-.marvel-container,
-.releases-grid {
+.marvel-container {
   padding: 0 clamp(1rem, 4vw, 3.5rem) !important;
   margin-bottom: clamp(1.5rem, 3vw, 2.5rem) !important;
 }
@@ -1218,8 +1614,8 @@ section {
 .hero-content {
   position: absolute !important;
   left: clamp(1.25rem, 4vw, 3.5rem) !important;
-  bottom: 18% !important;
-  top: auto !important;
+  top: clamp(1.5rem, 6vh, 3.5rem) !important;
+  bottom: auto !important;
   max-width: min(640px, 55%) !important;
   text-align: left !important;
   padding: 0 !important;
@@ -1246,10 +1642,10 @@ section {
 
 .hero-content .hero-btn,
 .hero-content .trailer-btn.hero-btn {
-  padding: 0.75rem 1.6rem !important;
-  font-size: 1rem !important;
+  padding: 0.5rem 1.1rem !important;
+  font-size: 0.85rem !important;
   font-weight: 700;
-  border-radius: 8px !important;
+  border-radius: 6px !important;
   box-shadow: 0 8px 24px rgba(255, 138, 0, 0.35);
 }
 
@@ -1350,8 +1746,8 @@ section {
 
 /* Trailer buttons: tighter, Netflix-pill feel. */
 .trailer-btn {
-  padding: 0.55rem 1rem !important;
-  font-size: 0.88rem !important;
+  padding: 0.38rem 0.7rem !important;
+  font-size: 0.76rem !important;
   border-radius: 6px !important;
   box-shadow: none !important;
   font-weight: 700;
@@ -1371,12 +1767,6 @@ section {
 
 /* Marvel grid/row spacing parity with the streaming rows. */
 
-/* Releases page: breathing room. */
-.releases-grid {
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
-  gap: clamp(0.75rem, 1.5vw, 1.25rem) !important;
-}
-
 /* =================== FOOTER =================== */
 footer {
   background: #000 !important;
@@ -1393,6 +1783,26 @@ footer {
   padding: 0 1rem !important;
 }
 
+.comments-page-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.comments-page-poster {
+  width: 60px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--cm-border);
+  flex-shrink: 0;
+}
+
+.comments-page-header h1 {
+  margin: 0;
+}
+
 .comments-section h2 {
   color: var(--cm-accent);
   margin-bottom: 1rem;
@@ -1400,12 +1810,17 @@ footer {
 
 .comment-form {
   display: grid;
-  gap: 0.6rem;
+  gap: 0.4rem;
   margin-bottom: 1.5rem;
-  padding: 1.25rem;
+  padding: 0.85rem;
   background: var(--cm-surface);
   border: 1px solid var(--cm-border);
   border-radius: 10px;
+}
+
+.comment-as {
+  font-size: 0.85rem;
+  margin: 0;
 }
 
 .comment-form input,
@@ -1413,7 +1828,7 @@ footer {
   background: rgba(0, 0, 0, 0.45);
   border: 1px solid var(--cm-border);
   color: var(--cm-text);
-  padding: 0.7rem 0.85rem;
+  padding: 0.55rem 0.7rem;
   border-radius: 8px;
   font-size: 0.95rem;
   font-family: inherit;
@@ -1421,7 +1836,7 @@ footer {
 }
 
 .comment-form textarea {
-  min-height: 110px;
+  min-height: 44px;
 }
 
 .comment-form input:focus,
@@ -1436,6 +1851,170 @@ footer {
   width: auto;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
+}
+
+@media (max-width: 480px) {
+  .comment-submit {
+    justify-self: stretch;
+    width: 100%;
+  }
+}
+
+.admin-user-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0 0;
+  display: grid;
+  gap: 0.5rem;
+  max-width: 700px;
+}
+
+.admin-user-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--cm-surface);
+  border: 1px solid var(--cm-border);
+  border-radius: 8px;
+}
+
+.admin-user-row img,
+.admin-user-avatar-fallback {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cm-surface-2);
+  color: var(--cm-accent);
+  font-weight: 700;
+}
+
+.admin-user-name {
+  font-weight: 600;
+  flex: 1;
+}
+
+.admin-user-real {
+  font-size: 0.75rem;
+  color: var(--cm-muted, rgba(255, 255, 255, 0.5));
+}
+
+.admin-user-moviecount {
+  font-size: 0.8rem;
+  color: var(--cm-accent);
+  font-weight: 600;
+}
+
+.admin-user-date {
+  font-size: 0.75rem;
+  color: var(--cm-muted, rgba(255, 255, 255, 0.5));
+}
+
+.hot-takes-page {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.hot-takes-subtitle {
+  color: var(--cm-muted, rgba(255, 255, 255, 0.6));
+  margin: -0.5rem 0 1rem;
+}
+
+/* Same pill-tab look as .mylist-tab — unstyled before this, just rendering
+   as plain default browser buttons. */
+.hot-takes-tabs {
+  display: flex;
+  gap: 0.6rem;
+  margin: 0 0 1.5rem;
+}
+
+.hot-takes-tab {
+  appearance: none;
+  border: 1px solid rgba(255, 215, 0, 0.25);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cm-text);
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.hot-takes-tab i {
+  opacity: 0.85;
+}
+
+.hot-takes-tab:hover {
+  background: rgba(255, 215, 0, 0.1);
+  border-color: rgba(255, 215, 0, 0.5);
+}
+
+.hot-takes-tab--active {
+  background: var(--cm-accent-grad);
+  color: #111;
+  border-color: transparent;
+  box-shadow: 0 4px 16px -4px rgba(255, 180, 0, 0.55);
+}
+
+.hot-takes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+  gap: 0.75rem;
+}
+
+.hot-take-card {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  background: var(--cm-surface);
+  border: 1px solid var(--cm-border);
+  border-radius: 10px;
+  padding: 0.6rem;
+  text-decoration: none;
+  color: var(--cm-text);
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.hot-take-card:hover {
+  border-color: rgba(255, 215, 0, 0.4);
+  transform: translateY(-2px);
+}
+
+.hot-take-card img,
+.hot-take-poster-placeholder {
+  width: 50px;
+  height: 75px;
+  object-fit: cover;
+  border-radius: 5px;
+  flex-shrink: 0;
+  background: var(--cm-surface-2);
+}
+
+.hot-take-body h3 {
+  margin: 0 0 0.15rem;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+.hot-take-body p {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--cm-muted, rgba(255, 255, 255, 0.6));
+}
+
+.hot-take-empty {
+  color: var(--cm-muted, rgba(255, 255, 255, 0.6));
 }
 
 .comment-list {
@@ -1456,16 +2035,97 @@ footer {
   border-radius: 10px;
 }
 
+.comment-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: top center;
+  flex-shrink: 0;
+  border: 2px solid var(--cm-border);
+}
+
+.comment-avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cm-surface-2);
+  color: var(--cm-accent);
+  font-weight: 700;
+  font-size: 1.5rem;
+}
+
 .comment-body {
   flex: 1;
   min-width: 0;
 }
 
 .comment-author {
-  display: block;
+  display: inline-block;
   color: var(--cm-accent);
   font-size: 0.9rem;
   margin-bottom: 0.2rem;
+  margin-right: 0.5rem;
+}
+
+.comment-time {
+  color: var(--cm-muted, rgba(255, 255, 255, 0.5));
+  font-size: 0.78rem;
+}
+
+.comment-votes {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.comment-vote {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--cm-border);
+  background: transparent;
+  color: var(--cm-muted, rgba(255, 255, 255, 0.6));
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.comment-vote:hover:not(:disabled) {
+  border-color: rgba(255, 215, 0, 0.4);
+  color: var(--cm-text);
+}
+
+.comment-vote:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.comment-vote--like.comment-vote--active {
+  background: rgba(110, 231, 183, 0.15);
+  border-color: #6ee7b7;
+  color: #6ee7b7;
+}
+
+.comment-vote--dislike.comment-vote--active {
+  background: rgba(255, 107, 107, 0.15);
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.comment-character-badge {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 215, 0, 0.12);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  color: var(--cm-accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .comment-text {
@@ -1835,8 +2495,6 @@ footer {
 
 .news-card {
   display: block;
-  background: var(--cm-surface);
-  border: 1px solid var(--cm-border);
   border-radius: 12px;
   overflow: hidden;
   text-decoration: none;
@@ -2231,6 +2889,10 @@ footer {
   color: var(--cm-accent);
 }
 
+/* Overlay badge on a thumb-sized bookmark context (Marvel phase thumbs) —
+   absolute + hidden-until-hover. The universal card (below) uses
+   .card-bookmark--inline instead, which overrides this to sit statically
+   next to the title. */
 .card-bookmark {
   position: absolute;
   top: 0.5rem;
@@ -2251,8 +2913,6 @@ footer {
   z-index: 3;
 }
 
-.movie-card:hover .card-bookmark,
-.release-card:hover .card-bookmark,
 .card-bookmark:focus-visible,
 .card-bookmark--active {
   opacity: 1;
@@ -2271,40 +2931,172 @@ footer {
   border-color: var(--cm-accent);
 }
 
-.card-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.5rem;
+/* Universal card corner badges — same visual language as the Theaters page
+   (.theater-rating/.theater-info/.theater-trailer), now shared so every
+   movie/show card looks the same: rating top-left, info top-right, trailer
+   bottom-left, comment-count bottom-right. */
+.card-rating,
+.theater-rating {
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.75);
+  color: var(--cm-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
-.card-actions .trailer-btn {
-  flex: 1;
+.theater-rating {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
+  z-index: 2;
+}
+
+/* Wraps rating + "where to watch" provider icon together, since both share
+   the top-left corner — info/trailer/comment-count already claim the other
+   three. */
+.card-top-left {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  z-index: 2;
+}
+
+/* Needs to out-specificity the generic `.movie-card img { width:100%
+   !important; aspect-ratio:2/3 !important }` poster rules, which would
+   otherwise stretch this tiny logo to full poster size. Scoped to both
+   wrap classes since movie and show cards use different ancestor names. */
+.movie-poster-wrap img.card-avail-logo,
+.show-poster-wrap img.card-avail-logo {
+  width: 16px !important;
+  height: 16px !important;
+  aspect-ratio: auto !important;
+  border-radius: 4px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.75);
+  flex: 0 0 auto;
+}
+
+.card-avail-icon {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0.2rem;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.75);
+  color: var(--cm-accent);
+  font-size: 0.6rem;
+  flex: 0 0 auto;
+  box-sizing: content-box;
 }
 
 .info-btn,
-.comment-btn {
-  flex: 0 0 36px;
-  width: 36px;
-  height: 36px !important;
-  padding: 0 !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  color: var(--cm-accent) !important;
-  border: 1px solid rgba(255, 215, 0, 0.28) !important;
-  border-radius: 6px !important;
+.theater-info {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: rgba(0, 0, 0, 0.7);
+  color: var(--cm-accent);
   cursor: pointer;
-  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 1rem;
+  font-size: 0.75rem;
+  z-index: 2;
 }
 
 .info-btn:hover,
-.comment-btn:hover {
+.theater-info:hover {
+  background: var(--cm-accent);
+  color: #111;
+}
+
+.card-trailer,
+.theater-trailer {
+  position: absolute;
+  bottom: 0.35rem;
+  left: 0.35rem;
+  width: 26px !important;
+  height: 26px !important;
+  display: grid;
+  place-items: center;
+  border-radius: 50% !important;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: rgba(0, 0, 0, 0.7) !important;
+  color: var(--cm-accent);
+  cursor: pointer;
+  font-size: 0.68rem !important;
+  padding: 0 !important;
+  margin-top: 0 !important;
+  z-index: 2;
+}
+
+.card-trailer:hover,
+.theater-trailer:hover {
   background: var(--cm-accent) !important;
-  color: #111 !important;
-  border-color: var(--cm-accent) !important;
+  color: #111;
+}
+
+.comment-btn {
+  position: absolute;
+  bottom: 0.35rem;
+  right: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: rgba(0, 0, 0, 0.75);
+  color: var(--cm-accent);
+  font-size: 0.68rem;
+  font-weight: 700;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.comment-btn:hover {
+  background: var(--cm-accent);
+  color: #111;
+}
+
+/* Title row below the poster: title grows, bookmark sits as a small
+   always-visible icon instead of overlaying the art. */
+.movie-card-meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.card-bookmark--inline {
+  position: static;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  opacity: 1;
+  transform: none;
+  background: transparent;
+  border-color: transparent;
+}
+
+.card-bookmark--inline:hover {
+  background: rgba(255, 215, 0, 0.12);
+  border-color: rgba(255, 215, 0, 0.3);
+}
+
+.movie-card-date {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--cm-muted);
+  margin-top: -0.25rem;
 }
 
 .hero-actions {
@@ -2317,19 +3109,20 @@ footer {
    36px icon-only box it inherits — otherwise "More Info" wraps to two lines
    and flex collapses the whitespace between the icon and the text. */
 .hero-info-btn {
+  position: static !important;
   flex: 0 0 auto !important;
   width: auto !important;
   height: auto !important;
-  gap: 0.5rem !important;
+  gap: 0.4rem;
   white-space: nowrap;
-  padding: 0.7rem 1.2rem !important;
+  padding: 0.5rem 1rem !important;
   background: rgba(30, 30, 30, 0.72) !important;
   color: #fff !important;
   border: 1px solid rgba(255, 255, 255, 0.25) !important;
   backdrop-filter: blur(6px);
   font-weight: 700;
   border-radius: 6px !important;
-  font-size: 0.95rem !important;
+  font-size: 0.82rem !important;
 }
 
 .hero-info-btn:hover {
@@ -3062,19 +3855,27 @@ body.no-scroll {
   gap: 0.75rem;
 }
 
-.info-cast-card {
+/* Shared with .person-credit-card — a second poster-tile base for cards with
+   a bare <img> (no wrap div, no overlay badges), as opposed to the
+   wrap-div family above (.theater-card & co). */
+.info-cast-card,
+.person-credit-card {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
 }
 
 .info-cast-card img,
-.info-cast-placeholder {
+.info-cast-placeholder,
+.person-credit-card img {
   width: 100%;
   aspect-ratio: 2 / 3;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--cm-surface-2);
+}
+
+.info-cast-card {
+  gap: 0.25rem;
 }
 
 .info-cast-placeholder {
@@ -3102,26 +3903,6 @@ body.no-scroll {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 0.75rem;
-}
-
-.info-similar-card {
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.info-similar-card img {
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
-  border-radius: 6px;
-  transition: transform 200ms ease, box-shadow 200ms ease;
-}
-
-.info-similar-card:hover img {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
 .info-similar-title {
@@ -3263,8 +4044,8 @@ body.no-scroll {
 /* Narrower column than the movie grids, since it only gets half the page. */
 .show-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 0.9rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
 }
 
 /* Roomier news cards now that the rail is half the page. */
@@ -3289,26 +4070,11 @@ body.no-scroll {
 }
 
 .show-card {
-  display: flex;
-  flex-direction: column;
   gap: 0.45rem;
-  min-width: 0;
   cursor: pointer;
 }
 
-.show-poster-wrap {
-  position: relative;
-  border-radius: 9px;
-  overflow: hidden;
-  border: 1px solid var(--cm-border);
-  background: rgba(255, 255, 255, 0.04);
-}
-
 .show-poster {
-  display: block;
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
   transition: transform 220ms ease;
 }
 
@@ -3333,6 +4099,15 @@ body.no-scroll {
   align-items: flex-start;
 }
 
+/* Pairs the rating badge with the "where to watch" icon on one row, same
+   idea as .card-top-left on movie cards — just nested a level deeper here
+   since .show-badges already stacks multiple badge rows vertically. */
+.show-badge-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .show-badge {
   padding: 0.12rem 0.42rem;
   border-radius: 4px;
@@ -3344,6 +4119,11 @@ body.no-scroll {
 
 .show-badge--rating {
   color: var(--cm-accent);
+}
+
+.show-badge--measured {
+  background: var(--cm-accent);
+  color: #000;
 }
 
 .show-title {
@@ -3491,155 +4271,15 @@ body.no-scroll {
   object-fit: cover;
 }
 
-/* Movie grid left, nearest-theaters rail right. */
-.theaters-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
-  gap: clamp(1.25rem, 2.5vw, 2.5rem);
-  align-items: start;
-}
-
-.theater-venues {
-  border-left: 1px solid var(--cm-border);
-  padding-left: 1.25rem;
-  min-width: 0;
-}
-
-.venue-head {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  font-size: 0.82rem !important;
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  color: var(--cm-accent);
-  border: none !important;
-  padding: 0 !important;
-  margin: 0 0 0.9rem !important;
-}
-
-.venue-sub {
-  text-transform: none;
-  letter-spacing: 0.03em;
-  font-size: 0.76rem;
-  font-weight: 500;
-  color: var(--cm-muted);
-}
-
-.venue-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.venue {
-  display: grid;
-  grid-template-columns: 46px minmax(0, 1fr);
-  gap: 0.7rem;
-  align-items: center;
-  padding: 0.6rem 0.7rem;
-  border: 1px solid var(--cm-border);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  text-decoration: none;
-  color: inherit;
-  transition: border-color 150ms ease, background 150ms ease;
-}
-
-.venue:hover {
-  border-color: rgba(255, 215, 0, 0.45);
-  background: rgba(255, 215, 0, 0.06);
-}
-
-.venue-dist {
-  display: grid;
-  place-items: center;
-  height: 44px;
-  border-radius: 6px;
-  background: rgba(255, 215, 0, 0.1);
-  color: var(--cm-accent);
-  font-weight: 800;
-  font-size: 1rem;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
-.venue-dist small {
-  display: block;
-  font-size: 0.6rem;
-  font-weight: 600;
-  opacity: 0.75;
-}
-
-.venue-name {
-  display: block;
-  font-weight: 700;
-  font-size: 0.86rem;
-  line-height: 1.25;
-}
-
-.venue-address {
-  display: block;
-  color: var(--cm-muted);
-  font-size: 0.74rem;
-  margin-top: 0.15rem;
-}
-
-.venue-empty {
-  color: var(--cm-muted);
-  font-size: 0.85rem;
-}
-
-.venue--skeleton {
-  grid-template-columns: 1fr;
-  min-height: 62px;
-  align-items: center;
-}
-
-.venue-skeleton-line {
-  display: block;
-  height: 14px;
-  width: 85%;
-}
-
-@media (max-width: 960px) {
-  .theaters-layout {
-    grid-template-columns: 1fr;
-  }
-  .theater-venues {
-    border-left: none;
-    border-top: 1px solid var(--cm-border);
-    padding-left: 0;
-    padding-top: 1.5rem;
-  }
-}
-
 .theater-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, 150px);
+  justify-content: start;
+  gap: 1.25rem;
 }
 
 .theater-card {
-  display: flex;
-  flex-direction: column;
   gap: 0.5rem;
-  min-width: 0;
-}
-
-.theater-poster-wrap {
-  position: relative;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid var(--cm-border);
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.theater-poster {
-  display: block;
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
 }
 
 .theater-poster--placeholder {
@@ -3647,38 +4287,6 @@ body.no-scroll {
   place-items: center;
   font-size: 2.2rem;
   color: var(--cm-muted);
-}
-
-.theater-rating {
-  position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
-  padding: 0.15rem 0.45rem;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.75);
-  color: var(--cm-accent);
-  font-size: 0.72rem;
-  font-weight: 700;
-}
-
-.theater-info {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 215, 0, 0.3);
-  background: rgba(0, 0, 0, 0.7);
-  color: var(--cm-accent);
-  cursor: pointer;
-}
-
-.theater-info:hover {
-  background: var(--cm-accent);
-  color: #111;
 }
 
 .theater-title {
@@ -3689,28 +4297,75 @@ body.no-scroll {
   padding: 0 !important;
 }
 
-.theater-tickets-label {
+.theater-tickets-wrap {
+  position: relative;
+}
+
+.theater-tickets-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  width: 100%;
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--cm-accent);
   font-size: 0.68rem;
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--cm-muted);
+  letter-spacing: 0.1em;
   font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.theater-tickets-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.theater-tickets-toggle::after {
+  content: "\25BE";
+  font-size: 0.7rem;
+  transition: transform 150ms ease;
+}
+
+.theater-tickets-wrap[open] .theater-tickets-toggle::after {
+  transform: rotate(180deg);
+}
+
+.theater-tickets-toggle:hover,
+.theater-tickets-wrap[open] .theater-tickets-toggle {
+  background: var(--cm-accent);
+  color: #111;
 }
 
 .theater-tickets {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  z-index: 5;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 0.3rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  border: 1px solid var(--cm-border);
+  background: #15151f;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
 }
 
 .theater-ticket {
-  padding: 0.22rem 0.5rem;
+  padding: 0.3rem 0.5rem;
   border-radius: 5px;
   border: 1px solid var(--cm-border);
   background: rgba(255, 255, 255, 0.05);
   color: var(--cm-text);
   font-size: 0.7rem;
   font-weight: 700;
+  text-align: center;
   text-decoration: none;
   transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
 }
@@ -3777,6 +4432,143 @@ body.no-scroll {
 .info-votes {
   color: var(--cm-muted);
   font-size: 0.85em;
+}
+
+/* Cinemetrics' own community score + a signed-in user's personal
+   rating/watched state. Deliberately lighter-weight than .auth-btn (which
+   these buttons borrow only for click/focus behavior, not its look — a
+   gold-gradient 0.8rem-padded login button looked absurd repeated ten times
+   in a row). */
+.info-user-media {
+  margin: 1rem 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--cm-border);
+  border-radius: var(--radius-md);
+  background: var(--cm-surface);
+}
+
+.info-community-rating {
+  margin: 0 0 0.7rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.info-community-score {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--cm-accent);
+}
+
+.info-community-count {
+  font-size: 0.82rem;
+  color: var(--cm-muted);
+}
+
+.info-community-empty {
+  font-size: 0.88rem;
+  color: var(--cm-muted);
+  font-style: italic;
+}
+
+.info-rate-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+}
+
+.info-rate-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--cm-muted);
+}
+
+.info-rate-stars {
+  display: flex;
+  gap: 0.15rem;
+}
+
+/* Each star is a real <button>1</button>..<button>10</button> for a11y
+   (screen readers hear "Rate 7 out of 10"), but the digit itself is visually
+   replaced by a star glyph — swapping the markup for true star icons would
+   mean rebuilding the hover/click wiring in index.js for a purely visual
+   change. */
+.info-rate-star {
+  all: unset;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  margin-top: 0;
+  color: transparent;
+  font-size: 0;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: transform 120ms ease;
+}
+
+.info-rate-star::before {
+  content: "★";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.18);
+  transition: color 120ms ease;
+}
+
+.info-rate-star--active::before {
+  color: var(--cm-accent);
+}
+
+.info-rate-star.info-rate-star:hover {
+  transform: scale(1.2);
+}
+
+.info-rate-star:hover::before {
+  color: var(--cm-accent);
+}
+
+.info-rate-star:focus-visible {
+  outline: 2px solid var(--cm-accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+.info-watched-btn {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--cm-border);
+  border-radius: var(--radius-pill);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cm-muted);
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.info-watched-btn:hover {
+  border-color: rgba(255, 215, 0, 0.4);
+  color: var(--cm-text);
+}
+
+.info-watched-btn--active {
+  background: rgba(255, 215, 0, 0.12);
+  border-color: var(--cm-accent);
+  color: var(--cm-accent);
+}
+
+.info-watched-btn:focus-visible {
+  outline: 2px solid var(--cm-accent);
+  outline-offset: 2px;
 }
 
 .info-keywords {
@@ -4308,30 +5100,15 @@ body.no-scroll {
 
 .games-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 1.1rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
 }
 
 .game-card {
-  display: flex;
-  flex-direction: column;
   gap: 0.65rem;
-  min-width: 0;
-}
-
-.game-cover-wrap {
-  position: relative;
-  border-radius: 10px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--cm-border);
 }
 
 .game-cover {
-  display: block;
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
   transition: transform 220ms ease;
 }
 
@@ -4849,7 +5626,7 @@ section.radar {
 }
 
 .year-title .fa-fire {
-  color: #ff8a00;
+  color: var(--cm-accent-2);
 }
 
 .releases-empty {
@@ -5032,8 +5809,8 @@ section.radar {
 
 .discover-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1.5rem;
 }
 
 .discover-empty {
@@ -5054,7 +5831,7 @@ section.radar {
 .info-cast-card {
   cursor: pointer;
   transition: transform 180ms ease;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
 }
 
 .info-cast-card:hover {
@@ -5180,11 +5957,9 @@ section.radar {
 
 .person-credit-card {
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
   gap: 0.35rem;
   transition: transform 180ms ease;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .person-credit-card:hover {
@@ -5197,12 +5972,7 @@ section.radar {
 }
 
 .person-credit-card img {
-  width: 100%;
-  aspect-ratio: 2 / 3;
-  object-fit: cover;
-  border-radius: 6px;
   transition: box-shadow 180ms ease;
-  background: var(--cm-surface-2);
 }
 
 .person-credit-card:hover img {
@@ -5265,14 +6035,14 @@ section.radar {
   cursor: pointer;
   transition: background 150ms ease, color 150ms ease, transform 150ms ease;
 }
-.news-tab:hover { color: #ffd700; }
+.news-tab:hover { color: var(--cm-accent); }
 .news-tab.is-active {
-  background: linear-gradient(90deg, #ffd700 0%, #ffb400 100%);
+  background: linear-gradient(90deg, var(--cm-accent) 0%, #ffb400 100%);
   color: #081018;
   box-shadow: 0 4px 14px rgba(255,166,0,0.28);
 }
 .news-tab:focus-visible {
-  outline: 2px solid #ffd700;
+  outline: 2px solid var(--cm-accent);
   outline-offset: 2px;
 }
 
@@ -5329,9 +6099,6 @@ img, video, iframe { max-width: 100%; }
 .movie-grid {
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) !important;
   }
-  .releases-grid {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
-  }
 }
 
 /* --------- Tablet (≤1024px) --------- */
@@ -5346,10 +6113,6 @@ img, video, iframe { max-width: 100%; }
 .movie-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
     gap: 1rem !important;
-  }
-  .releases-grid {
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)) !important;
-    gap: 1.25rem !important;
   }
 
   /* Marvel carousel: shrink card width */
@@ -5393,17 +6156,10 @@ img, video, iframe { max-width: 100%; }
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
     gap: 0.85rem !important;
   }
-  .releases-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) !important;
-    gap: 1rem !important;
-  }
   .marvel-phase-title { font-size: 1.5rem; }
 
   /* Profile / about / auth — tighten widths */
   .profile, .auth-page, .about { padding: 1.25rem; }
-
-  /* Comments form */
-  .comments-form textarea { min-height: 80px; }
 
   /* Trailer modal sizing on mobile */
   .trailer-content { max-width: 98%; padding: 6px; }
@@ -5427,9 +6183,6 @@ img, video, iframe { max-width: 100%; }
 .movie-grid {
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)) !important;
     gap: 0.7rem !important;
-  }
-  .releases-grid {
-    grid-template-columns: 1fr !important;
   }
 
   .movie-card { padding: 0.5rem; }
@@ -5786,7 +6539,7 @@ img, video, iframe { max-width: 100%; }
 .marvel-hero-thumb:hover,
 .marvel-hero-thumb:focus-visible {
   transform: translateY(-2px) scale(1.01);
-  border-color: #ffd700 !important;
+  border-color: var(--cm-accent) !important;
   box-shadow: 0 10px 26px rgba(255, 215, 0, 0.25) !important;
   outline: none;
 }
@@ -5883,7 +6636,7 @@ img, video, iframe { max-width: 100%; }
 .marvel-phase-thumb-btn:hover,
 .marvel-phase-thumb-btn:focus-visible {
   transform: translateY(-2px) scale(1.01);
-  border-color: #ffd700 !important;
+  border-color: var(--cm-accent) !important;
   box-shadow: 0 10px 26px rgba(255, 215, 0, 0.25) !important;
 }
 .marvel-phase-thumb-btn img {
@@ -6146,7 +6899,7 @@ img, video, iframe { max-width: 100%; }
   margin: 0 0 1rem 0;
   max-width: 58ch;
 }
-.marvel-hero-tagline b { color: #ffd700; font-weight: 800; }
+.marvel-hero-tagline b { color: var(--cm-accent); font-weight: 800; }
 .marvel-hero-stats {
   display: flex;
   gap: clamp(1rem, 2vw, 2rem);
@@ -6164,7 +6917,7 @@ img, video, iframe { max-width: 100%; }
 .marvel-hero-stat b {
   font-family: "Bebas Neue", Impact, sans-serif;
   font-size: clamp(1.6rem, 2.4vw, 2.2rem);
-  color: #ffd700;
+  color: var(--cm-accent);
   line-height: 1;
 }
 .marvel-hero-stat span {
@@ -6177,7 +6930,11 @@ img, video, iframe { max-width: 100%; }
 /* =================== FOOTER — ABOUT LINK =================== */
 .site-footer {
   border-top: 1px solid var(--cm-border);
-  margin-top: 3rem;
+  /* #root is a flex column (min-height: 100vh); an auto top margin here
+     eats all the leftover space so the footer sits flush at the bottom
+     of short pages instead of floating right under the content, while
+     still flowing naturally below content on long pages. */
+  margin-top: auto;
   padding: 1.5rem clamp(1rem, 4vw, 3rem);
   background: rgba(0, 0, 0, 0.35);
 }
@@ -6260,7 +7017,7 @@ img, video, iframe { max-width: 100%; }
     max-width: 30vw;
   }
   .play-intro-btn .play-text { display: none; }
-  .play-intro-btn { padding: 0.35rem 0.55rem !important; }
+  .play-intro-btn { padding: 0.3rem !important; gap: 0; }
 
   /* Collapsed links: hidden drawer that drops from under the navbar */
   .nav-links {
@@ -6308,7 +7065,7 @@ img, video, iframe { max-width: 100%; }
     border: 1px solid rgba(255, 255, 255, 0.25);
   }
   .nav-right > a[href="/signup"] {
-    background: var(--cm-accent-grad, linear-gradient(135deg, #ffd700, #ff8a00));
+    background: var(--cm-accent-grad, linear-gradient(135deg, var(--cm-accent), var(--cm-accent-2)));
     color: #111;
     border-color: transparent;
   }
@@ -6368,7 +7125,7 @@ img, video, iframe { max-width: 100%; }
   border-color: rgba(255, 215, 0, 0.5);
 }
 .mylist-tab--active {
-  background: linear-gradient(135deg, #ffd700, #ffb400);
+  background: linear-gradient(135deg, var(--cm-accent), #ffb400);
   color: #111;
   border-color: transparent;
   box-shadow: 0 4px 16px -4px rgba(255, 180, 0, 0.55);

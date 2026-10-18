@@ -16,14 +16,12 @@ export default function navItem(item) {
 // Top nav — slimmed so the Cinemetrics logo handles Home, and About
 // lives in the footer (freeing space up top).
 export const navItemsData = [
-  { url: "/movies", text: "Movies" },
   { url: "/tv", text: "TV" },
-  { url: "/theaters", text: "In Theaters" },
-  { url: "/releases", text: "Upcoming" },
+  { url: "/theaters", text: "Theater" },
   { url: "/marvel", text: "Marvel" },
-  { url: "/news", text: "News" },
   { url: "/games", text: "Games" },
-  { url: "/my-list", text: "My List" }
+  { url: "/my-list", text: "About" },
+  { url: "/hot-takes", text: "Hot Takes" }
 ];
 
 export const logo = {
