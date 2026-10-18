@@ -1,6 +1,4 @@
 // importing libraries for my backend API
-import dotenv from "dotenv"; // loads environment variables from .env file (API keys, MongoDB URL)
-// Load environment variables immediately so other modules see them at import time
 import express from "express"; // Framework to create servers and routes
 import axios from "axios"; // used to prime the response cache at boot
 import cors from "cors"; // Allows my frontend (Netlify) or Render to say whats up to my backend API
@@ -11,14 +9,6 @@ import authRoutes from "./routes/auth.js";
 import newsRoutes from "./routes/news.js";
 import personRoutes from "./routes/person.js";
 import tvRoutes from "./routes/tv.js";
-
-// my utilities to help with my .emv
-import { fileURLToPath } from "url"; // to get the current file path
-import { dirname, join } from "path"; // build paths for loading .env
-
-// Get my directory path to reference .env
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 //importing my API endpoint routers
 const commentsRouter = (await import("./routes/comments.js")).default; // api request
@@ -103,17 +93,34 @@ app.get("/status", (req, res) => {
   });
 });
 
-// Serve static files from the root directory
-import path from "path";
-app.use(express.static(join(__dirname, "..")));
+// This used to serve the whole repo root as static files, with a catch-all
+// falling back to index.html for anything else. Netlify is what actually
+// serves the frontend in production (its own _redirects file does the SPA
+// fallback) — this process only needs to be an API. Serving the repo root
+// here meant anyone could fetch this file, package.json, package-lock.json,
+// or anything else in the tree straight off the live Render URL, and the
+// catch-all was silently turning every mistyped route into a 200 instead of
+// a real 404.
 
-// SPA fallback: serve index.html for all non-API routes
-app.get("*", (req, res) => {
-  res.sendFile(join(__dirname, "..", "index.html"));
+// Anything that doesn't match a mounted router falls through to here instead
+// of Express's plain-text default — keeps every response on this API JSON-
+// shaped, including a typo'd route.
+app.use((req, res) => {
+  res.status(404).json({ message: "Not found" });
+});
+
+// Catches anything a route handler threw synchronously instead of rejecting
+// a promise (those are already handled by each route's own try/catch). Logs
+// the real error server-side and returns a generic message — same reasoning
+// as the auth error handlers: a stack trace in the response body is free
+// reconnaissance for whoever's looking at it.
+app.use((err, req, res, next) => {
+  console.error("UNHANDLED ERROR:", err);
+  res.status(500).json({ message: "Something went wrong." });
 });
 
 // Start the server, listen to 0.0.0.0 so render can reach server
-const server = app.listen(PORT, "0.0.0.0", () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Cinemetrics API running on port ${PORT}`);
   warmCache();
 });
