@@ -2,7 +2,8 @@ import mongoose from "mongoose";
 
 const commentSchema = new mongoose.Schema({
   movieId: { type: Number, required: true }, // how TMDB has id
-  username: { type: String, default: "Anonymous" },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  username: { type: String, required: true },
   text: { type: String, required: true },
   createdAt: { type: Date, default: Date.now }
 });

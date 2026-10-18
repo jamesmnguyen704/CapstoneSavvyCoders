@@ -63,6 +63,21 @@ const NEWS_TABS = ["movies"];
 // genuinely pulls fresh headlines.
 const NEWS_MAX_AGE_MS = 5 * 60 * 1000;
 
+// Reads the username out of the stored JWT without a round trip. This is
+// read-only UI state (which form to show, which delete buttons to render) —
+// the server independently verifies the token and enforces ownership on
+// every write, so nothing security-relevant depends on this being trustworthy.
+function getCurrentUser() {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return { id: payload.id, username: payload.username };
+  } catch {
+    return null;
+  }
+}
+
 // my modal helper
 function getModalEls() {
   const modal = document.querySelector("#trailerModal");
@@ -563,28 +578,32 @@ function attachCommentHandlers() {
   const list = document.querySelector(".comment-list");
   const movieId = state.Comments?.movieId;
 
+  // Posting requires login now (the server rejects it otherwise), so the
+  // form only renders for a signed-in user — see components/Comments.js.
   if (form && movieId) {
     form.addEventListener("submit", async event => {
       event.preventDefault();
       const msg = document.querySelector("#commentMsg");
-      const username = document.querySelector("#author").value.trim();
       const text = document.querySelector("#text").value.trim();
 
-      if (!username || !text) {
+      if (!text) {
         if (msg) {
-          msg.textContent = "Name and comment are required.";
+          msg.textContent = "Comment can't be empty.";
           msg.classList.add("auth-msg--error");
         }
         return;
       }
 
       try {
-        await postComment({ movieId: Number(movieId), username, text });
+        await postComment({ movieId: Number(movieId), text });
         state.Comments.comments = await fetchComments(movieId);
         render(state.Comments);
-      } catch {
+      } catch (err) {
         if (msg) {
-          msg.textContent = "Couldn't post comment. Please try again.";
+          msg.textContent =
+            err?.response?.status === 401
+              ? "Your session expired — please log in again."
+              : "Couldn't post comment. Please try again.";
           msg.classList.add("auth-msg--error");
         }
       }
@@ -1754,6 +1773,7 @@ router.hooks({
         const movieId = match.data.movieId;
         state.Comments.movieId = movieId;
         state.Comments.comments = await fetchComments(movieId);
+        state.Comments.currentUser = getCurrentUser();
         break;
       }
 
