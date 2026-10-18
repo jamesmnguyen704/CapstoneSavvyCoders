@@ -24,3 +24,7 @@ James often has 2-3 Claude Code sessions open in parallel. If you see named peer
 ## Before committing
 
 Never blind `git add -A` — this tree frequently has uncommitted work from other sessions mixed in. Check `git status -sb` and stage specific files you actually own.
+
+## README updates
+
+`README.md` is public-facing (portfolio piece, not internal docs) and drifts out of sync easily. Whoever ships a substantial feature updates it as part of that work — see **`docs/readme-maintenance.md`** for exactly when to update it, the branch+PR workflow (`master` is protected, no direct pushes), and the verify-don't-recall rule that would have prevented several real inaccuracies (a guessed account count, an outlet count that disagreed with itself in three places, a feature described as a standalone page after it was merged into another). Check real sources (the database, `package.json`, the actual route files) before writing a specific claim, every time — not just the first time.
