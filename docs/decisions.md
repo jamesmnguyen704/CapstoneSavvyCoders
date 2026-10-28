@@ -1,5 +1,18 @@
 # Decision log — Cinemetrics
 
+## 2026-10-27 — source provenance is never inferred from headline-matching method
+
+An editorial-queue news bridge first guessed `SYNDICATION` for exact-URL/
+near-identical-title matches and `INDEPENDENT_REPORT` for entity-aware
+matches. Caught in independent review (ChatGPT HQ) as unsound: matching
+method proves two articles are about the same development, not the
+relationship between them — a near-identical headline can still be an
+independent summary of a shared wire report, and a differently-worded one
+can still just be repeating the same original source. `provenance` now
+always defaults to `UNKNOWN`; `matchedBy` is kept as separate, purely
+technical grouping metadata that a future evidence-backed classification
+pass could use as one input, never as a stand-in for provenance itself.
+
 ## 2026-10-27 — test suite requires `--test-concurrency=1`, found while preparing a checkpoint
 
 Running every test file together with plain `node --test file1 file2 ...`

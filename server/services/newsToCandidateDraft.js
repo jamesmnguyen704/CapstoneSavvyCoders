@@ -23,17 +23,20 @@ export function draftFromNewsResult(newsResult, { account, platform = "threads",
       discoveredAt: newsResult.firstSeenAt || null
     },
     ...(Array.isArray(newsResult.relatedSources)
-      ? newsResult.relatedSources.map(rs => {
-          const { provenance, isSyndicationOf } = provenanceFromMatchReason(rs.matchedBy, newsResult.url);
-          return {
-            url: rs.url,
-            publisher: rs.publisher || "Unknown",
-            articlePublishedAt: rs.publishedAt || null,
-            discoveredAt: rs.firstSeenAt || null,
-            provenance,
-            isSyndicationOf
-          };
-        })
+      ? newsResult.relatedSources.map(rs => ({
+          url: rs.url,
+          publisher: rs.publisher || "Unknown",
+          articlePublishedAt: rs.publishedAt || null,
+          discoveredAt: rs.firstSeenAt || null,
+          // provenance stays UNKNOWN here, always — see the long comment
+          // below for why headline-matching method can't establish it.
+          // matchedBy IS preserved, as separate grouping metadata a future
+          // evidence-backed classification pass could use as one input,
+          // not as a stand-in for provenance itself.
+          provenance: "UNKNOWN",
+          isSyndicationOf: null,
+          matchedBy: rs.matchedBy || null
+        }))
       : [])
   ];
 
@@ -49,28 +52,18 @@ export function draftFromNewsResult(newsResult, { account, platform = "threads",
   };
 }
 
-// news.js's grouping attaches a relatedSources entry for two structurally
-// different reasons, and they mean different things for provenance:
-//   - "url"/"title": news.js's original groupAndDedupe pass — an exact URL
-//     repeat or a near-identical wire-copy headline. That IS a confirmed
-//     syndication case (see news.js's own doc comment: title-similarity
-//     exists specifically "to catch the same story syndicated across
-//     publishers").
-//   - "entity+similarity": the newsEventGrouping.js second pass — two
-//     outlets independently worded their own headline about the same
-//     underlying development. That's independent reporting, not a copy,
-//     and must not be labeled as syndication just because it was grouped.
-// Anything else (a future matchedBy value this hasn't been taught about) is
-// recorded as UNKNOWN rather than guessed either way.
-function provenanceFromMatchReason(matchedBy, primaryUrl) {
-  if (matchedBy === "url" || matchedBy === "title") {
-    return { provenance: "SYNDICATION", isSyndicationOf: primaryUrl };
-  }
-  if (matchedBy === "entity+similarity") {
-    return { provenance: "INDEPENDENT_REPORT", isSyndicationOf: null };
-  }
-  return { provenance: "UNKNOWN", isSyndicationOf: null };
-}
+// A second, stricter pass corrected this: provenance is NOT inferred from
+// matchedBy. An earlier version of this bridge guessed SYNDICATION for
+// "url"/"title" matches and INDEPENDENT_REPORT for "entity+similarity"
+// matches — but headline-matching method only proves two articles are
+// ABOUT the same development, not the relationship between them. Two
+// near-identical headlines could both be independent summaries of one
+// shared wire report; two differently-worded ones could both just be
+// repeating the same original source. Labeling either case by matching
+// method alone risks inflating or deflating how many outlets actually
+// independently confirm a fact — exactly the number a future fact-checking
+// pass would rely on. provenance stays UNKNOWN until something other than
+// text similarity (e.g. an editor's own research) establishes it.
 
 const STOP_WORDS = new Set([
   "the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "with", "is",

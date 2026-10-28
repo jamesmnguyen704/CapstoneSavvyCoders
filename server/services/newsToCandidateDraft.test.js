@@ -25,11 +25,13 @@ test("draftFromNewsResult produces a stub that validateCandidate always rejects"
   assert.equal(stub.sources.length, 2, "primary + the one relatedSources entry");
   assert.equal(stub.sources[0].url, REAL_NEWS_RESULT.url);
   assert.equal(stub.sources[1].url, REAL_NEWS_RESULT.relatedSources[0].url);
-  // The fixture's related source was matched by the entity-aware second
-  // pass (two outlets, their own wording) — that's independent reporting,
-  // not a confirmed copy, and must not be labeled as syndication.
-  assert.equal(stub.sources[1].provenance, "INDEPENDENT_REPORT");
+  // Grouped by the entity-aware second pass — that proves these are about
+  // the same development, NOT whether one is a copy of the other or an
+  // independent confirmation. provenance must stay UNKNOWN; matchedBy
+  // records the technical grouping reason separately.
+  assert.equal(stub.sources[1].provenance, "UNKNOWN");
   assert.equal(stub.sources[1].isSyndicationOf, null);
+  assert.equal(stub.sources[1].matchedBy, "entity+similarity");
   assert.deepEqual(stub.claims, []);
   assert.equal(stub.draftText, "");
   assert.equal(stub.claimsReviewed, false);
@@ -40,29 +42,27 @@ test("draftFromNewsResult produces a stub that validateCandidate always rejects"
   assert.ok(reasons.some(r => r.includes("claimsReviewed")));
 });
 
-test("a relatedSources entry matched by exact URL or near-identical title is labeled SYNDICATION", () => {
+test("differently-worded articles are NOT automatically labeled independent, regardless of matchedBy", () => {
+  // Covers all three matchedBy values this bridge currently sees — none of
+  // them should ever produce anything but UNKNOWN provenance. matchedBy
+  // itself IS preserved, as separate grouping metadata.
   const stub = draftFromNewsResult({
     ...REAL_NEWS_RESULT,
     relatedSources: [
       { url: "https://outlet-a.example.com/x", publisher: "Outlet A", publishedAt: "2026-10-27T12:00:00.000Z", matchedBy: "url" },
-      { url: "https://outlet-b.example.com/x", publisher: "Outlet B", publishedAt: "2026-10-27T12:30:00.000Z", matchedBy: "title" }
+      { url: "https://outlet-b.example.com/x", publisher: "Outlet B", publishedAt: "2026-10-27T12:30:00.000Z", matchedBy: "title" },
+      { url: "https://outlet-c.example.com/x", publisher: "Outlet C", publishedAt: "2026-10-27T13:00:00.000Z", matchedBy: "entity+similarity" },
+      { url: "https://outlet-d.example.com/x", publisher: "Outlet D", publishedAt: "2026-10-27T13:30:00.000Z" } // no matchedBy at all
     ]
   });
 
-  assert.equal(stub.sources[1].provenance, "SYNDICATION");
-  assert.equal(stub.sources[1].isSyndicationOf, REAL_NEWS_RESULT.url);
-  assert.equal(stub.sources[2].provenance, "SYNDICATION");
-  assert.equal(stub.sources[2].isSyndicationOf, REAL_NEWS_RESULT.url);
-});
-
-test("a relatedSources entry with no recognized matchedBy is labeled UNKNOWN, never guessed", () => {
-  const stub = draftFromNewsResult({
-    ...REAL_NEWS_RESULT,
-    relatedSources: [{ url: "https://outlet-c.example.com/x", publisher: "Outlet C", publishedAt: "2026-10-27T12:00:00.000Z" }]
-  });
-
-  assert.equal(stub.sources[1].provenance, "UNKNOWN");
-  assert.equal(stub.sources[1].isSyndicationOf, null);
+  const related = stub.sources.slice(1);
+  assert.equal(related.length, 4);
+  for (const source of related) {
+    assert.equal(source.provenance, "UNKNOWN", `${source.publisher} must not have inferred provenance from matchedBy`);
+    assert.equal(source.isSyndicationOf, null);
+  }
+  assert.deepEqual(related.map(s => s.matchedBy), ["url", "title", "entity+similarity", null]);
 });
 
 test("draftFromNewsResult throws on a malformed news result rather than producing a broken stub", () => {

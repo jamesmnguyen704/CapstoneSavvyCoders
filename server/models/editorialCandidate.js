@@ -18,14 +18,15 @@ const sourceSchema = new mongoose.Schema(
     discoveredAt: { type: Date, default: Date.now },
     // Whether this source is a confirmed copy of another one, an
     // independently-reported account of the same development, or simply
-    // unknown — never guessed. A news item grouped by exact-URL or
-    // near-identical-title matching (news.js's groupAndDedupe) IS a
-    // confirmed syndication/wire-copy case. One grouped only by the
-    // entity-aware second pass (newsEventGrouping.js, matchedBy
-    // "entity+similarity") is two different outlets' own wording about the
-    // same thing — that's independent reporting, not syndication, and
-    // treating it as syndication would silently overstate how many outlets
-    // corroborate the underlying fact.
+    // unknown. Deliberately NOT inferred from how the article was grouped
+    // (see matchedBy below) — headline-matching method proves two articles
+    // are ABOUT the same development, not whether one is a copy of the
+    // other or an independent confirmation of it. Two near-identical
+    // headlines could both be independently written summaries of a shared
+    // wire report; two very differently-worded ones could both just be
+    // repeating the same original source. Defaults to, and currently
+    // always is, UNKNOWN until some actual evidence-backed process (not
+    // text similarity) establishes the relationship — see docs/decisions.md.
     provenance: {
       type: String,
       enum: ["SYNDICATION", "INDEPENDENT_REPORT", "UNKNOWN"],
@@ -33,7 +34,13 @@ const sourceSchema = new mongoose.Schema(
     },
     // Only meaningful when provenance is SYNDICATION — which URL this is a
     // copy of.
-    isSyndicationOf: { type: String, default: null }
+    isSyndicationOf: { type: String, default: null },
+    // The TECHNICAL reason news.js's grouping attached this source —
+    // "url", "title", or "entity+similarity" — kept as separate grouping
+    // metadata, not as a stand-in for provenance. Useful evidence for a
+    // future evidence-backed classification pass, but not itself evidence
+    // of a fact relationship.
+    matchedBy: { type: String, default: null }
   },
   { _id: false }
 );
