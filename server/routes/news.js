@@ -7,16 +7,33 @@
 //   GET /tv      → TV-focused feed (streaming shows, prestige, reality)
 // Notes:
 //   - Returned shape: { results: [{ id, title, url, image, excerpt,
-//     source, publishedAt, tags }] }, sorted by date desc.
+//     source, publishedAt, tags, firstSeenAt, relatedSources }] }, sorted
+//     by date desc. firstSeenAt and relatedSources are additive — every
+//     field that existed before is unchanged, so an existing consumer that
+//     only reads the old fields sees no difference.
 //   - All feeds run in parallel with individual timeouts so one slow
 //     source can't drag the whole response down.
 //   - Dedupe is URL-based AND title-similarity-based to catch the same
-//     story syndicated across publishers.
+//     story syndicated across publishers, PLUS a second entity/wording-aware
+//     pass (server/services/newsEventGrouping.js) that catches differently
+//     worded independent reports of the same development — the first pass
+//     alone requires near-identical headlines and misses this case (see
+//     docs/project-status.md's Step B research). A matched duplicate is no
+//     longer discarded — it's attached to the surviving article's
+//     relatedSources[] (url, publisher, publishedAt, firstSeenAt, and
+//     which rule matched it), so every publisher independently reporting the
+//     same development stays visible instead of silently collapsing into one.
+//   - firstSeenAt is the genuine moment Cinemetrics' own discovery pass
+//     first saw that URL, persisted in Mongo (server/models/newsFirstSeen.js)
+//     so it survives both the 5-minute response cache and a server restart.
+//     It is never backfilled from the article's own publishedAt.
 
 import express from "express";
 import axios from "axios";
 import Parser from "rss-parser";
 import { cacheJson } from "../utils/cache.js";
+import { recordFirstSeen } from "../services/newsFirstSeen.js";
+import { mergeByEvent } from "../services/newsEventGrouping.js";
 
 const router = express.Router();
 
@@ -280,6 +297,79 @@ async function fetchGuardian({ section, query }) {
   }
 }
 
+// Pure, synchronous, no network/DB — the actual dedupe/grouping decision,
+// pulled out so it can be unit-tested against hand-built fixtures instead of
+// live RSS feeds. Takes the sorted, filtered article list `aggregate()`
+// assembles and returns the same surviving-article list as before, each now
+// carrying relatedSources[] instead of having its duplicates silently
+// dropped. Selection of WHICH article survives as primary is unchanged from
+// the original behavior (first one encountered in newest-first order).
+export function groupAndDedupe(all) {
+  const seenUrls = new Set();
+  const seenTitles = new Set();
+  const perSource = new Map();
+  const primaryByUrl = new Map();
+  const primaryByTitleKey = new Map();
+  const results = [];
+
+  for (const item of all) {
+    if (seenUrls.has(item.url)) {
+      const owner = primaryByUrl.get(item.url);
+      if (owner) owner.relatedSources.push(toRelatedSource(item, "url"));
+      continue;
+    }
+
+    const key = titleKey(item.title);
+    if (key && seenTitles.has(key)) {
+      const owner = primaryByTitleKey.get(key);
+      if (owner) owner.relatedSources.push(toRelatedSource(item, "title", key));
+      continue;
+    }
+
+    // A true per-source cap overflow (same prolific outlet, unrelated
+    // stories) — not a duplicate of anything, so it's dropped exactly like
+    // before rather than attached to any group.
+    const used = perSource.get(item.source) || 0;
+    if (used >= MAX_PER_SOURCE) continue;
+
+    seenUrls.add(item.url);
+    if (key) seenTitles.add(key);
+    perSource.set(item.source, used + 1);
+
+    const primary = { ...item, relatedSources: [] };
+    results.push(primary);
+    primaryByUrl.set(item.url, primary);
+    if (key) primaryByTitleKey.set(key, primary);
+    if (results.length >= MAX_RESULTS) break;
+  }
+  return results;
+}
+
+function toRelatedSource(item, matchedBy, titleKeyMatched = null) {
+  return {
+    url: item.url,
+    publisher: item.source,
+    publishedAt: item.publishedAt || null,
+    matchedBy, // "url" or "title" — why the dedupe pass considered this the same story
+    titleKeyMatched
+  };
+}
+
+// Stamps genuine, persisted first-seen timestamps onto the grouped results
+// (and their relatedSources) — separated from groupAndDedupe so that pure
+// function stays synchronous and DB-free for testing.
+export async function attachFirstSeen(results) {
+  const allUrls = results.flatMap(r => [r.url, ...r.relatedSources.map(s => s.url)]);
+  const firstSeenMap = await recordFirstSeen(allUrls);
+  for (const r of results) {
+    r.firstSeenAt = firstSeenMap.get(r.url) ?? null;
+    for (const rs of r.relatedSources) {
+      rs.firstSeenAt = firstSeenMap.get(rs.url) ?? null;
+    }
+  }
+  return results;
+}
+
 async function aggregate({ rssFeeds, guardian, match }) {
   const [guardianResults, ...rssResults] = await Promise.all([
     fetchGuardian(guardian),
@@ -299,28 +389,18 @@ async function aggregate({ rssFeeds, guardian, match }) {
     return tb - ta;
   });
 
-  // Dedupe in two passes: exact URL, then normalized-title similarity.
-  // Also cap each outlet, because the list is sorted newest-first and a
-  // high-volume wire (JoBlo and Deadline both publish several times an hour)
-  // would otherwise crowd out every slower, better source.
-  const seenUrls = new Set();
-  const seenTitles = new Set();
-  const perSource = new Map();
-  const results = [];
-  for (const item of all) {
-    if (seenUrls.has(item.url)) continue;
-    const key = titleKey(item.title);
-    if (key && seenTitles.has(key)) continue;
-
-    const used = perSource.get(item.source) || 0;
-    if (used >= MAX_PER_SOURCE) continue;
-
-    seenUrls.add(item.url);
-    if (key) seenTitles.add(key);
-    perSource.set(item.source, used + 1);
-    results.push(item);
-    if (results.length >= MAX_RESULTS) break;
-  }
+  // Two passes, deliberately kept separate: groupAndDedupe() is the
+  // original exact-URL/title-prefix match (untouched, still the one
+  // news.grouping.test.js exercises on its own). mergeByEvent() is an
+  // additive second pass — entity + word-overlap + time-bound — that
+  // catches differently-worded reports of the same development that the
+  // first pass structurally can't (see newsEventGrouping.js). Running them
+  // in sequence rather than replacing the first pass means the original,
+  // well-understood behavior is still exactly what it was; this only adds
+  // a further merge on top.
+  const deduped = groupAndDedupe(all);
+  const results = mergeByEvent(deduped);
+  await attachFirstSeen(results);
   return results;
 }
 

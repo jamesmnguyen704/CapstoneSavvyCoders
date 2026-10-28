@@ -1,8 +1,15 @@
 // importing libraries for my backend API
+//
+// This file only builds the Express app and exports it — no MongoDB connect,
+// no app.listen, no cache warm-up. Those are operational side effects that
+// belong to the actual running server, not to "what routes exist and how
+// are they wired together." Keeping them out of here means a test can
+// `import app from "./app.js"` and make requests against real routes
+// without opening a socket or touching the production database. See
+// server/server.js for the operational half.
 import express from "express"; // Framework to create servers and routes
-import axios from "axios"; // used to prime the response cache at boot
 import cors from "cors"; // Allows my frontend (Netlify) or Render to say whats up to my backend API
-import mongoose from "mongoose"; // MongoDB library that connects and interacts
+import mongoose from "mongoose"; // only used here to read connection.readyState in requireDatabase
 import rateLimit from "express-rate-limit";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -17,6 +24,8 @@ import tvRoutes from "./routes/tv.js";
 import usersRoutes from "./routes/users.js";
 import userMediaRoutes from "./routes/userMedia.js";
 import researchCacheRoutes from "./routes/researchCache.js";
+import editorialQueueRoutes from "./routes/editorialQueue.js";
+import { requireInternalKey } from "./middleware/requireInternalKey.js";
 
 //importing my API endpoint routers
 const commentsRouter = (await import("./routes/comments.js")).default; // api request
@@ -24,22 +33,6 @@ const moviesRouter = (await import("./routes/movies.js")).default; // movie requ
 
 // creating my express instance
 const app = express();
-
-// Connect MongoDB for logging. .then() and .catch() so render can catch errors
-mongoose
-  .connect(process.env.MONGODB)
-  .then(() => console.log("MongoDB connected successfully!"))
-  .catch((err) => console.error("MongoDB connection error:", err));
-
-// event loggers for more detail
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "Connection Error:"));
-db.once("open", () => {
-  console.log("Successfully opened connection to Mongo!");
-});
-
-// defining my port. Prefer BACKEND_PORT for local dev, fall back to PORT, then 3000
-const PORT = process.env.BACKEND_PORT || process.env.PORT || 3000;
 
 // custom middleware logging when it hits API
 const logging = (request, response, next) => {
@@ -86,7 +79,8 @@ app.use("/person", personRoutes); // person/actor detail + filmography
 app.use("/tv", tvRoutes); // TV shows + streaming-service browse
 app.use("/users", requireDatabase, usersRoutes); // admin-only account directory
 app.use("/user-media", requireDatabase, userMediaRoutes); // native ratings + watched/watchlist
-app.use("/research-cache", requireDatabase, researchCacheRoutes); // bot-comment research fact cache, internal tooling only
+app.use("/research-cache", requireDatabase, requireInternalKey, researchCacheRoutes); // bot-comment research fact cache, internal tooling only — gated by a shared secret, not a user login
+app.use("/editorial-queue", requireDatabase, editorialQueueRoutes); // Gate 2 private editorial queue — stops at READY, never calls a social publisher
 
 // testing starts here
 // Root route to confirm backend is running
@@ -145,26 +139,4 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong." });
 });
 
-// Start the server, listen to 0.0.0.0 so render can reach server
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Cinemetrics API running on port ${PORT}`);
-  warmCache();
-});
-
-// Prime the expensive curated routes at boot so the first visitor hits a warm
-// cache instead of paying the ~10s TMDB fan-out. Failures are non-fatal — the
-// route just stays cold and fills on first request.
-async function warmCache() {
-  const routes = ["/movies/marvel", "/movies/upcoming-curated"];
-  // Sequential: warming these in parallel stacks three TMDB fan-outs on top of
-  // each other and trips the rate limiter, leaving the cache full of holes.
-  for (const route of routes) {
-    const started = Date.now();
-    try {
-      await axios.get(`http://127.0.0.1:${PORT}${route}`, { timeout: 60000 });
-      console.log(`Warmed ${route} in ${Date.now() - started}ms`);
-    } catch (err) {
-      console.warn(`Warm-up skipped for ${route}:`, err.message);
-    }
-  }
-}
+export default app;

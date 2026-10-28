@@ -1,9 +1,10 @@
 // Read/write cache of facts a bot-comment research pass has already verified
 // per movie — so a new research agent checks here before re-hitting
-// TMDB/WebSearch for the same thing. Internal tooling, not user-facing: no
-// auth required (same trust level as the research agents that use it), but
-// it never touches Comment/User data directly. See
-// docs/persona-ensemble-framework.md's "Known constraints" section.
+// TMDB/WebSearch for the same thing. Internal tooling, not user-facing:
+// gated in app.js by requireInternalKey (a shared secret, since there's no
+// human login behind a research pass), and never touches Comment/User data
+// directly. See docs/persona-ensemble-framework.md's "Known constraints"
+// section.
 
 import express from "express";
 import MovieResearchCache from "../models/movieResearchCache.js";

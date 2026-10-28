@@ -29,6 +29,8 @@ This feature's knowledge is split across four docs on purpose (plot facts, voice
 
 This endpoint only ever touches research metadata, never `Comment`/`User` data — writing to it is not the same as posting content, and doesn't bypass the human-review gate for actual comments.
 
+**Auth (added 2026-10-27):** both routes require an `x-internal-key` header matching `RESEARCH_CACHE_KEY` from the `.env` James keeps outside the repo (see `[[env-file-lives-outside-repo]]`-style memory note, or ask him). There's no human login behind a research pass, so this is a shared secret rather than a JWT — a request with no key, or the wrong one, gets a 401; if the server has no key configured it fails closed (503) rather than silently allowing everything through, which is what it did before this date.
+
 ## How an account works
 
 - Every account signs up through the normal `/auth/signup` flow, password `Avengers2026!` for all of them, email pattern `{username}@mcu-roster.test` (anything ending in `.test` is how the admin panel and backfill scripts identify "this is a bot, not a real visitor").
