@@ -4,7 +4,10 @@ This file is auto-loaded at the start of every Claude Code session in this repo.
 
 ## Always check first
 
+- **`AGENTS.md`** — shared operating rules for any AI system touching this project (Claude Code, ChatGPT, Muse, R&D). The four-lane model, the session-resume checklist, and the handoff format live there — this file only covers Claude-Code-specific workflow.
 - **`docs/project-status.md`** — running log of what's done, what's in progress, and what's open. Updated at the end of each work session. Check this before starting work and update it before you stop.
+- **`docs/architecture.md`** — current verified system shape: route map, auth model, the editorial queue, news discovery, how to run the test suite. Read this before assuming how something is wired.
+- **`docs/decisions.md`** — short log of consequential technical decisions and why, so you don't re-litigate or accidentally undo one.
 - **`docs/bot-comments-handoff.md`** — everything about the Marvel fan-comment bot system (roster, content rules, posting pipeline, rate-limit workaround).
 - **`docs/mcu-storyline.md`** — chronological MCU plot/casting reference, used to ground unreleased-movie bot comments in confirmed facts.
 - **`docs/ai-research-findings.md`** — the actual findings (not just the prompts) from an external Gemini/ChatGPT research pass on the whole site: what's confirmed-and-fixed, what's recommended-but-not-built, and an explicit "don't bother" list. Check before re-suggesting something already covered here.

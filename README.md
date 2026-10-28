@@ -55,6 +55,18 @@ Cinemetrics pulls live data from **TMDB**, a dozen-plus news outlets per categor
 
 ---
 
+## News intelligence & editorial workflow *(internal, not a public feature)*
+
+The movie/Marvel news wires above are public and visible to every visitor. Behind them, as of October 2026, Cinemetrics is also building internal infrastructure to research and queue entertainment news candidates — there is no public editorial UI, and nothing here posts anywhere.
+
+- **Related-source grouping** — when multiple outlets independently cover the same story, the feed attaches them to each other (publisher, URL, published date, why they were matched) instead of showing a wall of near-duplicate cards.
+- **First-seen tracking** — the moment Cinemetrics' own discovery pass first saw a given article is persisted (survives restarts), separately from the outlet's own publish date.
+- **A private, authenticated editorial queue** — a researched story (sources + fact-checked claims + a draft) can be queued for review. Every submission requires an authenticated human to explicitly attest the draft's language matches what's actually been verified; an unreviewed or unverified draft is mechanically rejected, not just discouraged. Duplicate submissions are rejected at the database level, not just by convention.
+
+**What this is NOT (yet):** there is no connection to Buffer, Threads, or any social platform anywhere in this codebase, no scheduling, and no autonomous/unattended posting of any kind. A queued item reaching "ready for review" never implies it's cleared to publish — publishing itself hasn't been built. See [`docs/architecture.md`](docs/architecture.md) for the verified current shape of this system and [`docs/decisions.md`](docs/decisions.md) for why it's built the way it is.
+
+---
+
 ## Screenshots
 
 <table>
@@ -115,13 +127,19 @@ Cinemetrics pulls live data from **TMDB**, a dozen-plus news outlets per categor
 ├── store/            # per-view state objects
 ├── components/       # header, nav, main, footer
 ├── services/api.js   # every backend call in one place
-├── docs/             # living project status, AI research findings, bot-content handoff docs
+├── docs/             # project status, architecture, decision log, AI research findings, bot-content handoff
+├── AGENTS.md         # shared rules for any AI system working on this repo
+├── CLAUDE.md         # Claude Code's own entry point — read this first in a new session
 └── server/
-    ├── app.js        # express app + middleware
-    ├── models/       # user, comments, userMedia (ratings/watched), movieResearchCache
-    ├── routes/       # movies, tv, news, person, comments, user-media, research-cache, auth, users
-    ├── controllers/  # curated Marvel / upcoming data
-    ├── scripts/      # seed data, idempotent bot-comment posting
+    ├── app.js         # express app + middleware (no import-time side effects — see server.js)
+    ├── server.js      # DB connect, listener, cache warm-up
+    ├── models/        # user, comments, userMedia, movieResearchCache, editorialCandidate, newsFirstSeen
+    ├── routes/        # movies, tv, news, person, comments, user-media, research-cache, editorial-queue, auth, users
+    ├── services/      # editorial validation, news grouping/first-seen, news-to-queue bridge
+    ├── config/        # publishingPolicy.js — the one place that decides who may ever publish (nobody can yet)
+    ├── controllers/   # curated Marvel / upcoming data
+    ├── scripts/       # seed data, idempotent bot-comment posting
+    ├── research/      # fixture-driven research for news-grouping algorithm candidates
     └── utils/cache.js
 ```
 
@@ -169,6 +187,21 @@ Open **http://localhost:1234**.
 | `npm run app:watch` | API with nodemon |
 | `npm run build` | Production build to `dist/` |
 | `npm run seed` | Seed test data |
+| `npm run bot-comments -- path/to/batch.json` | Idempotent Marvel-comment bot posting |
+
+**Tests** — no test framework dependency, uses Node's built-in runner:
+
+```bash
+DOTENV_PATH=/path/to/.env node --test --test-concurrency=1 server/*.test.js server/middleware/*.test.js server/routes/*.test.js server/services/*.test.js server/research/*.test.js
+```
+
+`--test-concurrency=1` is required — several test files share one isolated test database and race each other under the runner's default concurrent execution. `DOTENV_PATH` is only needed for the tests that touch MongoDB; pure-logic tests run without it.
+
+---
+
+## Working on this with an AI coding agent
+
+This project is developed with Claude Code doing the engineering, plus a ChatGPT conversation for independent review and a parallel research-only lane for exploring future ideas — see [`AGENTS.md`](AGENTS.md) for how that's structured. If you're an AI session picking this repo up fresh: read [`CLAUDE.md`](CLAUDE.md) and [`AGENTS.md`](AGENTS.md) first, then [`docs/project-status.md`](docs/project-status.md) for current state — don't re-derive it from scratch.
 
 ---
 
@@ -193,6 +226,7 @@ Base: `https://capstonesavvycoders.onrender.com`
 | `POST /comments/meta/counts` | Batched comment-count lookup for a grid |
 | `GET/POST /user-media/:movieId` · `GET /user-media/meta/rating/:movieId` | Personal rating/watched state, and the aggregate community score |
 | `POST /auth/signup` · `/auth/login` | JWT auth |
+| `POST/GET /editorial-queue` | **Internal only**, authenticated + account-gated — the private news-editorial workflow described above. Not a public feature. |
 
 ---
 
@@ -270,6 +304,8 @@ curl -i http://localhost:3000/status     # API health
 - [ ] Franchise/collection pages for non-Marvel series (TMDB already has this data)
 - [ ] "On my services" personalized filtering, now that watch-provider data exists
 - [ ] Live Steam playtime on the Games page
+
+**Further out — concepts, not committed work:** actor filmography pages, franchise hubs beyond Marvel, deeper TV/anime/gaming coverage, and broader "entertainment intelligence" across categories. The internal news-editorial workflow above is a step toward one of these ideas (surfacing what's actually trending across sources), not a finished product — connecting it to any publishing destination is unbuilt and unscheduled.
 
 Full, current backlog (including findings from an external AI research pass) lives in [`docs/project-status.md`](docs/project-status.md) and [`docs/ai-research-findings.md`](docs/ai-research-findings.md).
 

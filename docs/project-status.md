@@ -2,6 +2,111 @@
 
 Living doc. Update the "Session log" section each time you work on this repo so picking it back up doesn't require re-deriving context from scratch. Newest entry on top.
 
+This file also distinguishes **tested/verified** work from **reported** work
+throughout — a status line that says "verified live" means someone actually
+ran it against the real server or database in this session, not just that
+tests exist for it. See `docs/architecture.md` for current system shape and
+`docs/decisions.md` for why specific choices were made. `AGENTS.md` defines
+the four cross-AI-system lanes (Engineering / HQ-QA / Social Intelligence /
+R&D Lab) for the broader Cinemetrics Intelligence Machine effort — the
+"Active lanes" table below is a different, narrower thing: which of James's
+*parallel Claude Code sessions* owns which part of the Engineering lane.
+
+## Cinemetrics Intelligence Machine — engineering status (2026-10-27)
+
+Started under direction from a separate ChatGPT "HQ/QA" conversation (see
+`AGENTS.md`'s lane model). Scope so far has deliberately stopped short of any
+publishing capability. All verified live against the real dev server and/or
+an isolated test database, not just unit-tested in isolation:
+
+- **Gate 1 — `/research-cache` auth fix.** Was exposed with zero
+  authentication (anyone could read/write it). Fixed with a shared-secret
+  header (`requireInternalKey`, `RESEARCH_CACHE_KEY`). Verified live:
+  unauthorized read/write → 401/503, authorized workflow → real read-write
+  round trip against production Mongo, public routes unaffected.
+- **`app.js`/`server.js` testability split.** `app.js` now has zero side
+  effects on import (no DB connect, no listener) — proven by a test, and by
+  restarting the real server from the new entry point with identical boot
+  behavior.
+- **Gate 2 — private editorial queue.** `/editorial-queue`, authenticated,
+  single-account-policy-gated, stops at `READY` (never `AUTHORIZED` or
+  beyond — no publishing code exists). Ghost Rider test fixture proven
+  through intake → validation → durable Mongo record → duplicate rejection
+  (including a genuine concurrent-race test against the DB's unique index,
+  not just a sequential pre-check) → read-back. Reviewer identity
+  (`reviewedBy`) is bound server-side from the authenticated session, never
+  trusted from the client.
+  - **Known gap, reported not hidden:** the Ghost Rider test used a
+    hand-authored fixture, not real output piped from `/news/marvel`. The
+    real story genuinely is in that feed right now (verified live), but
+    nothing currently bridges discovery output into queue intake — that's
+    real future scope, not done.
+- **News discovery: related-source grouping + persisted first-seen.**
+  `server/routes/news.js` no longer discards a matched duplicate — it's
+  attached to the surviving article as `relatedSources[]`. Every article
+  gets a genuine `firstSeenAt`, persisted in Mongo, verified to survive an
+  actual full server restart (not just the response cache), never
+  backfilled from the article's own `publishedAt`. Public feed shape is
+  unchanged (additive fields only).
+  - **Original limitation (now partially addressed below):** the original
+    title-match alone is narrow (near-identical wire-copy headlines only)
+    and doesn't catch 5 real, differently-worded articles about one real
+    Ghost Rider casting story.
+- **Event grouping, second pass (`server/services/newsEventGrouping.js`).**
+  Research-measured first (fixture set: same-event/different-wording,
+  syndicated copies, negotiation→confirmed, same-franchise-different-
+  development, rumor-vs-contradicting-confirmation, same-actor-different-
+  event — precision 1.00, recall 0.58, zero false positives on every
+  adversarial case) before being wired in as an *additive* second pass —
+  the original `groupAndDedupe()` is untouched and still has its own
+  passing tests. **Verified live**, not just on the fixture: the real 5
+  Ghost Rider articles went from 5 separate results to 3 groups. Known,
+  named gap: one outlet's headline never names the person involved at all,
+  so no text-only signal can bridge it; live results also differ slightly
+  from the clean-ASCII fixture prediction (2 groups) because real titles
+  use curly apostrophes (`Gosling's`) the punctuation-stripping doesn't
+  fully normalize yet — reported honestly, not rounded up.
+- **News-to-queue bridge (`server/services/newsToCandidateDraft.js`).**
+  Turns one real `/news/marvel`-shaped result into a **stub** (sources
+  populated, `claims: []`, `draftText: ""`, `claimsReviewed: false`) — never
+  auto-submitted, never auto-promoted to READY. Verified end-to-end against
+  the real authenticated route: raw stub → 422 rejected; human-completed
+  stub → 201 `READY`; resubmission → 409 duplicate, not double-queued; zero
+  calls to any publisher anywhere in the path.
+- **Security hardening:** `requireInternalKey` now uses
+  `crypto.timingSafeEqual` (was a plain `!==`, a theoretical timing
+  side-channel). `/editorial-queue`'s `GET /` and `GET /:storyId` now scope
+  every query to the authenticated account+platform, not just `storyId`/
+  `status` — correct by construction for a future second account, not just
+  because only one exists today.
+- **44/44 automated tests passing** — run with
+  `node --test --test-concurrency=1 server/*.test.js server/middleware/*.test.js server/routes/*.test.js server/services/*.test.js server/research/*.test.js`.
+  **`--test-concurrency=1` is required** — found while preparing this
+  checkpoint that several DB-backed test files share one real test database
+  and race each other under Node's default concurrent file execution; every
+  file passes individually, the race only appears across files run
+  together. See `docs/decisions.md`.
+- **Explicitly NOT built:** Buffer integration, any Threads/social publish
+  code (grepped for and confirmed absent across the whole repo, re-verified
+  by an independent read-only review this session), scheduling,
+  breaking-news scoring, autonomous content production, automatic UserMedia
+  schema migration (see R&D lane finding below). `autoPublishingEnabled:
+  false` in `server/config/publishingPolicy.js`.
+- **R&D lane finding, not yet acted on:** `UserMedia.movieId` has no
+  media-type/provider field, so it implicitly assumes every record is a
+  movie. Fine today; would need a migration (e.g. `{mediaType, provider,
+  externalId}`) before TV/game ratings could share the same model without
+  ID collisions. Deliberately NOT started — needs its own inventory of
+  production data, indexes, routes, and frontend callers first, as a
+  separate milestone after this checkpoint, not bundled into it.
+- **Next recommended steps:** (1) Buffer account/channel verification —
+  read-only investigation already done (see commit/session notes), docs
+  confirm `createPost` shape and status read-back, but whether a scheduled
+  post can be cancelled before publishing is unconfirmed from public docs
+  alone (needs the live API Explorer). (2) The apostrophe-normalization gap
+  in event grouping — small, scoped fix. (3) The `UserMedia` migration
+  inventory, separately, not blocking publishing work.
+
 ## Active lanes (parallel Claude sessions)
 
 Three sessions run against this same working tree at once. Address each by name:
