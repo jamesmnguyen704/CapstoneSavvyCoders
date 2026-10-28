@@ -16,11 +16,24 @@ const sourceSchema = new mongoose.Schema(
     // noticed it — two different clocks the original plan asked to keep apart.
     articlePublishedAt: { type: Date, default: null },
     discoveredAt: { type: Date, default: Date.now },
-    // True only for the first source of an independent report; a syndicated
-    // copy of the same underlying report is still worth recording (it's
-    // corroboration of *reach*, not of the *fact*) but must not count as a
-    // second independent confirmation — see claims[].independentSourceCount.
-    isSyndicationOf: { type: String, default: null } // another source's url, or null
+    // Whether this source is a confirmed copy of another one, an
+    // independently-reported account of the same development, or simply
+    // unknown — never guessed. A news item grouped by exact-URL or
+    // near-identical-title matching (news.js's groupAndDedupe) IS a
+    // confirmed syndication/wire-copy case. One grouped only by the
+    // entity-aware second pass (newsEventGrouping.js, matchedBy
+    // "entity+similarity") is two different outlets' own wording about the
+    // same thing — that's independent reporting, not syndication, and
+    // treating it as syndication would silently overstate how many outlets
+    // corroborate the underlying fact.
+    provenance: {
+      type: String,
+      enum: ["SYNDICATION", "INDEPENDENT_REPORT", "UNKNOWN"],
+      default: "UNKNOWN"
+    },
+    // Only meaningful when provenance is SYNDICATION — which URL this is a
+    // copy of.
+    isSyndicationOf: { type: String, default: null }
   },
   { _id: false }
 );

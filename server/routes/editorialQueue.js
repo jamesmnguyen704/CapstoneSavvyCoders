@@ -61,7 +61,8 @@ router.post("/", async (req, res) => {
       angle,
       draftText,
       claims,
-      claimsReviewed
+      claimsReviewed,
+      sources
     });
 
     if (!valid) {

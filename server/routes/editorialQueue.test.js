@@ -161,6 +161,51 @@ test("a draft with a hashtag is rejected", async () => {
   assert.ok(body.reasons.some(r => r.includes("hashtag")));
 });
 
+test("a VERIFIED_REPORT claim with no evidenceUrl is rejected", async () => {
+  const res = await postCandidate(
+    ghostRiderFixture({
+      storyId: "ghost-rider-no-evidence-test",
+      claims: [
+        { text: "Connor Storrie is reportedly in talks for Ghost Rider", status: "VERIFIED_REPORT", evidenceUrl: null }
+      ]
+    })
+  );
+  assert.equal(res.status, 422);
+  const body = await res.json();
+  assert.ok(body.reasons.some(r => r.includes("no evidenceUrl")));
+});
+
+test("a VERIFIED_REPORT claim whose evidenceUrl isn't one of the submitted sources is rejected", async () => {
+  const res = await postCandidate(
+    ghostRiderFixture({
+      storyId: "ghost-rider-evidence-mismatch-test",
+      claims: [
+        {
+          text: "Connor Storrie is reportedly in talks for Ghost Rider",
+          status: "VERIFIED_REPORT",
+          evidenceUrl: "https://some-outlet-not-in-sources.example.com/story"
+        }
+      ]
+    })
+  );
+  assert.equal(res.status, 422);
+  const body = await res.json();
+  assert.ok(body.reasons.some(r => r.includes("does not match any of this candidate's sources")));
+});
+
+test("a NOT_VERIFIED/UNKNOWN claim does not require evidenceUrl", async () => {
+  const res = await postCandidate(
+    ghostRiderFixture({
+      storyId: "ghost-rider-unverified-no-evidence-needed-test",
+      claims: [
+        { text: "Connor Storrie is reportedly in talks for a villain role", status: "VERIFIED_REPORT", evidenceUrl: "https://ew.com/connor-storrie-ghost-rider-villain-ryan-gosling-12197326" },
+        { text: "Marvel has officially confirmed the casting", status: "NOT_VERIFIED", evidenceUrl: null }
+      ]
+    })
+  );
+  assert.equal(res.status, 201, "an unverified claim recording the absence of confirmation doesn't need a source the way asserting one does");
+});
+
 test("submitting without claimsReviewed is rejected even with valid text", async () => {
   const res = await postCandidate(
     ghostRiderFixture({ storyId: "ghost-rider-unreviewed-test", claimsReviewed: false })

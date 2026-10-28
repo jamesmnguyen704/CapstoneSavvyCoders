@@ -25,6 +25,11 @@ test("draftFromNewsResult produces a stub that validateCandidate always rejects"
   assert.equal(stub.sources.length, 2, "primary + the one relatedSources entry");
   assert.equal(stub.sources[0].url, REAL_NEWS_RESULT.url);
   assert.equal(stub.sources[1].url, REAL_NEWS_RESULT.relatedSources[0].url);
+  // The fixture's related source was matched by the entity-aware second
+  // pass (two outlets, their own wording) — that's independent reporting,
+  // not a confirmed copy, and must not be labeled as syndication.
+  assert.equal(stub.sources[1].provenance, "INDEPENDENT_REPORT");
+  assert.equal(stub.sources[1].isSyndicationOf, null);
   assert.deepEqual(stub.claims, []);
   assert.equal(stub.draftText, "");
   assert.equal(stub.claimsReviewed, false);
@@ -33,6 +38,31 @@ test("draftFromNewsResult produces a stub that validateCandidate always rejects"
   assert.equal(valid, false, "a raw stub must never itself be eligible for READY");
   assert.ok(reasons.some(r => r.includes("claim")));
   assert.ok(reasons.some(r => r.includes("claimsReviewed")));
+});
+
+test("a relatedSources entry matched by exact URL or near-identical title is labeled SYNDICATION", () => {
+  const stub = draftFromNewsResult({
+    ...REAL_NEWS_RESULT,
+    relatedSources: [
+      { url: "https://outlet-a.example.com/x", publisher: "Outlet A", publishedAt: "2026-10-27T12:00:00.000Z", matchedBy: "url" },
+      { url: "https://outlet-b.example.com/x", publisher: "Outlet B", publishedAt: "2026-10-27T12:30:00.000Z", matchedBy: "title" }
+    ]
+  });
+
+  assert.equal(stub.sources[1].provenance, "SYNDICATION");
+  assert.equal(stub.sources[1].isSyndicationOf, REAL_NEWS_RESULT.url);
+  assert.equal(stub.sources[2].provenance, "SYNDICATION");
+  assert.equal(stub.sources[2].isSyndicationOf, REAL_NEWS_RESULT.url);
+});
+
+test("a relatedSources entry with no recognized matchedBy is labeled UNKNOWN, never guessed", () => {
+  const stub = draftFromNewsResult({
+    ...REAL_NEWS_RESULT,
+    relatedSources: [{ url: "https://outlet-c.example.com/x", publisher: "Outlet C", publishedAt: "2026-10-27T12:00:00.000Z" }]
+  });
+
+  assert.equal(stub.sources[1].provenance, "UNKNOWN");
+  assert.equal(stub.sources[1].isSyndicationOf, null);
 });
 
 test("draftFromNewsResult throws on a malformed news result rather than producing a broken stub", () => {

@@ -23,13 +23,17 @@ export function draftFromNewsResult(newsResult, { account, platform = "threads",
       discoveredAt: newsResult.firstSeenAt || null
     },
     ...(Array.isArray(newsResult.relatedSources)
-      ? newsResult.relatedSources.map(rs => ({
-          url: rs.url,
-          publisher: rs.publisher || "Unknown",
-          articlePublishedAt: rs.publishedAt || null,
-          discoveredAt: rs.firstSeenAt || null,
-          isSyndicationOf: newsResult.url
-        }))
+      ? newsResult.relatedSources.map(rs => {
+          const { provenance, isSyndicationOf } = provenanceFromMatchReason(rs.matchedBy, newsResult.url);
+          return {
+            url: rs.url,
+            publisher: rs.publisher || "Unknown",
+            articlePublishedAt: rs.publishedAt || null,
+            discoveredAt: rs.firstSeenAt || null,
+            provenance,
+            isSyndicationOf
+          };
+        })
       : [])
   ];
 
@@ -43,6 +47,29 @@ export function draftFromNewsResult(newsResult, { account, platform = "threads",
     draftText: "",
     claimsReviewed: false
   };
+}
+
+// news.js's grouping attaches a relatedSources entry for two structurally
+// different reasons, and they mean different things for provenance:
+//   - "url"/"title": news.js's original groupAndDedupe pass — an exact URL
+//     repeat or a near-identical wire-copy headline. That IS a confirmed
+//     syndication case (see news.js's own doc comment: title-similarity
+//     exists specifically "to catch the same story syndicated across
+//     publishers").
+//   - "entity+similarity": the newsEventGrouping.js second pass — two
+//     outlets independently worded their own headline about the same
+//     underlying development. That's independent reporting, not a copy,
+//     and must not be labeled as syndication just because it was grouped.
+// Anything else (a future matchedBy value this hasn't been taught about) is
+// recorded as UNKNOWN rather than guessed either way.
+function provenanceFromMatchReason(matchedBy, primaryUrl) {
+  if (matchedBy === "url" || matchedBy === "title") {
+    return { provenance: "SYNDICATION", isSyndicationOf: primaryUrl };
+  }
+  if (matchedBy === "entity+similarity") {
+    return { provenance: "INDEPENDENT_REPORT", isSyndicationOf: null };
+  }
+  return { provenance: "UNKNOWN", isSyndicationOf: null };
 }
 
 const STOP_WORDS = new Set([

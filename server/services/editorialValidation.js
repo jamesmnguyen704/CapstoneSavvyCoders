@@ -27,7 +27,7 @@ function hasUnhedgedCertaintyClaim(draftText) {
     .some(sentence => CERTAINTY_PATTERN.test(sentence) && !NEGATION_PATTERN.test(sentence));
 }
 
-export function validateCandidate({ account, platform, angle, draftText, claims, claimsReviewed }) {
+export function validateCandidate({ account, platform, angle, draftText, claims, claimsReviewed, sources }) {
   const reasons = [];
 
   const policy = PUBLISHING_POLICY[platform];
@@ -50,6 +50,23 @@ export function validateCandidate({ account, platform, angle, draftText, claims,
 
   if (!Array.isArray(claims) || claims.length === 0) {
     reasons.push("At least one source-backed claim is required");
+  } else {
+    // A nonempty claims array only proves something was typed in, not that
+    // it's actually backed by a source. A claim asserting VERIFIED_REPORT —
+    // "a reliable outlet reported this" — must name which outlet, and that
+    // outlet must be one of the sources actually submitted with this
+    // candidate, not an arbitrary URL. NOT_VERIFIED/UNKNOWN/CONTRADICTED
+    // claims aren't required to carry evidence — recording the absence of
+    // confirmation doesn't need a source the way asserting one does.
+    const sourceUrls = new Set(Array.isArray(sources) ? sources.map(s => s?.url).filter(Boolean) : []);
+    claims.forEach((claim, i) => {
+      if (claim?.status !== "VERIFIED_REPORT") return;
+      if (typeof claim.evidenceUrl !== "string" || claim.evidenceUrl.length === 0) {
+        reasons.push(`Claim ${i + 1} is marked VERIFIED_REPORT but has no evidenceUrl`);
+      } else if (!sourceUrls.has(claim.evidenceUrl)) {
+        reasons.push(`Claim ${i + 1}'s evidenceUrl does not match any of this candidate's sources`);
+      }
+    });
   }
 
   if (!angle || typeof angle !== "string") {
